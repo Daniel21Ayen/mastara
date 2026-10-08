@@ -1,0 +1,233 @@
+// ==============================================================================
+// Partition D & J: Tests, Exams, Monotonic Anti-Cheat and Standalone COC Module
+// Requirements: FR-030 to FR-059, FR-180 to FR-185, D9, D14
+// ==============================================================================
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ExamKind {
+  MID
+  FINAL
+  MOCK
+}
+
+enum AttemptCategory {
+  PRACTICE
+  QUIZ
+  EXAM
+  COC
+}
+
+enum AttemptState {
+  READY
+  STARTED
+  IN_PROGRESS
+  SUBMITTING
+  SUBMITTED
+  RESULT_AVAILABLE
+  LOCAL_RECOVERY
+  EXPIRED
+}
+
+model Question {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_id        String            @db.Uuid
+  topic_id         String?           @db.Uuid
+  type             QuestionType
+  prompt_en        String            @db.Text
+  prompt_am        String?           @db.Text
+  explanation_en   String?           @db.Text
+  explanation_am   String?           @db.Text
+  options          Json              @db.JsonB
+  correct_answers  Json              @db.JsonB
+  difficulty       Difficulty        @default(MEDIUM)
+  is_free_trial    Boolean           @default(false)
+  is_active        Boolean           @default(true)
+  version          Int               @default(1)
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime          @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  course           Course            @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  topic            Topic?            @relation(fields: [topic_id], references: [id], onDelete: SetNull)
+  attempt_answers  AttemptAnswer[]
+  coc_question     CocQuestion?
+  exam_questions   ExamQuestion[]
+
+  @@index([course_id, topic_id, is_active])
+  @@index([is_free_trial])
+  @@map("questions")
+}
+
+model QuizChapter {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_id      String   @db.Uuid
+  quiz_no        Int
+  chapter_number Int
+  topic_id       String?  @db.Uuid
+  is_free_trial  Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @updatedAt @db.Timestamptz(6)
+
+  course         Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  topic          Topic?   @relation(fields: [topic_id], references: [id], onDelete: SetNull)
+
+  @@unique([course_id, quiz_no, chapter_number])
+  @@index([course_id, quiz_no])
+  @@map("quiz_chapters")
+}
+
+model Exam {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_id      String            @db.Uuid
+  university_id  String?           @db.Uuid
+  kind           ExamKind
+  title_en       String
+  title_am       String?
+  year           Int?
+  duration_min   Int
+  passing_score  Int               @default(50)
+  is_free_trial  Boolean           @default(false)
+  status         PublicationStatus @default(DRAFT)
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime          @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  course         Course            @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  university     University?       @relation(fields: [university_id], references: [id], onDelete: SetNull)
+  exam_questions ExamQuestion[]
+  attempts       Attempt[]
+
+  @@index([course_id, kind, status])
+  @@index([university_id])
+  @@map("exams")
+}
+
+model ExamQuestion {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  exam_id     String   @db.Uuid
+  question_id String   @db.Uuid
+  sort_order  Int      @default(0)
+  points      Float    @default(1.0)
+
+  exam        Exam     @relation(fields: [exam_id], references: [id], onDelete: Cascade)
+  question    Question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@unique([exam_id, question_id])
+  @@index([exam_id, sort_order])
+  @@map("exam_questions")
+}
+
+model CocQuestion {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question_id       String           @unique @db.Uuid
+  course_id         String           @db.Uuid
+  year              Int?
+  source            String?
+  version           Int              @default(1)
+  is_free_trial     Boolean          @default(false)
+  created_at        DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime         @updatedAt @db.Timestamptz(6)
+
+  question          Question         @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  course            Course           @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  coc_set_questions CocSetQuestion[]
+
+  @@index([course_id, year])
+  @@map("coc_questions")
+}
+
+model CocSet {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title_en              String
+  title_am              String?
+  year                  Int?
+  is_timed              Boolean           @default(true)
+  duration_min          Int               @default(120)
+  sample_question_count Int               @default(10)
+  status                PublicationStatus @default(DRAFT)
+  created_at            DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime          @updatedAt @db.Timestamptz(6)
+
+  coc_set_questions     CocSetQuestion[]
+  attempts              Attempt[]
+
+  @@index([status, year])
+  @@map("coc_sets")
+}
+
+model CocSetQuestion {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  coc_set_id      String      @db.Uuid
+  coc_question_id String      @db.Uuid
+  sort_order      Int         @default(0)
+  is_sample       Boolean     @default(false)
+
+  coc_set         CocSet      @relation(fields: [coc_set_id], references: [id], onDelete: Cascade)
+  coc_question    CocQuestion @relation(fields: [coc_question_id], references: [id], onDelete: Cascade)
+
+  @@unique([coc_set_id, coc_question_id])
+  @@index([coc_set_id, sort_order])
+  @@map("coc_set_questions")
+}
+
+model Attempt {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id         String          @db.Uuid
+  exam_id            String?         @db.Uuid
+  coc_set_id         String?         @db.Uuid
+  topic_id           String?         @db.Uuid
+  quiz_no            Int?
+  category           AttemptCategory
+  state              AttemptState    @default(STARTED)
+  score              Float?
+  total_questions    Int
+  correct_count      Int?
+  elapsed_ms         BigInt          @default(0)
+  server_started_at  DateTime        @default(now()) @db.Timestamptz(6)
+  server_deadline_at DateTime?       @db.Timestamptz(6)
+  submitted_at       DateTime?       @db.Timestamptz(6)
+  is_tampered        Boolean         @default(false)
+  integrity_metadata Json?           @db.JsonB
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime        @updatedAt @db.Timestamptz(6)
+
+  student            Student         @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  exam               Exam?           @relation(fields: [exam_id], references: [id], onDelete: SetNull)
+  coc_set            CocSet?         @relation(fields: [coc_set_id], references: [id], onDelete: SetNull)
+  answers            AttemptAnswer[]
+
+  @@index([student_id, category, state])
+  @@index([exam_id])
+  @@index([coc_set_id])
+  @@map("attempts")
+}
+
+model AttemptAnswer {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attempt_id       String   @db.Uuid
+  question_id      String   @db.Uuid
+  selected_answers Json     @db.JsonB
+  is_correct       Boolean?
+  is_flagged       Boolean  @default(false)
+  client_timestamp DateTime @db.Timestamptz(6)
+  server_timestamp DateTime @default(now()) @db.Timestamptz(6)
+
+  attempt          Attempt  @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+  question         Question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@unique([attempt_id, question_id])
+  @@index([attempt_id])
+  @@map("attempt_answers")
+}

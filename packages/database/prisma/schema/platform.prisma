@@ -1,0 +1,97 @@
+// ==============================================================================
+// Partition G & H: Platform Operations, Notifications, Support and Audit
+// Requirements: FR-110 to FR-119, FR-150 to FR-155
+// ==============================================================================
+
+enum NotificationType {
+  PAYMENT_APPROVED
+  PAYMENT_REJECTED
+  ENTITLEMENT_EXPIRING
+  ENTITLEMENT_EXPIRED
+  DEVICE_MISMATCH
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Notification {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id String           @db.Uuid
+  type       NotificationType
+  title_en   String
+  title_am   String
+  message_en String           @db.Text
+  message_am String           @db.Text
+  is_read    Boolean          @default(false)
+  data       Json?            @db.JsonB
+  created_at DateTime         @default(now()) @db.Timestamptz(6)
+
+  student    Student          @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@index([student_id, is_read, created_at])
+  @@map("notifications")
+}
+
+model SupportTicket {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id String           @db.Uuid
+  subject    String
+  status     TicketStatus     @default(OPEN)
+  created_at DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at DateTime         @updatedAt @db.Timestamptz(6)
+
+  student    Student          @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  messages   SupportMessage[]
+
+  @@index([student_id, status])
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticket_id   String        @db.Uuid
+  sender_id   String?       @db.Uuid
+  sender_role Role
+  body        String        @db.Text
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+
+  ticket      SupportTicket @relation(fields: [ticket_id], references: [id], onDelete: Cascade)
+  student     Student?      @relation(fields: [sender_id], references: [id], onDelete: SetNull)
+
+  @@index([ticket_id, created_at])
+  @@map("support_messages")
+}
+
+model AuditLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actor_id    String   @db.Uuid
+  actor_role  Role
+  action      String
+  target_type String
+  target_id   String
+  metadata    Json?    @db.JsonB
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([actor_id, created_at])
+  @@index([target_type, target_id])
+  @@index([action, created_at])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  value       Json     @db.JsonB
+  description String?
+  updated_by  String?  @db.Uuid
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
+
+  @@map("system_settings")
+}

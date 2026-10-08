@@ -1,0 +1,162 @@
+// ==============================================================================
+// Partition C: Content, Documents, Scan-to-PDF and Bilingual STEM
+// Requirements: FR-020 to FR-029, FR-034, FR-043, FR-044, FR-140 to FR-147, D8, D10
+// ==============================================================================
+
+enum DocumentStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum ScanJobStatus {
+  DRAFT
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+model Module {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_id      String            @db.Uuid
+  code           String
+  title_en       String
+  title_am       String
+  description_en String?           @db.Text
+  description_am String?           @db.Text
+  is_free_trial  Boolean           @default(false)
+  status         PublicationStatus @default(DRAFT)
+  sort_order     Int               @default(0)
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime          @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  course         Course            @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  topics         Topic[]
+
+  @@unique([course_id, code])
+  @@index([course_id, status, sort_order])
+  @@map("modules")
+}
+
+model Topic {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  module_id        String            @db.Uuid
+  chapter_number   Int
+  title_en         String
+  title_am         String
+  is_free_trial    Boolean           @default(false)
+  sort_order       Int               @default(0)
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime          @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  module           Module            @relation(fields: [module_id], references: [id], onDelete: Cascade)
+  contents         Content[]
+  document_assets  DocumentAsset[]
+  reading_progress ReadingProgress[]
+  questions        Question[]
+  quiz_chapters    QuizChapter[]
+  scan_jobs        ScanJob[]
+
+  @@unique([module_id, chapter_number])
+  @@index([module_id, sort_order])
+  @@map("topics")
+}
+
+model Content {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topic_id      String            @db.Uuid
+  version       Int               @default(1)
+  status        PublicationStatus @default(DRAFT)
+  title_en      String
+  title_am      String
+  body_en       String            @db.Text
+  body_am       String            @db.Text
+  is_free_trial Boolean           @default(false)
+  published_at  DateTime?         @db.Timestamptz(6)
+  created_at    DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime          @updatedAt @db.Timestamptz(6)
+
+  topic         Topic             @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+
+  @@unique([topic_id, version])
+  @@index([topic_id, status])
+  @@map("contents")
+}
+
+model DocumentAsset {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  topic_id        String?        @db.Uuid
+  storage_key     String
+  mime_type       String
+  checksum_sha256 String
+  size_bytes      BigInt
+  page_count      Int?
+  title_en        String
+  title_am        String?
+  is_free_trial   Boolean        @default(false)
+  source_job_id   String?        @db.Uuid
+  status          DocumentStatus @default(PENDING)
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime       @updatedAt @db.Timestamptz(6)
+
+  topic           Topic?         @relation(fields: [topic_id], references: [id], onDelete: SetNull)
+
+  @@index([topic_id, status])
+  @@map("document_assets")
+}
+
+model ScanJob {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_id       String        @db.Uuid
+  topic_id        String?       @db.Uuid
+  title           String
+  status          ScanJobStatus @default(DRAFT)
+  error_message   String?       @db.Text
+  output_asset_id String?       @db.Uuid
+  created_by      String        @db.Uuid
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @updatedAt @db.Timestamptz(6)
+
+  course          Course        @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  topic           Topic?        @relation(fields: [topic_id], references: [id], onDelete: SetNull)
+  pages           ScanPage[]
+
+  @@index([course_id, status])
+  @@map("scan_jobs")
+}
+
+model ScanPage {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  job_id          String   @db.Uuid
+  page_no         Int
+  image_key       String
+  rotation_deg    Int      @default(0)
+  crop_data       Json?    @db.JsonB
+  checksum_sha256 String?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  job             ScanJob  @relation(fields: [job_id], references: [id], onDelete: Cascade)
+
+  @@unique([job_id, page_no])
+  @@index([job_id])
+  @@map("scan_pages")
+}
+
+model ReadingProgress {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id      String    @db.Uuid
+  topic_id        String    @db.Uuid
+  scroll_position Float     @default(0)
+  is_completed    Boolean   @default(false)
+  completed_at    DateTime? @db.Timestamptz(6)
+  last_read_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  student         Student   @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  topic           Topic     @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+
+  @@unique([student_id, topic_id])
+  @@index([student_id, is_completed])
+  @@map("reading_progress")
+}
