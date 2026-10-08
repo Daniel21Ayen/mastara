@@ -1,0 +1,128 @@
+// ==============================================================================
+// Partition A: Identity and Device
+// Requirements: FR-001 to FR-009a, FR-160, D3, D4
+// ==============================================================================
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum StudentStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum PreferredLanguage {
+  EN
+  AM
+}
+
+enum DevicePlatform {
+  ANDROID
+  IOS
+}
+
+enum DeviceBindingStatus {
+  ACTIVE
+  RELEASED
+  REVOKED
+}
+
+enum SecurityEventType {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  REGISTER
+  DEVICE_BOUND
+  DEVICE_MISMATCH
+  DEVICE_RELEASED
+  DEVICE_REVOKED
+  TOKEN_REFRESH
+}
+
+model Student {
+  id                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone                String?           @unique
+  email                String?           @unique
+  password_hash        String
+  role                 Role              @default(STUDENT)
+  status               StudentStatus     @default(ACTIVE)
+  first_name           String
+  last_name            String
+  avatar_url           String?
+  preferred_language   PreferredLanguage @default(EN)
+
+  // Academic scope (cascading selection per FR-160 to FR-162)
+  university_id        String?           @db.Uuid
+  program_id           String?           @db.Uuid
+  semester_id          String?           @db.Uuid
+  stream_pref          Stream?
+  profile_completed_at DateTime?         @db.Timestamptz(6)
+
+  created_at           DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime          @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  university           University?       @relation(fields: [university_id], references: [id], onDelete: SetNull)
+  program              Program?          @relation(fields: [program_id], references: [id], onDelete: SetNull)
+  semester             Semester?         @relation(fields: [semester_id], references: [id], onDelete: SetNull)
+  device_binding       DeviceBinding?
+  courses              StudentCourse[]
+  orders               Order[]
+  entitlements         Entitlement[]
+  attempts             Attempt[]
+  reading_progress     ReadingProgress[]
+  outbox_events        OutboxEvent[]
+  notifications        Notification[]
+  support_tickets      SupportTicket[]
+  support_messages     SupportMessage[]
+  security_logs        SecurityEventLog[]
+
+  @@index([phone])
+  @@index([email])
+  @@index([role, status])
+  @@index([university_id, program_id, semester_id])
+  @@map("students")
+}
+
+model DeviceBinding {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id            String              @unique @db.Uuid
+  device_id_hash        String
+  device_name           String?
+  platform              DevicePlatform
+  status                DeviceBindingStatus @default(ACTIVE)
+  bound_at              DateTime            @default(now()) @db.Timestamptz(6)
+  released_at           DateTime?           @db.Timestamptz(6)
+  revoked_at            DateTime?           @db.Timestamptz(6)
+  revoked_by            String?             @db.Uuid
+  revoke_reason         String?
+  is_rooted_or_emulator Boolean             @default(false)
+  last_seen_at          DateTime            @default(now()) @db.Timestamptz(6)
+  created_at            DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime            @updatedAt @db.Timestamptz(6)
+
+  student               Student             @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@index([device_id_hash])
+  @@index([status])
+  @@map("device_bindings")
+}
+
+model SecurityEventLog {
+  id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id     String?           @db.Uuid
+  event_type     SecurityEventType
+  device_id_hash String?
+  ip_address     String?
+  user_agent     String?
+  metadata       Json?             @db.JsonB
+  created_at     DateTime          @default(now()) @db.Timestamptz(6)
+
+  student        Student?          @relation(fields: [student_id], references: [id], onDelete: SetNull)
+
+  @@index([student_id, created_at])
+  @@index([event_type])
+  @@map("security_event_logs")
+}

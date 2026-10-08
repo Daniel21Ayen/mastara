@@ -1,1 +1,31 @@
-{ "name": "@mastara/database", "version": "0.0.0", "private": true }
+{
+  "name": "@mastara/database",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "prisma": {
+    "schema": "prisma/schema"
+  },
+  "scripts": {
+    "prisma": "prisma",
+    "generate": "prisma generate --schema=prisma/schema",
+    "validate": "prisma validate --schema=prisma/schema",
+    "migrate:dev": "prisma migrate dev --schema=prisma/schema",
+    "migrate:deploy": "prisma migrate deploy --schema=prisma/schema",
+    "db:push": "prisma db push --schema=prisma/schema",
+    "db:seed": "ts-node src/seed.ts",
+    "build": "tsc -b",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "7.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "dotenv": "^16.4.7",
+    "prisma": "7.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}
