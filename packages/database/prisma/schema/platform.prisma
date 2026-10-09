@@ -4,6 +4,8 @@
 // ==============================================================================
 
 enum NotificationType {
+  WELCOME
+  PAYMENT_PENDING
   PAYMENT_APPROVED
   PAYMENT_REJECTED
   ENTITLEMENT_EXPIRING
