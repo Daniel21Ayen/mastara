@@ -1,0 +1,97 @@
+// apps/mobile/src/modules/my-courses/screens/MyCoursesScreen.tsx
+import type { CourseTab } from '@mastara/domain';
+import type { Href } from 'expo-router';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+
+import { useI18n } from '@/core/i18n';
+import { useSession } from '@/core/session';
+import { theme } from '@/core/theme';
+import { AppButton, AppText, ScreenHeader, SegmentedControl, Screen } from '@/shared/ui';
+import type { SegmentOption } from '@/shared/ui';
+
+import { AddCoursesSheet } from '../components/AddCoursesSheet';
+import { CourseCard } from '../components/CourseCard';
+import { CourseFilterSheet } from '../components/CourseFilterSheet';
+import { CourseSearchBar } from '../components/CourseSearchBar';
+import { useMyCourses } from '../hooks/useMyCourses';
+
+export function MyCoursesScreen() {
+  const { t } = useI18n();
+  const { profile } = useSession();
+  const router = useRouter();
+  const courses = useMyCourses();
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+
+  const tabs: SegmentOption<CourseTab>[] = [
+    { value: 'ALL', label: t('mycourses.tab.all') },
+    { value: 'ONGOING', label: t('mycourses.tab.ongoing') },
+    { value: 'COMPLETED', label: t('mycourses.tab.completed') },
+  ];
+
+  const header = (
+    <View style={styles.header}>
+      <ScreenHeader title={t('mycourses.title')} />
+      <CourseSearchBar
+        value={courses.filters.query}
+        onChangeText={(query) => courses.setFilters((prev) => ({ ...prev, query }))}
+        activeFilters={courses.activeFilters}
+        onFilterPress={() => setFilterOpen(true)}
+      />
+      <SegmentedControl
+        options={tabs}
+        value={courses.filters.tab}
+        onChange={(tab) => courses.setFilters((prev) => ({ ...prev, tab }))}
+      />
+    </View>
+  );
+
+  const empty = courses.loading ? (
+    <ActivityIndicator color={theme.colors.primary} />
+  ) : courses.error ? (
+    <AppButton label={t('common.retry')} variant="outline" onPress={courses.reload} />
+  ) : courses.total === 0 ? (
+    <AppText muted>{t('mycourses.empty.none')}</AppText>
+  ) : (
+    <View style={styles.gap}>
+      <AppText muted>{t('mycourses.empty.match')}</AppText>
+      <AppButton label={t('mycourses.clear')} variant="outline" onPress={courses.clearFilters} />
+    </View>
+  );
+
+  return (
+    <Screen inTabs>
+      <FlatList
+        data={courses.visible}
+        keyExtractor={(item) => item.course.id}
+        renderItem={({ item }) => (
+          <CourseCard item={item} onPress={(id) => router.push(`/course/${id}` as Href)} />
+        )}
+        ListHeaderComponent={header}
+        ListEmptyComponent={empty}
+        ListFooterComponent={<AppButton label={t('mycourses.add')} variant="outline" onPress={() => setAddOpen(true)} />}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      />
+
+      <CourseFilterSheet
+        visible={filterOpen}
+        filters={courses.filters}
+        onApply={(next) => courses.setFilters((prev) => ({ ...prev, ...next }))}
+        onClose={() => setFilterOpen(false)}
+      />
+      {profile ? <AddCoursesSheet visible={addOpen} profile={profile} onClose={() => setAddOpen(false)} /> : null}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: { gap: theme.spacing.md, paddingBottom: theme.spacing.md },
+  list: { paddingBottom: theme.spacing.lg },
+  separator: { height: theme.spacing.sm },
+  gap: { gap: theme.spacing.sm },
+});
