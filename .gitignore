@@ -1,9 +1,29 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
+build
 .next
-.expo
 .turbo
-.env
+
+# Expo / React Native
+.expo
 android
 ios
+
+# Environment
+.env
+.env.local
+
+# Logs
 *.log
+
+# OS
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/
