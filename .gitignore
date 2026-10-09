@@ -1,13 +1,12 @@
-# Dependencies
 node_modules
-
-# Build output
 dist
-build
 .next
+.expo
 .turbo
-
-# Expo / React Native
+.env
+android
+ios
+*.log
 .expo
 android
 ios
