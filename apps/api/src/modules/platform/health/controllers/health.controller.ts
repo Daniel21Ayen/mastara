@@ -6,11 +6,14 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
 
+import { Public } from "../../../../common/decorators/public.decorator";
+
 @ApiTags("Health")
 @Controller("health")
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
+  @Public()
   @Get()
   @ApiOperation({ summary: "Check system and database health" })
   @ApiResponse({ status: 200, description: "Service is healthy and database is connected" })
