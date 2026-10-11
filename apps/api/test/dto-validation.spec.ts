@@ -10,7 +10,8 @@ import { EditAccountDto } from "../src/modules/identity/students/dto/edit-accoun
 import { GetCoursesQueryDto } from "../src/modules/catalog/dto/get-courses-query.dto";
 import { RecordProgressDto } from "../src/modules/content/dto/record-progress.dto";
 import { GetQuizChaptersQueryDto } from "../src/modules/assessment/quizzes/dto/get-quiz-chapters-query.dto";
-import { DevicePlatform, Stream } from "@mastara/database";
+import { GetExamsQueryDto } from "../src/modules/assessment/exams/dto/get-exams-query.dto";
+import { DevicePlatform, ExamKind, Stream } from "@mastara/database";
 
 let passed = 0;
 let failed = 0;
@@ -307,6 +308,27 @@ async function runTests() {
   });
   const nonIntegerQuizNoErrors = await validate(nonIntegerQuizNo);
   assert(nonIntegerQuizNoErrors.some((e) => e.property === "quizNo"), "Rejects non-integer quizNo");
+
+  // ----------------------------------------------------
+  // Test GetExamsQueryDto (Exams)
+  // ----------------------------------------------------
+  console.log("\n10. GetExamsQueryDto Validation:");
+
+  const validExamQueryEmpty = plainToInstance(GetExamsQueryDto, {});
+  const validExamQueryEmptyErrors = await validate(validExamQueryEmpty);
+  assert(validExamQueryEmptyErrors.length === 0, "Accepts empty query (optional kind)", validExamQueryEmptyErrors);
+
+  const validExamQueryMid = plainToInstance(GetExamsQueryDto, {
+    kind: ExamKind.MID,
+  });
+  const validExamQueryMidErrors = await validate(validExamQueryMid);
+  assert(validExamQueryMidErrors.length === 0, "Accepts valid MID exam kind", validExamQueryMidErrors);
+
+  const invalidExamKind = plainToInstance(GetExamsQueryDto, {
+    kind: "POP_QUIZ" as any,
+  });
+  const invalidExamKindErrors = await validate(invalidExamKind);
+  assert(invalidExamKindErrors.some((e) => e.property === "kind"), "Rejects invalid exam kind enum");
 
   console.log(`\n========================================`);
   console.log(`Results: ${passed} passed, ${failed} failed.`);
