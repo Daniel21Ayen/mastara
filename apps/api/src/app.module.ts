@@ -6,6 +6,7 @@ import { DatabaseModule } from "./infrastructure/database/database.module";
 import { HealthModule } from "./modules/platform/health/health.module";
 import { AuthModule } from "./modules/identity/auth/auth.module";
 import { DevicesModule } from "./modules/identity/devices/devices.module";
+import { StudentsModule } from "./modules/identity/students/students.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
 
@@ -25,6 +26,7 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     HealthModule,
     AuthModule,
     DevicesModule,
+    StudentsModule,
   ],
   providers: [
     {
