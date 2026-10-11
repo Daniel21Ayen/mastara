@@ -6,6 +6,7 @@ import { LoginDto } from "../src/modules/identity/auth/dto/login.dto";
 import { RegisterDeviceDto } from "../src/modules/identity/devices/dto/register-device.dto";
 import { UpdateAcademicScopeDto, StudentStreamSelection } from "../src/modules/identity/students/dto/update-academic.dto";
 import { UpdateCoursesDto } from "../src/modules/identity/students/dto/update-courses.dto";
+import { EditAccountDto } from "../src/modules/identity/students/dto/edit-account.dto";
 import { DevicePlatform } from "@mastara/database";
 
 let passed = 0;
@@ -188,6 +189,37 @@ async function runTests() {
   });
   const coursesInvalidItemErrors = await validate(coursesInvalidItem);
   assert(coursesInvalidItemErrors.some((e) => e.property === "courseIds"), "Rejects array with invalid UUID");
+
+  // ----------------------------------------------------
+  // Test EditAccountDto
+  // ----------------------------------------------------
+  console.log("\n6. EditAccountDto Validation:");
+
+  const editValidPhone = plainToInstance(EditAccountDto, {
+    name: "Almaz Kebede",
+    identifier: "+251911223344",
+  });
+  const editValidPhoneErrors = await validate(editValidPhone);
+  assert(editValidPhoneErrors.length === 0, "Accepts valid name and Ethiopian phone", editValidPhoneErrors);
+
+  const editValidEmail = plainToInstance(EditAccountDto, {
+    name: "Almaz Kebede",
+    identifier: "almaz@mastara.edu.et",
+  });
+  const editValidEmailErrors = await validate(editValidEmail);
+  assert(editValidEmailErrors.length === 0, "Accepts valid name and email", editValidEmailErrors);
+
+  const editShortName = plainToInstance(EditAccountDto, {
+    name: "A",
+  });
+  const editShortNameErrors = await validate(editShortName);
+  assert(editShortNameErrors.some((e) => e.property === "name"), "Rejects name shorter than 2 characters");
+
+  const editInvalidId = plainToInstance(EditAccountDto, {
+    identifier: "invalid_phone_or_email",
+  });
+  const editInvalidIdErrors = await validate(editInvalidId);
+  assert(editInvalidIdErrors.some((e) => e.property === "identifier"), "Rejects invalid identifier format");
 
   console.log(`\n========================================`);
   console.log(`Results: ${passed} passed, ${failed} failed.`);
