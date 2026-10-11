@@ -7,6 +7,9 @@ import { HealthModule } from "./modules/platform/health/health.module";
 import { AuthModule } from "./modules/identity/auth/auth.module";
 import { DevicesModule } from "./modules/identity/devices/devices.module";
 import { StudentsModule } from "./modules/identity/students/students.module";
+import { CatalogModule } from "./modules/catalog/catalog.module";
+import { ContentModule } from "./modules/content/content.module";
+import { LearningModule } from "./modules/learning/learning.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
 
@@ -27,6 +30,9 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     AuthModule,
     DevicesModule,
     StudentsModule,
+    CatalogModule,
+    ContentModule,
+    LearningModule,
   ],
   providers: [
     {

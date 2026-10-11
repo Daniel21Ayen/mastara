@@ -7,7 +7,9 @@ import { RegisterDeviceDto } from "../src/modules/identity/devices/dto/register-
 import { UpdateAcademicScopeDto, StudentStreamSelection } from "../src/modules/identity/students/dto/update-academic.dto";
 import { UpdateCoursesDto } from "../src/modules/identity/students/dto/update-courses.dto";
 import { EditAccountDto } from "../src/modules/identity/students/dto/edit-account.dto";
-import { DevicePlatform } from "@mastara/database";
+import { GetCoursesQueryDto } from "../src/modules/catalog/dto/get-courses-query.dto";
+import { RecordProgressDto } from "../src/modules/content/dto/record-progress.dto";
+import { DevicePlatform, Stream } from "@mastara/database";
 
 let passed = 0;
 let failed = 0;
@@ -220,6 +222,61 @@ async function runTests() {
   });
   const editInvalidIdErrors = await validate(editInvalidId);
   assert(editInvalidIdErrors.some((e) => e.property === "identifier"), "Rejects invalid identifier format");
+
+  // ----------------------------------------------------
+  // Test GetCoursesQueryDto (Catalog)
+  // ----------------------------------------------------
+  console.log("\n7. GetCoursesQueryDto Validation:");
+
+  const validCatalogQuery = plainToInstance(GetCoursesQueryDto, {
+    semesterId: "b3010000-0000-0000-0000-000000000001",
+    stream: Stream.NATURAL,
+  });
+  const validCatalogQueryErrors = await validate(validCatalogQuery);
+  assert(validCatalogQueryErrors.length === 0, "Accepts valid semester UUID and NATURAL stream", validCatalogQueryErrors);
+
+  const missingSemesterQuery = plainToInstance(GetCoursesQueryDto, {
+    stream: Stream.SOCIAL,
+  });
+  const missingSemesterErrors = await validate(missingSemesterQuery);
+  assert(missingSemesterErrors.some((e) => e.property === "semesterId"), "Rejects missing semesterId");
+
+  const invalidSemesterUUIDQuery = plainToInstance(GetCoursesQueryDto, {
+    semesterId: "invalid-uuid-12345",
+  });
+  const invalidSemesterUUIDErrors = await validate(invalidSemesterUUIDQuery);
+  assert(invalidSemesterUUIDErrors.some((e) => e.property === "semesterId"), "Rejects malformed semesterId UUID");
+
+  const invalidStreamQuery = plainToInstance(GetCoursesQueryDto, {
+    semesterId: "b3010000-0000-0000-0000-000000000001",
+    stream: "INVALID_STREAM_SELECTION",
+  });
+  const invalidStreamErrors = await validate(invalidStreamQuery);
+  assert(invalidStreamErrors.some((e) => e.property === "stream"), "Rejects invalid stream enum value");
+
+  // ----------------------------------------------------
+  // Test RecordProgressDto (Content)
+  // ----------------------------------------------------
+  console.log("\n8. RecordProgressDto Validation:");
+
+  const validProgress = plainToInstance(RecordProgressDto, {
+    scrollPosition: 0.85,
+    isCompleted: true,
+  });
+  const validProgressErrors = await validate(validProgress);
+  assert(validProgressErrors.length === 0, "Accepts valid scrollPosition and isCompleted boolean", validProgressErrors);
+
+  const negativeScroll = plainToInstance(RecordProgressDto, {
+    scrollPosition: -0.5,
+  });
+  const negativeScrollErrors = await validate(negativeScroll);
+  assert(negativeScrollErrors.some((e) => e.property === "scrollPosition"), "Rejects negative scrollPosition");
+
+  const invalidBool = plainToInstance(RecordProgressDto, {
+    isCompleted: "not-a-bool" as any,
+  });
+  const invalidBoolErrors = await validate(invalidBool);
+  assert(invalidBoolErrors.some((e) => e.property === "isCompleted"), "Rejects non-boolean isCompleted");
 
   console.log(`\n========================================`);
   console.log(`Results: ${passed} passed, ${failed} failed.`);
