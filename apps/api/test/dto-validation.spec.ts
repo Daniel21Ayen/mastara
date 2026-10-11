@@ -9,6 +9,7 @@ import { UpdateCoursesDto } from "../src/modules/identity/students/dto/update-co
 import { EditAccountDto } from "../src/modules/identity/students/dto/edit-account.dto";
 import { GetCoursesQueryDto } from "../src/modules/catalog/dto/get-courses-query.dto";
 import { RecordProgressDto } from "../src/modules/content/dto/record-progress.dto";
+import { GetQuizChaptersQueryDto } from "../src/modules/assessment/quizzes/dto/get-quiz-chapters-query.dto";
 import { DevicePlatform, Stream } from "@mastara/database";
 
 let passed = 0;
@@ -277,6 +278,35 @@ async function runTests() {
   });
   const invalidBoolErrors = await validate(invalidBool);
   assert(invalidBoolErrors.some((e) => e.property === "isCompleted"), "Rejects non-boolean isCompleted");
+
+  // ----------------------------------------------------
+  // Test GetQuizChaptersQueryDto (Quizzes)
+  // ----------------------------------------------------
+  console.log("\n9. GetQuizChaptersQueryDto Validation:");
+
+  const validQuizQuery = plainToInstance(GetQuizChaptersQueryDto, {
+    quizNo: 1,
+  });
+  const validQuizQueryErrors = await validate(validQuizQuery);
+  assert(validQuizQueryErrors.length === 0, "Accepts valid quiz number (1)", validQuizQueryErrors);
+
+  const validQuizQuery3 = plainToInstance(GetQuizChaptersQueryDto, {
+    quizNo: 3,
+  });
+  const validQuizQuery3Errors = await validate(validQuizQuery3);
+  assert(validQuizQuery3Errors.length === 0, "Accepts valid quiz number (3)", validQuizQuery3Errors);
+
+  const invalidQuizNo = plainToInstance(GetQuizChaptersQueryDto, {
+    quizNo: 4,
+  });
+  const invalidQuizNoErrors = await validate(invalidQuizNo);
+  assert(invalidQuizNoErrors.some((e) => e.property === "quizNo"), "Rejects invalid quiz number out of range (4)");
+
+  const nonIntegerQuizNo = plainToInstance(GetQuizChaptersQueryDto, {
+    quizNo: "not-a-number" as any,
+  });
+  const nonIntegerQuizNoErrors = await validate(nonIntegerQuizNo);
+  assert(nonIntegerQuizNoErrors.some((e) => e.property === "quizNo"), "Rejects non-integer quizNo");
 
   console.log(`\n========================================`);
   console.log(`Results: ${passed} passed, ${failed} failed.`);
