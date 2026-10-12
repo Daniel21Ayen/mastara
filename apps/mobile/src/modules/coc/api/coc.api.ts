@@ -1,10 +1,8 @@
 // apps/mobile/src/modules/coc/api/coc.api.ts
 import type { CocSet, Question } from '@mastara/contracts';
 
-import { env } from '@/core/config/env';
 import { cacheReads } from '@/core/db';
-import { buildCocQuestions, buildCocSets, courseTitles } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
+import { httpClient } from '@/core/network';
 
 export interface CocSession {
   set: CocSet;
@@ -19,23 +17,14 @@ export interface CocApi {
   getSession(setId: string, courseIds: readonly string[]): Promise<CocSession | null>;
 }
 
-const mockCocApi: CocApi = {
-  async getSets(courseIds) {
-    await simulateLatency(150);
-    return buildCocSets(courseIds);
+const realCocApi: CocApi = {
+  async getSets(_courseIds) {
+    return httpClient.get<CocSet[]>('/assessment/coc/sets');
   },
-  async getSession(setId, courseIds) {
-    await simulateLatency(150);
-    const set = buildCocSets(courseIds).find((item) => item.id === setId);
-    if (!set) return null;
-    return { set, questions: buildCocQuestions(setId, courseIds), courseTitles: courseTitles(courseIds) };
+  async getSession(setId, _courseIds) {
+    return httpClient.get<CocSession>(`/assessment/coc/sets/${setId}/session`);
   },
 };
 
-function createCocApi(): CocApi {
-  if (env.useMocks) return mockCocApi;
-  throw new Error('The real COC API is added in the backend integration phase.');
-}
-
 /** Reads are saved on the phone and used when it is offline; writes always need the server. */
-export const cocApi = cacheReads('coc', createCocApi(), ['getSets', 'getSession']);
+export const cocApi = cacheReads('coc', realCocApi, ['getSets', 'getSession']);

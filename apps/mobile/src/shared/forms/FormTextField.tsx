@@ -23,7 +23,7 @@ export function FormTextField<V extends Record<string, string>>({
   return (
     <TextField
       {...rest}
-      value={form.values[name]}
+      value={form.values[name] ?? ''}
       onChangeText={(text) => form.setValue(name, text as V[typeof name])}
       error={te(form.errors[name])}
     />

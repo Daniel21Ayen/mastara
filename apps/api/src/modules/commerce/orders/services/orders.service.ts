@@ -10,6 +10,7 @@ import { PrismaService } from "../../../../infrastructure/database/prisma.servic
 import {
   EntitlementStatus,
   OrderStatus,
+  PaymentMethod,
   ProductType,
   ProofStatus,
   PublicationStatus,
@@ -35,6 +36,10 @@ export interface OrderResponse {
   items: OrderItemBrief[];
   createdAt: Date;
   updatedAt: Date;
+  method?: PaymentMethod;
+  reference?: string;
+  durationDays?: number;
+  rejectReason?: string;
 }
 
 @Injectable()
@@ -151,6 +156,8 @@ export class OrdersService {
           },
         },
         include: {
+          proof: true,
+          product: true,
           items: {
             include: {
               course: {
@@ -183,6 +190,8 @@ export class OrdersService {
         ...(query.status ? { status: query.status } : {}),
       },
       include: {
+        proof: true,
+        product: true,
         items: {
           include: {
             course: {
@@ -207,6 +216,8 @@ export class OrdersService {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: {
+        proof: true,
+        product: true,
         items: {
           include: {
             course: {
@@ -262,7 +273,7 @@ export class OrdersService {
   private _mapOrder(order: any): OrderResponse {
     return {
       id: order.id,
-      type: order.product?.type ?? (order.items?.[0] ? "SINGLE" : "SINGLE"),
+      type: order.product?.type ?? "SINGLE",
       stream: order.stream,
       quotedAmount: Number(order.quoted_amount),
       status: order.status,
@@ -277,6 +288,10 @@ export class OrdersService {
       })),
       createdAt: order.created_at,
       updatedAt: order.updated_at,
+      method: order.proof?.method,
+      reference: order.proof?.transaction_reference,
+      durationDays: order.product?.duration_days,
+      rejectReason: order.proof?.reject_reason ?? undefined,
     };
   }
 }

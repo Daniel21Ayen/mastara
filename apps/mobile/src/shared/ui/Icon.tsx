@@ -35,7 +35,7 @@ export type IconName = keyof typeof ICONS;
 interface IconProps {
   name: IconName;
   size?: number;
-  color?: string;
+  color?: ComponentProps<typeof Ionicons>['color'];
 }
 
 export function Icon({ name, size = 20, color = theme.colors.text }: IconProps) {
