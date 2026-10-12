@@ -9,10 +9,12 @@ function getApiUrl(): string {
   if (hostUri) {
     const host = hostUri.split(':')[0];
     if (host && host !== 'localhost' && host !== '127.0.0.1') {
-      return `http://${host}:4001/api/v1`;
+      if (!host.includes('exp.direct') && !host.includes('ngrok')) {
+        return `http://${host}:4001/api/v1`;
+      }
     }
   }
-  return 'http://localhost:4001/api/v1';
+  return 'http://172.16.133.191:4001/api/v1';
 }
 
 export const env = {
