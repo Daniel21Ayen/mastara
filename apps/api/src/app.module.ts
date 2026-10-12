@@ -11,6 +11,7 @@ import { CatalogModule } from "./modules/catalog/catalog.module";
 import { ContentModule } from "./modules/content/content.module";
 import { LearningModule } from "./modules/learning/learning.module";
 import { AssessmentModule } from "./modules/assessment/assessment.module";
+import { CommerceModule } from "./modules/commerce/commerce.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
 
@@ -35,6 +36,7 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     ContentModule,
     LearningModule,
     AssessmentModule,
+    CommerceModule,
   ],
   providers: [
     {
