@@ -1,21 +1,10 @@
 // apps/mobile/src/modules/store/api/store.api.ts
 import type { Course, CreateOrderInput, Order } from '@mastara/contracts';
-import { canBuyCourse, ERROR_CODES, MAX_RECEIPT_BYTES, quoteOrder } from '@mastara/domain';
+import { ERROR_CODES, MAX_RECEIPT_BYTES } from '@mastara/domain';
 import type { AccessState, OrderStream, PaymentMethod, PricingConfig, StudentStream } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
 import { cacheReads } from '@/core/db';
-import { ApiError } from '@/core/network';
-import {
-  accessFor,
-  ADMIN_ACCOUNTS,
-  addOrder,
-  courses,
-  isReferenceUsed,
-  listOrders,
-  MOCK_PRICING,
-} from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
+import { ApiError, httpClient } from '@/core/network';
 
 export interface BuyableCourse {
   course: Course;
@@ -39,73 +28,60 @@ export interface StoreApi {
   getOrders(userId: string): Promise<Order[]>;
 }
 
-function inStream(course: Course, stream: OrderStream): boolean {
-  return stream === 'BOTH' || course.stream === 'COMMON' || course.stream === stream;
+function mapToMobileOrder(res: any, fallbackInput?: CreateOrderInput): Order {
+  return {
+    id: res.id,
+    type: res.type ?? fallbackInput?.type ?? 'SINGLE',
+    stream: res.stream ?? fallbackInput?.stream ?? 'NATURAL',
+    courseIds: res.items?.map((it: any) => it.courseId) ?? fallbackInput?.courseIds ?? [],
+    method: res.method ?? fallbackInput?.method ?? 'CBE_MOBILE',
+    reference: res.reference ?? fallbackInput?.reference ?? '',
+    amount: res.quotedAmount ?? 0,
+    status: res.status ?? 'PENDING',
+    rejectReason: res.rejectReason,
+    createdAt:
+      typeof res.createdAt === 'string'
+        ? res.createdAt
+        : new Date(res.createdAt ?? Date.now()).toISOString(),
+    durationDays: res.durationDays ?? 150,
+  };
 }
 
-function fullPackageCourses(programId: string, stream: OrderStream): Course[] {
-  return courses.filter((course) => course.semesterId.startsWith(`${programId}-s`) && inStream(course, stream));
-}
-
-const mockStoreApi: StoreApi = {
+const realStoreApi: StoreApi = {
   async getPricing() {
-    await simulateLatency(100);
-    return MOCK_PRICING;
+    return httpClient.get<PricingConfig>('/commerce/pricing');
   },
   async getAccounts() {
-    await simulateLatency(100);
-    return ADMIN_ACCOUNTS;
+    return httpClient.get<Record<PaymentMethod, string>>('/commerce/accounts');
   },
   async getBuyableCourses(semesterId, stream) {
-    await simulateLatency(150);
-    return courses
-      .filter((course) => course.semesterId === semesterId && inStream(course, stream))
-      .map((course) => {
-        const { access, daysLeft } = accessFor(course.id);
-        return { course, access, daysLeft, buyable: canBuyCourse(access, daysLeft) };
-      });
+    return httpClient.get<BuyableCourse[]>(
+      `/commerce/courses/buyable?semesterId=${semesterId}&stream=${stream}`,
+    );
   },
   async getFullPackageCourses(programId, stream) {
-    await simulateLatency(100);
-    return fullPackageCourses(programId, stream);
-  },
-  async createOrder(userId, input, receiptBytes) {
-    await simulateLatency(400);
-
-    if (receiptBytes > MAX_RECEIPT_BYTES) throw new ApiError(ERROR_CODES.RECEIPT_TOO_LARGE);
-    if (isReferenceUsed(input.reference)) throw new ApiError(ERROR_CODES.TRANSACTION_REFERENCE_DUPLICATE);
-
-    const isFull = input.type === 'FULL_STREAM' || input.type === 'FULL_BOTH';
-    const covered = isFull ? fullPackageCourses(input.programId ?? '', input.stream).map((course) => course.id) : input.courseIds;
-
-    const quote = quoteOrder(
-      MOCK_PRICING,
-      input.type === 'BUNDLE' ? { type: 'BUNDLE', courseCount: covered.length } : { type: input.type },
+    return httpClient.get<Course[]>(
+      `/commerce/courses/full-package?programId=${programId}&stream=${stream}`,
     );
-    if (!quote.ok || (input.type === 'SINGLE' && covered.length !== 1)) {
-      throw new ApiError(ERROR_CODES.BUNDLE_COUNT_INVALID);
-    }
-
-    return addOrder(userId, {
-      type: input.type,
-      stream: input.stream,
-      courseIds: covered,
-      method: input.method,
-      reference: input.reference.trim(),
-      amount: quote.quote.total,
-      durationDays: MOCK_PRICING.durationDays[input.type],
-    });
   },
-  async getOrders(userId) {
-    await simulateLatency(100);
-    return listOrders(userId);
+  async createOrder(_userId, input, receiptBytes) {
+    if (receiptBytes > MAX_RECEIPT_BYTES) {
+      throw new ApiError(ERROR_CODES.RECEIPT_TOO_LARGE);
+    }
+    const res = await httpClient.post<any>('/commerce/orders', input);
+    return mapToMobileOrder(res, input);
+  },
+  async getOrders(_userId) {
+    const list = await httpClient.get<any[]>('/commerce/orders');
+    return list.map((res) => mapToMobileOrder(res));
   },
 };
 
-function createStoreApi(): StoreApi {
-  if (env.useMocks) return mockStoreApi;
-  throw new Error('The real store API is added in the backend integration phase.');
-}
-
 /** Reads are saved on the phone and used when it is offline; writes always need the server. */
-export const storeApi = cacheReads('store', createStoreApi(), ['getPricing', 'getAccounts', 'getBuyableCourses', 'getFullPackageCourses', 'getOrders']);
+export const storeApi = cacheReads('store', realStoreApi, [
+  'getPricing',
+  'getAccounts',
+  'getBuyableCourses',
+  'getFullPackageCourses',
+  'getOrders',
+]);

@@ -39,7 +39,7 @@ export function BottomSheet({ visible, title, onClose, children, scroll = false 
 
 const styles = StyleSheet.create({
   modal: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.colors.overlay },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: theme.colors.overlay },
   sheet: {
     maxHeight: '85%',
     backgroundColor: theme.colors.surface,

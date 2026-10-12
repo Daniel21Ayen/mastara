@@ -8,7 +8,7 @@ export interface SchemaLike<Output> {
     | { success: false; error: { issues: ReadonlyArray<{ path: PropertyKey[]; message: string }> } };
 }
 
-type FieldValues = Record<string, string>;
+type FieldValues = object;
 type FieldErrors<V extends FieldValues> = Partial<Record<keyof V, string>>;
 
 export interface FormApi<V extends FieldValues, Output> {
