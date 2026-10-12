@@ -11,7 +11,12 @@ import { GetCoursesQueryDto } from "../src/modules/catalog/dto/get-courses-query
 import { RecordProgressDto } from "../src/modules/content/dto/record-progress.dto";
 import { GetQuizChaptersQueryDto } from "../src/modules/assessment/quizzes/dto/get-quiz-chapters-query.dto";
 import { GetExamsQueryDto } from "../src/modules/assessment/exams/dto/get-exams-query.dto";
-import { DevicePlatform, ExamKind, Stream } from "@mastara/database";
+import {
+  StartAttemptDto,
+  SubmitAttemptDto,
+  GetAttemptsQueryDto,
+} from "../src/modules/assessment/attempts/dto";
+import { AttemptCategory, DevicePlatform, ExamKind, Stream } from "@mastara/database";
 
 let passed = 0;
 let failed = 0;
@@ -329,6 +334,75 @@ async function runTests() {
   });
   const invalidExamKindErrors = await validate(invalidExamKind);
   assert(invalidExamKindErrors.some((e) => e.property === "kind"), "Rejects invalid exam kind enum");
+
+  // ----------------------------------------------------
+  // Test StartAttemptDto (Assessment Attempts)
+  // ----------------------------------------------------
+  console.log("\n11. StartAttemptDto Validation:");
+
+  const validStartExam = plainToInstance(StartAttemptDto, {
+    category: AttemptCategory.EXAM,
+    examId: "a0000000-0000-4000-8000-000000000001",
+  });
+  const validStartExamErrors = await validate(validStartExam);
+  assert(validStartExamErrors.length === 0, "Accepts valid EXAM attempt start payload", validStartExamErrors);
+
+  const invalidCategoryStart = plainToInstance(StartAttemptDto, {
+    category: "INVALID_CAT" as any,
+  });
+  const invalidCategoryStartErrors = await validate(invalidCategoryStart);
+  assert(invalidCategoryStartErrors.some((e) => e.property === "category"), "Rejects invalid attempt category enum");
+
+  const invalidUuidStart = plainToInstance(StartAttemptDto, {
+    category: AttemptCategory.EXAM,
+    examId: "not-a-uuid",
+  });
+  const invalidUuidStartErrors = await validate(invalidUuidStart);
+  assert(invalidUuidStartErrors.some((e) => e.property === "examId"), "Rejects non-UUID examId");
+
+  // ----------------------------------------------------
+  // Test SubmitAttemptDto (Assessment Attempts)
+  // ----------------------------------------------------
+  console.log("\n12. SubmitAttemptDto Validation:");
+
+  const validSubmit = plainToInstance(SubmitAttemptDto, {
+    answers: [
+      {
+        questionId: "b0000000-0000-4000-8000-000000000001",
+        selectedAnswers: ["opt-1", "opt-2"],
+        isFlagged: false,
+        clientTimestamp: "2026-10-12T14:30:00.000Z",
+      },
+    ],
+    elapsedMs: 120000,
+  });
+  const validSubmitErrors = await validate(validSubmit);
+  assert(validSubmitErrors.length === 0, "Accepts valid attempt submission payload", validSubmitErrors);
+
+  const invalidAnswersNonArray = plainToInstance(SubmitAttemptDto, {
+    answers: "not-an-array" as any,
+  });
+  const invalidAnswersNonArrayErrors = await validate(invalidAnswersNonArray);
+  assert(invalidAnswersNonArrayErrors.some((e) => e.property === "answers"), "Rejects non-array answers payload");
+
+  // ----------------------------------------------------
+  // Test GetAttemptsQueryDto (Assessment Attempts)
+  // ----------------------------------------------------
+  console.log("\n13. GetAttemptsQueryDto Validation:");
+
+  const validAttemptsQuery = plainToInstance(GetAttemptsQueryDto, {
+    category: AttemptCategory.EXAM,
+    page: 2,
+    limit: 20,
+  });
+  const validAttemptsQueryErrors = await validate(validAttemptsQuery);
+  assert(validAttemptsQueryErrors.length === 0, "Accepts valid attempts query with pagination", validAttemptsQueryErrors);
+
+  const invalidAttemptsLimit = plainToInstance(GetAttemptsQueryDto, {
+    limit: 100, // max is 50
+  });
+  const invalidAttemptsLimitErrors = await validate(invalidAttemptsLimit);
+  assert(invalidAttemptsLimitErrors.some((e) => e.property === "limit"), "Rejects attempts limit > 50");
 
   console.log(`\n========================================`);
   console.log(`Results: ${passed} passed, ${failed} failed.`);
