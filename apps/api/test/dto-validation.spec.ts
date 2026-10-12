@@ -16,7 +16,12 @@ import {
   SubmitAttemptDto,
   GetAttemptsQueryDto,
 } from "../src/modules/assessment/attempts/dto";
-import { AttemptCategory, DevicePlatform, ExamKind, Stream } from "@mastara/database";
+import {
+  QuoteOrderDto,
+  GetBuyableCoursesQueryDto,
+  GetFullPackageQueryDto,
+} from "../src/modules/commerce/pricing/dto";
+import { AttemptCategory, DevicePlatform, ExamKind, ProductType, Stream } from "@mastara/database";
 
 let passed = 0;
 let failed = 0;
@@ -403,6 +408,76 @@ async function runTests() {
   });
   const invalidAttemptsLimitErrors = await validate(invalidAttemptsLimit);
   assert(invalidAttemptsLimitErrors.some((e) => e.property === "limit"), "Rejects attempts limit > 50");
+
+  // ----------------------------------------------------
+  // Test QuoteOrderDto (Commerce Pricing)
+  // ----------------------------------------------------
+  console.log("\n14. QuoteOrderDto Validation:");
+
+  const validQuoteBundle = plainToInstance(QuoteOrderDto, {
+    type: ProductType.BUNDLE,
+    courseCount: 8,
+  });
+  const validQuoteBundleErrors = await validate(validQuoteBundle);
+  assert(validQuoteBundleErrors.length === 0, "Accepts valid BUNDLE quote payload", validQuoteBundleErrors);
+
+  const invalidQuoteType = plainToInstance(QuoteOrderDto, {
+    type: "INVALID_PROD" as any,
+  });
+  const invalidQuoteTypeErrors = await validate(invalidQuoteType);
+  assert(invalidQuoteTypeErrors.some((e) => e.property === "type"), "Rejects invalid product type enum");
+
+  const invalidCourseCount = plainToInstance(QuoteOrderDto, {
+    type: ProductType.BUNDLE,
+    courseCount: -1,
+  });
+  const invalidCourseCountErrors = await validate(invalidCourseCount);
+  assert(invalidCourseCountErrors.some((e) => e.property === "courseCount"), "Rejects negative courseCount");
+
+  // ----------------------------------------------------
+  // Test GetBuyableCoursesQueryDto (Commerce Pricing)
+  // ----------------------------------------------------
+  console.log("\n15. GetBuyableCoursesQueryDto Validation:");
+
+  const validBuyableQuery = plainToInstance(GetBuyableCoursesQueryDto, {
+    semesterId: "b3010000-0000-4000-8000-000000000001",
+    stream: Stream.NATURAL,
+  });
+  const validBuyableQueryErrors = await validate(validBuyableQuery);
+  assert(validBuyableQueryErrors.length === 0, "Accepts valid buyable courses query", validBuyableQueryErrors);
+
+  const invalidSemesterId = plainToInstance(GetBuyableCoursesQueryDto, {
+    semesterId: "not-a-uuid",
+    stream: Stream.NATURAL,
+  });
+  const invalidSemesterIdErrors = await validate(invalidSemesterId);
+  assert(invalidSemesterIdErrors.some((e) => e.property === "semesterId"), "Rejects malformed semesterId");
+
+  const invalidBuyableStream = plainToInstance(GetBuyableCoursesQueryDto, {
+    semesterId: "b3010000-0000-4000-8000-000000000001",
+    stream: "ARTS" as any,
+  });
+  const invalidBuyableStreamErrors = await validate(invalidBuyableStream);
+  assert(invalidBuyableStreamErrors.some((e) => e.property === "stream"), "Rejects invalid stream enum");
+
+  // ----------------------------------------------------
+  // Test GetFullPackageQueryDto (Commerce Pricing)
+  // ----------------------------------------------------
+  console.log("\n16. GetFullPackageQueryDto Validation:");
+
+  const validFullPkgQuery = plainToInstance(GetFullPackageQueryDto, {
+    programId: "b2010000-0000-4000-8000-000000000001",
+    stream: Stream.SOCIAL,
+  });
+  const validFullPkgQueryErrors = await validate(validFullPkgQuery);
+  assert(validFullPkgQueryErrors.length === 0, "Accepts valid full package query", validFullPkgQueryErrors);
+
+  const invalidProgramId = plainToInstance(GetFullPackageQueryDto, {
+    programId: "bad-uuid",
+    stream: Stream.SOCIAL,
+  });
+  const invalidProgramIdErrors = await validate(invalidProgramId);
+  assert(invalidProgramIdErrors.some((e) => e.property === "programId"), "Rejects malformed programId");
 
   console.log(`\n========================================`);
   console.log(`Results: ${passed} passed, ${failed} failed.`);
