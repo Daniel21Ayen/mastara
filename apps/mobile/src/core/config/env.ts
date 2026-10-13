@@ -5,14 +5,18 @@ function getApiUrl(): string {
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
-  const hostUri = Constants.expoConfig?.hostUri;
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    (Constants as Record<string, any>).manifest?.debuggerHost ??
+    (Constants as Record<string, any>).manifest2?.extra?.expoClient?.hostUri;
+
   if (hostUri) {
     const host = hostUri.split(':')[0];
-    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+    if (host && host !== 'localhost' && host !== '127.0.0.1' && !host.includes('exp.direct') && !host.includes('ngrok')) {
       return `http://${host}:4001/api/v1`;
     }
   }
-  return 'http://localhost:4001/api/v1';
+  return 'http://192.168.73.116:4001/api/v1';
 }
 
 export const env = {
