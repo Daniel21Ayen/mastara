@@ -14,6 +14,8 @@ export type PracticeAction =
   | { type: 'answer'; questionId: string; answer: Answer }
   | { type: 'check'; questionId: string; correct: boolean }
   | { type: 'move'; delta: 1 | -1; total: number }
+  /** The question now on screen while the student scrolls. Same question again is not a change. */
+  | { type: 'goto'; index: number; total: number }
   | { type: 'finish' }
   | { type: 'restart' };
 
@@ -32,6 +34,10 @@ export function practiceReducer(state: PracticeState, action: PracticeAction): P
       return { ...state, results: { ...state.results, [action.questionId]: action.correct } };
     case 'move':
       return { ...state, index: Math.max(0, Math.min(action.total - 1, state.index + action.delta)) };
+    case 'goto': {
+      const index = Math.max(0, Math.min(action.total - 1, action.index));
+      return index === state.index ? state : { ...state, index };
+    }
     case 'finish':
       return { ...state, finished: true };
     case 'restart':

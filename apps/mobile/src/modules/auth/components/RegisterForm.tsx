@@ -2,7 +2,7 @@
 import { registerSchema } from '@mastara/contracts';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { FormTextField } from '@/shared/forms';
 import { useForm } from '@/shared/hooks';
 import { AppButton, AppText } from '@/shared/ui';
@@ -10,6 +10,7 @@ import { AppButton, AppText } from '@/shared/ui';
 import { useAuth } from '../hooks/useAuth';
 
 export function RegisterForm() {
+  const theme = useTheme();
   const { t } = useI18n();
   const { register, loading, error } = useAuth();
   const form = useForm(registerSchema, { name: '', identifier: '', password: '' });

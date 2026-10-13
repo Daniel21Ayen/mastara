@@ -32,7 +32,8 @@ const network = createMyCoursesApi();
 
 /**
  * Online: fresh data, saved on the phone. Offline: the saved data, but paid access is only trusted for a limited
- * grace period and until its saved expiry (see `offlineAccess` in the domain package).
+ * grace period and until its exact saved expiry, judged with a clock a date change cannot move back (see
+ * `offlineAccess` and `trustedNowMs` in the domain package).
  */
 export const myCoursesApi: MyCoursesApi = {
   getMyCourses: (courseIds) =>
@@ -40,9 +41,17 @@ export const myCoursesApi: MyCoursesApi = {
       `my-courses.${courseIds.join(',')}`,
       () => network.getMyCourses(courseIds),
       (saved, cachedAtMs, nowMs) =>
-        saved.map((item) => ({
-          ...item,
-          ...offlineAccess({ access: item.access, daysLeft: item.daysLeft, cachedAtMs }, nowMs),
+        saved.map(({ daysLeft, expiresAt, ...rest }) => ({
+          ...rest,
+          ...offlineAccess(
+            {
+              access: rest.access,
+              expiresAtMs: expiresAt ? Date.parse(expiresAt) : undefined,
+              daysLeft,
+              cachedAtMs,
+            },
+            nowMs,
+          ),
         })),
     ),
 };

@@ -29,18 +29,44 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
   }
 }
 
+const DB_NAME = 'mastara.db';
+
 async function open(): Promise<SQLite.SQLiteDatabase> {
-  const db = await SQLite.openDatabaseAsync('mastara.db');
-  if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);
-  await db.execAsync('PRAGMA journal_mode = WAL;');
-  await migrate(db);
-  return db;
+  const db = await SQLite.openDatabaseAsync(DB_NAME);
+  try {
+    if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);
+    await db.execAsync('PRAGMA journal_mode = WAL;');
+    await migrate(db);
+    return db;
+  } catch (error) {
+    await db.closeAsync().catch(() => undefined); // do not leave a half-open connection behind
+    throw error;
+  }
 }
 
 let opening: Promise<SQLite.SQLiteDatabase> | null = null;
 
-/** The one shared database connection, opened and upgraded on first use. */
+/**
+ * The one shared database connection, opened and upgraded on first use.
+ * A failed open is NOT remembered: the next call tries again (before, one failure broke the app until it restarted).
+ */
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
-  opening ??= open();
+  opening ??= open().catch((error: unknown) => {
+    opening = null;
+    throw error;
+  });
   return opening;
+}
+
+/**
+ * Last resort when the database cannot be opened (for example the encryption key was lost after a reinstall).
+ * Deletes the file; changes not yet sent to the server are lost. The caller must ask the student first.
+ */
+export async function resetDatabase(): Promise<void> {
+  if (opening) {
+    const current = await opening.catch(() => null);
+    await current?.closeAsync().catch(() => undefined);
+  }
+  opening = null;
+  await SQLite.deleteDatabaseAsync(DB_NAME);
 }

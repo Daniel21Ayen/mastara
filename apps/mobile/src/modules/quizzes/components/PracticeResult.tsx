@@ -1,8 +1,8 @@
 // apps/mobile/src/modules/quizzes/components/PracticeResult.tsx
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Card, ProgressBar } from '@/shared/ui';
 
 interface PracticeResultProps {
@@ -13,6 +13,8 @@ interface PracticeResultProps {
 }
 
 export function PracticeResult({ correct, total, onAgain, onBack }: PracticeResultProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
 
@@ -34,6 +36,6 @@ export function PracticeResult({ correct, total, onAgain, onBack }: PracticeResu
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.md },
-});
+}));

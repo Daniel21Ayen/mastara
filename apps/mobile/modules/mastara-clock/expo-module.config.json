@@ -1,0 +1,5 @@
+{
+  "platforms": ["android", "ios"],
+  "android": { "modules": ["expo.modules.mastaraclock.MastaraClockModule"] },
+  "ios": { "modules": ["MastaraClockModule"] }
+}

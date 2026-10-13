@@ -3,7 +3,7 @@ import type { Topic } from '@mastara/contracts';
 import type { ContentKind } from '@mastara/domain';
 
 import { env } from '@/core/config/env';
-import { cacheReads } from '@/core/db';
+import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
 import { buildTopics, courses, findTopic } from '@/core/mock/data';
 import { simulateLatency } from '@/core/mock/delay';
 
@@ -30,5 +30,20 @@ function createContentApi(): ContentApi {
   throw new Error('The real content API is added in the backend integration phase.');
 }
 
-/** Reads are saved on the phone and used when it is offline; writes always need the server. */
-export const contentApi = cacheReads('content', createContentApi(), ['getTopics', 'getTopic']);
+/** The server, with no download rules. Used to download a lesson. */
+export const contentRemote = createContentApi();
+
+/**
+ * Online first. A lesson opens offline only if the student downloaded it. Offline, the lesson lists show what was downloaded.
+ */
+export const contentApi = gatewayReads('content', contentRemote, {
+  details: ['getTopic'],
+  lists: {
+    getTopics: async (courseId: string, kind: ContentKind) => {
+      const saved = await downloadStore.listByKind<Topic>('TOPIC', courseId);
+      return saved.map((item) => item.meta).filter((topic) => topic.kind === kind).sort((a, b) => a.number - b.number);
+    },
+  },
+});
+
+export const topicKey = (topicId: string): string => contentKey('content', 'getTopic', [topicId]);

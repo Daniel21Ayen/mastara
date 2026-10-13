@@ -1,10 +1,10 @@
 // apps/mobile/src/modules/my-courses/components/CourseCard.tsx
 import type { MyCourse } from '@mastara/contracts';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
-import { AppText, Badge, Icon, ProgressBar } from '@/shared/ui';
+import { accentForKey, createStyles, useTheme } from '@/core/theme';
+import { AppText, Badge, Icon, LetterTile, ProgressBar } from '@/shared/ui';
 
 import { percentOf } from '../lib/filterCourses';
 
@@ -14,8 +14,11 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ item, onPress }: CourseCardProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const percent = percentOf(item);
+  const accent = accentForKey(item.course.id);
 
   const streamLabel =
     item.course.stream === 'COMMON'
@@ -37,11 +40,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
       onPress={() => onPress(item.course.id)}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <View style={styles.tile}>
-        <AppText variant="heading" color={theme.colors.primary}>
-          {item.course.title.charAt(0)}
-        </AppText>
-      </View>
+      <LetterTile label={item.course.title.charAt(0).toUpperCase()} accent={accent} />
       <View style={styles.text}>
         <AppText bold>{item.course.title}</AppText>
         <AppText variant="caption" muted>
@@ -49,7 +48,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
         </AppText>
         <View style={styles.progress}>
           <View style={styles.bar}>
-            <ProgressBar value={percent} />
+            <ProgressBar value={percent} accent={accent} />
           </View>
           <AppText variant="caption" muted>
             {percent}%
@@ -65,7 +64,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
@@ -75,15 +74,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   pressed: { opacity: 0.85 },
-  tile: {
-    width: 48,
-    height: 48,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   text: { flex: 1, gap: 2 },
   progress: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginTop: theme.spacing.xs },
   bar: { flex: 1 },
-});
+}));

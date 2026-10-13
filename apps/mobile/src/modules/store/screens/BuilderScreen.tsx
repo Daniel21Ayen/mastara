@@ -4,11 +4,11 @@ import type { StudentStream } from '@mastara/domain';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Badge, Screen, SelectableRow, TopBar } from '@/shared/ui';
 
 import { PriceSummary } from '../components/PriceSummary';
@@ -17,6 +17,8 @@ import { useOrderDraft } from '../state/OrderDraftContext';
 
 /** Choose the courses for a Semester Bundle (7 to 10, extras beyond) or a Single course. */
 export function BuilderScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const { profile } = useSession();
@@ -107,6 +109,6 @@ export function BuilderScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   list: { gap: theme.spacing.sm },
-});
+}));

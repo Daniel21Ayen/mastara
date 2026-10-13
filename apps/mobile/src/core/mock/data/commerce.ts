@@ -82,13 +82,16 @@ export function pendingOrderCount(userId: string, now = Date.now()): number {
 }
 
 /** Access of a course: paid access from approved orders wins, otherwise the generated sample state. */
-export function accessFor(courseId: string, now = Date.now()): { access: AccessState; daysLeft?: number } {
+export function accessFor(
+  courseId: string,
+  now = Date.now(),
+): { access: AccessState; daysLeft?: number; expiresAt?: string } {
   settleOrders(now);
   const expiresAt = expiryByCourse.get(courseId);
 
   if (expiresAt !== undefined) {
     return expiresAt > now
-      ? { access: 'PAID', daysLeft: Math.ceil((expiresAt - now) / DAY_MS) }
+      ? { access: 'PAID', daysLeft: Math.ceil((expiresAt - now) / DAY_MS), expiresAt: new Date(expiresAt).toISOString() }
       : { access: 'LOCKED' };
   }
   return mockAccessFor(courseId);

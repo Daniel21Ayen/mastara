@@ -2,10 +2,10 @@
 import { ACCESS_STATES } from '@mastara/domain';
 import type { AccessState, Stream } from '@mastara/domain';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 import { AppButton, AppText, BottomSheet, ChipGroup } from '@/shared/ui';
 import type { ChipOption } from '@/shared/ui';
 
@@ -23,6 +23,7 @@ function toggle<T>(list: readonly T[], value: T): T[] {
 }
 
 export function CourseFilterSheet({ visible, filters, onApply, onClose }: CourseFilterSheetProps) {
+  const styles = useStyles();
   const { t } = useI18n();
   const [streams, setStreams] = useState<readonly Stream[]>(filters.streams);
   const [access, setAccess] = useState<readonly AccessState[]>(filters.access);
@@ -82,8 +83,8 @@ export function CourseFilterSheet({ visible, filters, onApply, onClose }: Course
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   group: { gap: theme.spacing.sm },
   actions: { flexDirection: 'row', gap: theme.spacing.sm },
   flex: { flex: 1 },
-});
+}));

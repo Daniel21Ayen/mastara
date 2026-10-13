@@ -29,6 +29,24 @@ export const attemptStore = {
     }
   },
 
+  /** Every saved item whose key starts with `prefix` (for example all unfinished exams). */
+  async list<T>(prefix: string): Promise<{ key: string; state: T }[]> {
+    const db = await getDb();
+    const rows = await db.getAllAsync<{ key: string; state: string }>(
+      "SELECT key, state FROM attempts WHERE user_id = ? AND key LIKE ? ESCAPE '\\'",
+      [dbUser(), `${prefix.replace(/[%_\\]/g, '\\$&')}%`],
+    );
+    const items: { key: string; state: T }[] = [];
+    for (const row of rows) {
+      try {
+        items.push({ key: row.key, state: JSON.parse(row.state) as T });
+      } catch {
+        // A damaged row is skipped; it cannot be resumed.
+      }
+    }
+    return items;
+  },
+
   async remove(key: string): Promise<void> {
     const db = await getDb();
     await db.runAsync('DELETE FROM attempts WHERE user_id = ? AND key = ?', [dbUser(), key]);

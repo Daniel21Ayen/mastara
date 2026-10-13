@@ -3,7 +3,7 @@ import type { Exam, Question, University } from '@mastara/contracts';
 import type { ExamKind } from '@mastara/domain';
 
 import { env } from '@/core/config/env';
-import { cacheReads } from '@/core/db';
+import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
 import { buildExamQuestions, buildExams, courses, findExam, universities } from '@/core/mock/data';
 import { simulateLatency } from '@/core/mock/delay';
 
@@ -54,5 +54,18 @@ function createExamApi(): ExamApi {
   throw new Error('The real exam API is added in the backend integration phase.');
 }
 
-/** Reads are saved on the phone and used when it is offline; writes always need the server. */
-export const examApi = cacheReads('exam', createExamApi(), ['getExams', 'getSession']);
+/** The server, with no download rules. Used to download an exam. */
+export const examRemote = createExamApi();
+
+/** Online first. An exam opens offline only if the student downloaded it. */
+export const examApi = gatewayReads('exam', examRemote, {
+  details: ['getSession'],
+  lists: {
+    getExams: async (courseId: string, kind: ExamKind) => {
+      const saved = await downloadStore.listByKind<ExamListing>('EXAM', courseId);
+      return saved.map((item) => item.meta).filter((listing) => listing.exam.kind === kind);
+    },
+  },
+});
+
+export const examKey = (examId: string): string => contentKey('exam', 'getSession', [examId]);

@@ -6,7 +6,14 @@
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prestart": "node scripts/build-katex-assets.mjs",
+    "preandroid": "node scripts/build-katex-assets.mjs",
+    "pretypecheck": "node scripts/build-katex-assets.mjs",
+    "pretest": "node scripts/build-katex-assets.mjs",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "build:katex": "node scripts/build-katex-assets.mjs",
+    "check:size": "node scripts/check-app-size.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/noto-sans-ethiopic": "^0.4.2",
@@ -18,7 +25,7 @@
     "@mastara/ui-tokens": "*",
     "@react-native-community/netinfo": "12.0.1",
     "expo": "latest",
-    "expo-blob": "^57.0.2",
+    "expo-build-properties": "~57.0.22",
     "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.21",
     "expo-crypto": "~57.0.3",
@@ -27,17 +34,22 @@
     "expo-image-manipulator": "~57.0.21",
     "expo-image-picker": "~57.0.20",
     "expo-linking": "~57.0.12",
+    "expo-modules-core": "~57.0.21",
     "expo-router": "~57.0.25",
+    "expo-screen-capture": "~57.0.4",
     "expo-secure-store": "~57.0.4",
     "expo-splash-screen": "~57.0.9",
     "expo-sqlite": "~57.0.4",
     "expo-status-bar": "~57.0.1",
+    "katex": "^0.16.45",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "~4.26.0"
+    "react-native-screens": "~4.26.0",
+    "react-native-webview": "13.16.1"
   },
   "devDependencies": {
+    "@types/katex": "^0.16.7",
     "@types/react": "~19.2.4",
     "typescript": "~6.0.3"
   }

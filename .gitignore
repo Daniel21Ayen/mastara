@@ -1,29 +1,11 @@
-# Dependencies
-node_modules
-
-# Build output
-dist
-build
-.next
-.turbo
-
-# Expo / React Native
-.expo
-android
-ios
-
-# Environment
+node_modules/
+.expo/
+.turbo/
+dist/
+build/
+*.log
 .env
 .env.local
-
-# Logs
-*.log
-
-# OS
 .DS_Store
-
-# TypeScript
-*.tsbuildinfo
-
-# Test coverage
-coverage/
+uploads/
+apps/mobile/src/core/math/katexAssets.generated.ts

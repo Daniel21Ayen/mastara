@@ -1,8 +1,8 @@
 // apps/mobile/src/modules/home/components/HomeHeader.tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppText, Icon } from '@/shared/ui';
 
 interface HomeHeaderProps {
@@ -13,6 +13,8 @@ interface HomeHeaderProps {
 }
 
 export function HomeHeader({ name, hasUnread, onBellPress, onAvatarPress }: HomeHeaderProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const firstName = name.trim().split(' ')[0] ?? name;
 
@@ -33,7 +35,7 @@ export function HomeHeader({ name, hasUnread, onBellPress, onAvatarPress }: Home
         onPress={onBellPress}
         style={styles.round}
       >
-        <Icon name="bell" color={theme.colors.primary} size={22} />
+        <Icon name="bell" color={theme.accents.amber.main} size={22} />
         {hasUnread ? <View style={styles.dot} /> : null}
       </Pressable>
 
@@ -51,18 +53,18 @@ export function HomeHeader({ name, hasUnread, onBellPress, onAvatarPress }: Home
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
   text: { flex: 1, gap: 2 },
   round: {
     width: theme.minTouchTarget,
     height: theme.minTouchTarget,
     borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.accents.amber.soft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatar: { backgroundColor: theme.colors.primary },
+  avatar: { backgroundColor: theme.accents.violet.main },
   dot: {
     position: 'absolute',
     top: 10,
@@ -72,4 +74,4 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.danger,
   },
-});
+}));

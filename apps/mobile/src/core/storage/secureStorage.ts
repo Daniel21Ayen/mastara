@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   session: 'mastara.session',
   deviceId: 'mastara.deviceId',
   language: 'mastara.language',
+  theme: 'mastara.theme',
   dbKey: 'mastara.dbKey',
 } as const;
 

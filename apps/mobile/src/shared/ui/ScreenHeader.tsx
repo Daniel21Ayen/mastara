@@ -1,7 +1,7 @@
 // apps/mobile/src/shared/ui/ScreenHeader.tsx
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -11,6 +11,7 @@ interface ScreenHeaderProps {
 }
 
 export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
+  const styles = useStyles();
   return (
     <View style={styles.wrap}>
       <AppText variant="heading" accessibilityRole="header">
@@ -21,6 +22,6 @@ export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.xs, paddingTop: theme.spacing.lg },
-});
+}));

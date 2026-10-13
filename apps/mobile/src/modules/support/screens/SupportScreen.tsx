@@ -2,10 +2,10 @@
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
 import { AppButton, AppText, Badge, ListRow, Screen, TopBar } from '@/shared/ui';
 
@@ -13,6 +13,8 @@ import { NewTicketSheet } from '../components/NewTicketSheet';
 import { useTickets } from '../hooks/useTickets';
 
 export function SupportScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const timeAgo = useTimeAgo();
@@ -32,7 +34,7 @@ export function SupportScreen() {
         {tickets.map((ticket) => (
           <ListRow
             key={ticket.id}
-            icon="note"
+            icon="support"
             title={ticket.subject}
             subtitle={timeAgo(ticket.createdAt)}
             trailing={<Badge label={t(`support.status.${ticket.status}`)} tone={ticket.status === 'ANSWERED' ? 'primary' : 'muted'} />}
@@ -46,6 +48,6 @@ export function SupportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   list: { gap: theme.spacing.sm },
-});
+}));

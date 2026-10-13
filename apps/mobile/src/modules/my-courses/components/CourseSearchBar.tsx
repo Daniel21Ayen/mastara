@@ -1,8 +1,8 @@
 // apps/mobile/src/modules/my-courses/components/CourseSearchBar.tsx
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppText, Icon } from '@/shared/ui';
 
 interface CourseSearchBarProps {
@@ -13,6 +13,8 @@ interface CourseSearchBarProps {
 }
 
 export function CourseSearchBar({ value, onChangeText, activeFilters, onFilterPress }: CourseSearchBarProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t, language } = useI18n();
   const family = language === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
 
@@ -50,7 +52,7 @@ export function CourseSearchBar({ value, onChangeText, activeFilters, onFilterPr
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', gap: theme.spacing.sm },
   field: {
     flex: 1,
@@ -84,4 +86,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}));

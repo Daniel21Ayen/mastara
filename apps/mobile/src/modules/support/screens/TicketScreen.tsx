@@ -1,9 +1,9 @@
 // apps/mobile/src/modules/support/screens/TicketScreen.tsx
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
 import { AppText, Badge, Card, Screen, TopBar } from '@/shared/ui';
 
@@ -11,6 +11,8 @@ import { useTickets } from '../hooks/useTickets';
 
 /** One request with the conversation. The admin's reply appears here (and the status becomes Answered). */
 export function TicketScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const timeAgo = useTimeAgo();
@@ -43,6 +45,6 @@ export function TicketScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   list: { gap: theme.spacing.sm },
-});
+}));

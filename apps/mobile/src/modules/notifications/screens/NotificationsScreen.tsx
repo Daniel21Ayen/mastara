@@ -2,10 +2,10 @@
 import type { AppNotification } from '@mastara/contracts';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Screen, TopBar } from '@/shared/ui';
 
 import { NotificationRow } from '../components/NotificationRow';
@@ -19,6 +19,8 @@ const DESTINATION: Partial<Record<AppNotification['kind'], Href>> = {
 };
 
 export function NotificationsScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const { items, loading, error, reload, markAllRead, markRead } = useNotifications();
@@ -48,6 +50,6 @@ export function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   list: { gap: theme.spacing.sm },
-});
+}));

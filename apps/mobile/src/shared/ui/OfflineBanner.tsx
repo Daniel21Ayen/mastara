@@ -1,15 +1,17 @@
 // apps/mobile/src/shared/ui/OfflineBanner.tsx
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useI18n } from '@/core/i18n';
 import { useOnline } from '@/core/network';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
 /** A thin bar shown on every screen while the phone is offline. */
 export function OfflineBanner() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const online = useOnline();
   const insets = useSafeAreaInsets();
@@ -25,7 +27,7 @@ export function OfflineBanner() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   bar: { backgroundColor: theme.colors.text, paddingBottom: theme.spacing.xs, paddingHorizontal: theme.spacing.md },
   text: { textAlign: 'center' },
-});
+}));

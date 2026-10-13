@@ -15,6 +15,8 @@ const DEBOUNCE_MS = 500;
 interface SyncValue {
   online: boolean;
   pending: number;
+  /** Changes the server refused and that were set aside. */
+  rejected: number;
   syncing: boolean;
   lastSyncAt: number | null;
   syncNow: () => Promise<void>;
@@ -27,11 +29,15 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const { user } = useSession();
   const online = useOnline();
   const [pending, setPending] = useState(0);
+  const [rejected, setRejected] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const refresh = useCallback(async () => setPending(user ? await outbox.pendingCount() : 0), [user]);
+  const refresh = useCallback(async () => {
+    setPending(user ? await outbox.pendingCount() : 0);
+    setRejected(user ? await outbox.rejectedCount() : 0);
+  }, [user]);
 
   const syncNow = useCallback(async () => {
     if (!user) return;
@@ -67,7 +73,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     };
   }, [user, online, syncNow]);
 
-  const value = useMemo(() => ({ online, pending, syncing, lastSyncAt, syncNow }), [online, pending, syncing, lastSyncAt, syncNow]);
+  const value = useMemo(
+    () => ({ online, pending, rejected, syncing, lastSyncAt, syncNow }),
+    [online, pending, rejected, syncing, lastSyncAt, syncNow],
+  );
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }
 

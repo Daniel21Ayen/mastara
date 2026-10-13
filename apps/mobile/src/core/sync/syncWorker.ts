@@ -23,7 +23,7 @@ async function run(userId: string): Promise<FlushResult> {
     const rejected = results.filter((result) => result.status === 'rejected').map((result) => result.id);
 
     await outbox.markApplied(done);
-    await outbox.markFailed(rejected, 'rejected by server');
+    await outbox.markRejected(rejected, 'rejected by server');
     return { sent: done.length, failed: rejected.length };
   } catch (error) {
     // Network or server problem: keep everything and retry later with a growing wait.

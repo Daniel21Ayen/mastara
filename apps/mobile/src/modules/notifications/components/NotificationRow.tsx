@@ -2,12 +2,13 @@
 import type { AppNotification } from '@mastara/contracts';
 import type { NotificationKind } from '@mastara/domain';
 import type { TranslationKey } from '@mastara/i18n';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
+import type { AccentName } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
-import { AppText, Icon } from '@/shared/ui';
+import { AppText, IconTile } from '@/shared/ui';
 import type { IconName } from '@/shared/ui';
 
 interface NotificationRowProps {
@@ -20,10 +21,19 @@ const ICON: Record<NotificationKind, IconName> = {
   PAYMENT_PENDING: 'store',
   PAYMENT_APPROVED: 'check',
   PAYMENT_REJECTED: 'close',
-  ACCESS_EXPIRING: 'lock',
+  ACCESS_EXPIRING: 'clock',
+};
+
+const ACCENT: Record<NotificationKind, AccentName> = {
+  WELCOME: 'amber',
+  PAYMENT_PENDING: 'orange',
+  PAYMENT_APPROVED: 'emerald',
+  PAYMENT_REJECTED: 'danger',
+  ACCESS_EXPIRING: 'fuchsia',
 };
 
 export function NotificationRow({ item, onPress }: NotificationRowProps) {
+  const styles = useStyles();
   const { t } = useI18n();
   const timeAgo = useTimeAgo();
 
@@ -40,9 +50,7 @@ export function NotificationRow({ item, onPress }: NotificationRowProps) {
       onPress={() => onPress(item)}
       style={[styles.row, !item.read && styles.unread]}
     >
-      <View style={styles.tile}>
-        <Icon name={ICON[item.kind]} color={theme.colors.primary} />
-      </View>
+      <IconTile icon={ICON[item.kind]} accent={ACCENT[item.kind]} solid />
       <View style={styles.text}>
         <AppText bold>{t(`notif.${item.kind}.title`)}</AppText>
         <AppText variant="caption" muted>
@@ -57,7 +65,7 @@ export function NotificationRow({ item, onPress }: NotificationRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
@@ -69,14 +77,6 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   unread: { borderColor: theme.colors.primarySoft },
-  tile: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   text: { flex: 1, gap: 2 },
   dot: { width: 10, height: 10, borderRadius: theme.radius.pill, backgroundColor: theme.colors.danger },
-});
+}));

@@ -1,10 +1,10 @@
 // apps/mobile/src/modules/assessment/components/QuestionView.tsx
 import type { Question } from '@mastara/contracts';
 import type { Answer, ContentLang } from '@mastara/domain';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 import { AppText, RichText, TextField } from '@/shared/ui';
 
 import { FeedbackPanel } from './FeedbackPanel';
@@ -17,12 +17,18 @@ interface QuestionViewProps {
   answer: Answer | undefined;
   checked: boolean;
   correct: boolean | undefined;
+  /** Review only: the question was left blank. */
+  skipped?: boolean;
+  /** Controlled Show/Hide of the explanation (see FeedbackPanel). */
+  explanationOpen?: boolean;
+  onToggleExplanation?: () => void;
   onChoose: (optionId: string) => void;
   onText: (text: string) => void;
 }
 
 /** One question: prompt, the right input for its type, and feedback once checked. */
-export function QuestionView({ question, lang, answer, checked, correct, onChoose, onText }: QuestionViewProps) {
+export function QuestionView({ question, lang, answer, checked, correct, skipped = false, explanationOpen, onToggleExplanation, onChoose, onText }: QuestionViewProps) {
+  const styles = useStyles();
   const { t } = useI18n();
   const chosen = answer?.kind === 'choice' ? answer.optionIds : [];
 
@@ -60,6 +66,7 @@ export function QuestionView({ question, lang, answer, checked, correct, onChoos
           value={answer?.kind === 'text' ? answer.text : ''}
           onChangeText={onText}
           autoCapitalize="none"
+          editable={!checked}
         />
       ) : (
         question.options.map((option) => {
@@ -87,12 +94,15 @@ export function QuestionView({ question, lang, answer, checked, correct, onChoos
           lang={lang}
           correctAnswer={correctAnswer}
           explanation={question.explanation?.[lang]}
+          skipped={skipped}
+          expanded={explanationOpen}
+          onToggleExplanation={onToggleExplanation}
         />
       ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.md },
-});
+}));

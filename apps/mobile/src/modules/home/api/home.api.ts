@@ -1,6 +1,5 @@
 // apps/mobile/src/modules/home/api/home.api.ts
 import type { HomeSummary, RecentItem, StudentProfile } from '@mastara/contracts';
-import { progressPercent } from '@mastara/domain';
 
 import { env } from '@/core/config/env';
 import { cacheReads } from '@/core/db';
@@ -54,14 +53,6 @@ const mockHomeApi: HomeApi = {
     }
 
     return {
-      continueLearning: first
-        ? {
-            courseId: first.course.id,
-            courseTitle: first.course.title,
-            chapterNumber: Math.min(first.chaptersTotal, first.chaptersDone + 1),
-            percent: progressPercent(first.chaptersDone, first.chaptersTotal),
-          }
-        : null,
       chaptersDone: progress.reduce((sum, item) => sum + item.chaptersDone, 0),
       chaptersTotal: progress.reduce((sum, item) => sum + item.chaptersTotal, 0),
       activeProducts: mine.filter((course) => accessFor(course.id).access === 'PAID').length,
