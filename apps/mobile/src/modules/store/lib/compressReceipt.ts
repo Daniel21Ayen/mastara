@@ -11,7 +11,7 @@ export interface Receipt {
 
 async function sizeOf(uri: string): Promise<number> {
   const response = await fetch(uri);
-  return (await response.blob()).size;
+  return (await response.arrayBuffer()).byteLength;
 }
 
 /** Shrinks a screenshot step by step until it is under 300 KB, to save the student's mobile data. */
