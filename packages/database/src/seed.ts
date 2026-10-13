@@ -24,7 +24,7 @@ async function main() {
     create: {
       email: adminEmail,
       phone: "+251911000000",
-      password_hash: "$2b$10$EpRnTzVlqHNP0.fUbXUw3.eP28jP1l2pY7Lg0.qEw0dD2.jB1zR2C",
+      password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123
       role: Role.ADMIN,
       first_name: "Mastara",
       last_name: "Admin",
@@ -39,7 +39,7 @@ async function main() {
     create: {
       email: studentEmail,
       phone: "+251911223344",
-      password_hash: "$2b$10$EpRnTzVlqHNP0.fUbXUw3.eP28jP1l2pY7Lg0.qEw0dD2.jB1zR2C",
+      password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123
       role: Role.STUDENT,
       first_name: "Abebe",
       last_name: "Kebede",
