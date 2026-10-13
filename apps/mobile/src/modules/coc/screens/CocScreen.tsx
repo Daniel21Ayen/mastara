@@ -77,7 +77,7 @@ export function CocScreen() {
             <ListRow
               key={set.id}
               icon={open ? 'exam' : 'lock'}
-              title={set.title[language]}
+              title={typeof set.title === 'string' ? set.title : (set.title?.[language] ?? (set.title as any)?.en ?? '')}
               subtitle={t('coc.setMeta', { count: set.questionCount, minutes: set.minutes, courses: set.courseCount })}
               trailing={set.isFree && !paid ? <Badge label={t('exams.sample')} /> : undefined}
               onPress={() => openSet(set)}

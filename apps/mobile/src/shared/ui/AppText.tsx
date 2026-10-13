@@ -1,5 +1,5 @@
-// apps/mobile/src/shared/ui/AppText.tsx
 import type { Language } from '@mastara/i18n';
+import React, { type ReactNode } from 'react';
 import { Text } from 'react-native';
 import type { TextProps } from 'react-native';
 
@@ -25,6 +25,29 @@ const sizeByVariant: Record<Variant, number> = {
   caption: theme.fontSize.caption,
 };
 
+function resolveNode(node: ReactNode, lang: Language): ReactNode {
+  if (node == null || typeof node === 'boolean') {
+    return null;
+  }
+  if (typeof node === 'string' || typeof node === 'number') {
+    return node;
+  }
+  if (Array.isArray(node)) {
+    return node.map((child, index) => <React.Fragment key={index}>{resolveNode(child, lang)}</React.Fragment>);
+  }
+  if (typeof node === 'object') {
+    if (React.isValidElement(node)) {
+      return node;
+    }
+    if ('en' in (node as any) || 'am' in (node as any)) {
+      const b = node as { en?: string; am?: string };
+      return lang === 'am' ? (b.am ?? b.en ?? '') : (b.en ?? b.am ?? '');
+    }
+    return '';
+  }
+  return String(node);
+}
+
 export function AppText({
   variant = 'body',
   bold = variant === 'title' || variant === 'heading',
@@ -32,10 +55,14 @@ export function AppText({
   color,
   lang,
   style,
+  children,
   ...rest
 }: AppTextProps) {
   const { language } = useI18n();
-  const family = (lang ?? language) === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
+  const effectiveLang = lang ?? language;
+  const family = effectiveLang === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
+
+  const resolvedChildren = resolveNode(children, effectiveLang);
 
   return (
     <Text
@@ -48,6 +75,8 @@ export function AppText({
         },
         style,
       ]}
-    />
+    >
+      {resolvedChildren}
+    </Text>
   );
 }

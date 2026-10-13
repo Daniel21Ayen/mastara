@@ -21,8 +21,10 @@ export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
   const isModule = topic.kind === 'MODULE';
 
   // Modules read "Module 1" with the topic title below; notes read the title with its summary below.
-  const title = isModule ? t('topic.module', { n: topic.number }) : topic.title[lang];
-  const subtitle = isModule ? topic.title[lang] : topic.summary[lang];
+  const topicTitle = typeof topic.title === 'string' ? topic.title : (topic.title?.[lang] ?? (topic.title as any)?.en ?? '');
+  const topicSummary = typeof topic.summary === 'string' ? topic.summary : (topic.summary?.[lang] ?? (topic.summary as any)?.en ?? '');
+  const title = isModule ? t('topic.module', { n: topic.number }) : topicTitle;
+  const subtitle = isModule ? topicTitle : topicSummary;
 
   return (
     <Pressable

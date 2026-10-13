@@ -31,9 +31,14 @@ export function ReaderScreen() {
 
   const goTo = (topicId: string) => router.replace(`/reader/${topicId}?lang=${lang}` as Href);
 
+  const rawTitle = data?.topic.title;
+  const topicTitle = typeof rawTitle === 'string' ? rawTitle : (rawTitle?.[lang] ?? (rawTitle as any)?.en ?? '');
+  const rawBody = data?.topic.body;
+  const topicBody = typeof rawBody === 'string' ? rawBody : (rawBody?.[lang] ?? (rawBody as any)?.en ?? '');
+
   return (
     <Screen scroll>
-      <TopBar title={data?.topic.title[lang] ?? ''} onBack={() => router.back()} />
+      <TopBar title={topicTitle} onBack={() => router.back()} />
 
       {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
       {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
@@ -51,7 +56,7 @@ export function ReaderScreen() {
           <SegmentedControl options={languages} value={lang} onChange={setLang} />
 
           <Card>
-            <RichText text={data.topic.body[lang]} lang={lang} />
+            <RichText text={topicBody} lang={lang} />
           </Card>
 
           <AppText variant="caption" muted style={styles.position}>
