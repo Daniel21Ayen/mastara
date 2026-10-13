@@ -39,7 +39,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
     >
       <View style={styles.tile}>
         <AppText variant="heading" color={theme.colors.primary}>
-          {item.course.title.charAt(0)}
+          {(typeof item.course.title === 'string' ? item.course.title : ((item.course.title as any)?.en ?? '')).charAt(0)}
         </AppText>
       </View>
       <View style={styles.text}>

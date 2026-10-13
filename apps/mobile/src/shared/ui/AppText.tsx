@@ -1,5 +1,5 @@
-// apps/mobile/src/shared/ui/AppText.tsx
 import type { Language } from '@mastara/i18n';
+import React, { type ReactNode } from 'react';
 import { Text } from 'react-native';
 import type { TextProps } from 'react-native';
 
@@ -25,6 +25,16 @@ const sizeByVariant: Record<Variant, number> = {
   caption: theme.fontSize.caption,
 };
 
+function resolveChild(child: ReactNode, lang: Language): ReactNode {
+  if (child && typeof child === 'object' && !React.isValidElement(child)) {
+    if ('en' in (child as any) || 'am' in (child as any)) {
+      const b = child as { en?: string; am?: string };
+      return lang === 'am' ? (b.am ?? b.en ?? '') : (b.en ?? b.am ?? '');
+    }
+  }
+  return child;
+}
+
 export function AppText({
   variant = 'body',
   bold = variant === 'title' || variant === 'heading',
@@ -32,10 +42,16 @@ export function AppText({
   color,
   lang,
   style,
+  children,
   ...rest
 }: AppTextProps) {
   const { language } = useI18n();
-  const family = (lang ?? language) === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
+  const effectiveLang = lang ?? language;
+  const family = effectiveLang === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
+
+  const resolvedChildren = React.Children.map(children, (child) =>
+    resolveChild(child, effectiveLang),
+  );
 
   return (
     <Text
@@ -48,6 +64,8 @@ export function AppText({
         },
         style,
       ]}
-    />
+    >
+      {resolvedChildren}
+    </Text>
   );
 }
