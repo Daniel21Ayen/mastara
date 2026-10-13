@@ -1,8 +1,8 @@
 // apps/mobile/src/shared/ui/SelectableRow.tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -17,6 +17,8 @@ interface SelectableRowProps {
 }
 
 export function SelectableRow({ title, description, selected, onToggle, disabled = false, trailing }: SelectableRowProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -45,7 +47,7 @@ export function SelectableRow({ title, description, selected, onToggle, disabled
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: {
     minHeight: theme.minTouchTarget + theme.spacing.md,
     borderRadius: theme.radius.md,
@@ -70,4 +72,4 @@ const styles = StyleSheet.create({
   },
   boxSelected: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   text: { flex: 1, gap: 2 },
-});
+}));

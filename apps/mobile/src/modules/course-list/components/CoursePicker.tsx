@@ -1,9 +1,9 @@
 // apps/mobile/src/modules/course-list/components/CoursePicker.tsx
 import type { StudentStream } from '@mastara/domain';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 import { AppButton, AppText, Badge, SegmentedControl, SelectableRow } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
@@ -22,6 +22,7 @@ function toggle(ids: readonly string[], id: string): string[] {
 }
 
 export function CoursePicker({ semesterId, stream, selectedIds, onChange }: CoursePickerProps) {
+  const styles = useStyles();
   const { t } = useI18n();
   const { visible, filter, setFilter, loading, error, reload } = useCoursePicker({ semesterId, stream });
 
@@ -57,7 +58,7 @@ export function CoursePicker({ semesterId, stream, selectedIds, onChange }: Cour
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.sm },
   count: { textAlign: 'center' },
-});
+}));

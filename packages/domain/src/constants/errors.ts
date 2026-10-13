@@ -9,6 +9,8 @@ export const ERROR_CODES = {
   BUNDLE_COUNT_INVALID: 'BUNDLE_COUNT_INVALID',
   RECEIPT_TOO_LARGE: 'RECEIPT_TOO_LARGE',
   NETWORK_OFFLINE: 'NETWORK_OFFLINE',
+  /** Offline, and this content was never downloaded to the phone. */
+  CONTENT_NOT_DOWNLOADED: 'CONTENT_NOT_DOWNLOADED',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

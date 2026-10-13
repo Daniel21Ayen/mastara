@@ -6,12 +6,12 @@ import type { TranslationKey } from '@mastara/i18n';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { LockedSheet } from '@/modules/access';
-import { AppButton, AppText, Icon, UnderlineTabs } from '@/shared/ui';
+import { AppText, ErrorNotice, IconTile, UnderlineTabs } from '@/shared/ui';
 import type { UnderlineTabOption } from '@/shared/ui';
 
 import { useExams } from '../hooks/useExams';
@@ -37,6 +37,8 @@ interface ExamsTabProps {
 
 /** Course "Exams" tab: lower tabs Mid, Final, Mock. COC is not here: it opens from Home. */
 export function ExamsTab({ courseId, access }: ExamsTabProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const [kind, setKind] = useState<ExamKind>('MID');
@@ -58,9 +60,7 @@ export function ExamsTab({ courseId, access }: ExamsTabProps) {
       <UnderlineTabs options={options} value={kind} onChange={setKind} />
 
       <View style={styles.intro}>
-        <View style={styles.tile}>
-          <Icon name="exam" color={theme.colors.primary} />
-        </View>
+        <IconTile icon="exam" solid />
         <View style={styles.text}>
           <AppText variant="bodyLarge" bold>
             {t(KIND_TEXT[kind].title)}
@@ -72,7 +72,7 @@ export function ExamsTab({ courseId, access }: ExamsTabProps) {
       </View>
 
       {loading && items.length === 0 ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
+      {error ? <ErrorNotice error={error} onRetry={reload} /> : null}
       {!loading && !error && items.length === 0 ? <AppText muted>{t('exams.empty')}</AppText> : null}
 
       {items.map(({ exam, university }) => (
@@ -90,16 +90,8 @@ export function ExamsTab({ courseId, access }: ExamsTabProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.md },
   intro: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
-  tile: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   text: { flex: 1, gap: 2 },
-});
+}));

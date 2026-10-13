@@ -1,12 +1,12 @@
 // apps/mobile/src/modules/auth/screens/AuthScreen.tsx
 import { LANGUAGES } from '@mastara/i18n';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { env } from '@/core/config/env';
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
-import { AppButton, AppText, Screen, ScreenHeader, SegmentedControl } from '@/shared/ui';
+import { createStyles } from '@/core/theme';
+import { AppButton, AppText, Screen, ScreenHeader, SegmentedControl, ThemeSwitch } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
 import { LoginForm } from '../components/LoginForm';
@@ -15,6 +15,7 @@ import { RegisterForm } from '../components/RegisterForm';
 type Tab = 'login' | 'register';
 
 export function AuthScreen() {
+  const styles = useStyles();
   const { t, language, setLanguage } = useI18n();
   const [tab, setTab] = useState<Tab>('login');
 
@@ -47,11 +48,12 @@ export function AuthScreen() {
           </View>
         ))}
       </View>
+      <ThemeSwitch />
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   languages: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.md },
   flex: { flex: 1 },
-});
+}));

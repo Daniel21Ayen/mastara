@@ -2,11 +2,14 @@
 import type { Topic } from '@mastara/contracts';
 import { canOpenContent } from '@mastara/domain';
 import type { AccessState, ContentLang } from '@mastara/domain';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
-import { AppText, Badge, Icon } from '@/shared/ui';
+import { accentForKey, createStyles, useTheme } from '@/core/theme';
+import { DownloadButton } from '@/modules/downloads';
+import { AppText, Badge, Icon, IconTile } from '@/shared/ui';
+
+import { topicDownload } from '../lib/topicDownload';
 
 interface TopicRowProps {
   topic: Topic;
@@ -16,15 +19,15 @@ interface TopicRowProps {
 }
 
 export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const open = canOpenContent(access, topic.isFree);
   const isModule = topic.kind === 'MODULE';
 
-  // Modules read "Module 1" with the topic title below; notes read the title with its summary below.
-  const topicTitle = typeof topic.title === 'string' ? topic.title : (topic.title?.[lang] ?? (topic.title as any)?.en ?? '');
-  const topicSummary = typeof topic.summary === 'string' ? topic.summary : (topic.summary?.[lang] ?? (topic.summary as any)?.en ?? '');
-  const title = isModule ? t('topic.module', { n: topic.number }) : topicTitle;
-  const subtitle = isModule ? topicTitle : topicSummary;
+  // One language per tab. Modules read "Module 1" with the title below; notes read the title with its summary below.
+  const title = isModule ? t('topic.module', { n: topic.number }) : topic.title[lang];
+  const subtitle = isModule ? topic.title[lang] : topic.summary[lang];
 
   return (
     <Pressable
@@ -33,9 +36,7 @@ export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
       onPress={() => onPress(topic, open)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <View style={styles.tile}>
-        <Icon name={isModule ? 'module' : 'note'} color={theme.colors.primary} />
-      </View>
+      <IconTile icon={isModule ? 'module' : 'note'} accent={accentForKey(topic.id)} solid size={48} />
       <View style={styles.text}>
         <AppText bold lang={lang}>
           {title}
@@ -44,6 +45,7 @@ export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
           {subtitle}
         </AppText>
       </View>
+      {open ? <DownloadButton unit={topicDownload(topic)} /> : null}
       {open ? (
         topic.isFree ? <Badge label={t('topic.free')} /> : <Icon name="chevron" color={theme.colors.textMuted} />
       ) : (
@@ -53,7 +55,7 @@ export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
@@ -63,13 +65,5 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   pressed: { opacity: 0.85 },
-  tile: {
-    width: 48,
-    height: 48,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   text: { flex: 1, gap: 2 },
-});
+}));

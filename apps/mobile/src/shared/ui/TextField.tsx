@@ -1,9 +1,9 @@
 // apps/mobile/src/shared/ui/TextField.tsx
-import { StyleSheet, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import type { KeyboardTypeOptions, TextInputProps } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -16,6 +16,8 @@ export interface TextFieldProps {
   secureTextEntry?: boolean;
   keyboardType?: KeyboardTypeOptions;
   autoCapitalize?: TextInputProps['autoCapitalize'];
+  /** False for a read-only answer (review). */
+  editable?: boolean;
 }
 
 export function TextField({
@@ -27,7 +29,10 @@ export function TextField({
   secureTextEntry,
   keyboardType,
   autoCapitalize = 'none',
+  editable = true,
 }: TextFieldProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { language } = useI18n();
   const family = language === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
 
@@ -37,6 +42,7 @@ export function TextField({
       <TextInput
         accessibilityLabel={label}
         value={value}
+        editable={editable}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.textMuted}
@@ -55,7 +61,7 @@ export function TextField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.xs },
   input: {
     minHeight: theme.minTouchTarget,
@@ -68,4 +74,4 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   inputError: { borderColor: theme.colors.danger, borderWidth: 2 },
-});
+}));

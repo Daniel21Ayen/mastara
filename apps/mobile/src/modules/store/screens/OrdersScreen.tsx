@@ -2,11 +2,11 @@
 import type { Order } from '@mastara/contracts';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Screen, TopBar } from '@/shared/ui';
 
 import { OrderRow } from '../components/OrderRow';
@@ -15,6 +15,8 @@ import { useOrderDraft } from '../state/OrderDraftContext';
 
 /** Receipts and their status. A mock admin approves each one about 10 seconds after it is sent. */
 export function OrdersScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const { user } = useSession();
@@ -47,6 +49,6 @@ export function OrdersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   list: { gap: theme.spacing.sm },
-});
+}));

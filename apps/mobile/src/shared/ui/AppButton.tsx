@@ -1,7 +1,7 @@
 // apps/mobile/src/shared/ui/AppButton.tsx
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -20,6 +20,8 @@ export function AppButton({
   disabled = false,
   loading = false,
 }: AppButtonProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const isPrimary = variant === 'primary';
   const inactive = disabled || loading;
   const textColor = isPrimary ? theme.colors.onPrimary : theme.colors.primary;
@@ -48,7 +50,7 @@ export function AppButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   base: {
     minHeight: theme.minTouchTarget,
     borderRadius: theme.radius.md,
@@ -61,4 +63,4 @@ const styles = StyleSheet.create({
   outline: { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary },
   inactive: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
-});
+}));

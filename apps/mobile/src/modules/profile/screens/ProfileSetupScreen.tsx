@@ -2,11 +2,11 @@
 import { academicScopeSchema } from '@mastara/contracts';
 import type { StudentProfile } from '@mastara/contracts';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { CoursePicker } from '@/modules/course-list';
 import { useForm } from '@/shared/hooks';
 import { AppButton, AppText, Screen, ScreenHeader } from '@/shared/ui';
@@ -21,6 +21,8 @@ const INITIAL: AcademicValues = { universityId: '', programId: '', semesterId: '
 
 /** First-run setup: academic details, then choose courses, then Home. */
 export function ProfileSetupScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const { user } = useSession();
   const saveProfile = useSaveProfile();
@@ -71,6 +73,6 @@ export function ProfileSetupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   actions: { gap: theme.spacing.sm },
-});
+}));

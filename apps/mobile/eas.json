@@ -1,0 +1,24 @@
+{
+  "cli": { "version": ">= 12.0.0", "appVersionSource": "remote" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": { "buildType": "apk" }
+    },
+    "preview-arm64": {
+      "distribution": "internal",
+      "android": { "buildType": "apk", "gradleCommand": ":app:assembleRelease" },
+      "env": { "ORG_GRADLE_PROJECT_reactNativeArchitectures": "arm64-v8a" }
+    },
+    "preview-arm32": {
+      "distribution": "internal",
+      "android": { "buildType": "apk", "gradleCommand": ":app:assembleRelease" },
+      "env": { "ORG_GRADLE_PROJECT_reactNativeArchitectures": "armeabi-v7a" }
+    },
+    "production": {
+      "android": { "buildType": "app-bundle" }
+    }
+  },
+  "submit": { "production": {} }
+}

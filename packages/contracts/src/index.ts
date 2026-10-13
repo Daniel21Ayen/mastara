@@ -1,5 +1,6 @@
 // packages/contracts/src/index.ts
 export * from './academic';
+export * from './admin';
 export * from './auth';
 export * from './commerce';
 export * from './content';

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { ExamsTab } from '@/modules/exams';
 import { TestsTab } from '@/modules/quizzes';
 import { AppButton, AppText, Screen, SegmentedControl, TopBar } from '@/shared/ui';
@@ -17,6 +17,7 @@ import { useCourseDetail } from '../hooks/useCourseDetail';
 type CourseTabId = 'MATERIAL' | 'TESTS' | 'EXAMS';
 
 export function CourseScreen() {
+  const theme = useTheme();
   const { t } = useI18n();
   const router = useRouter();
   const { courseId } = useLocalSearchParams<{ courseId: string }>();

@@ -1,9 +1,10 @@
 // apps/mobile/src/modules/device-lock/components/ReleaseDeviceSheet.tsx
 import { useState } from 'react';
 
+import { downloadStore } from '@/core/downloads';
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { AppButton, AppText, BottomSheet } from '@/shared/ui';
 
 import { deviceApi } from '../api/device.api';
@@ -15,6 +16,7 @@ interface ReleaseDeviceSheetProps {
 
 /** "Release Device & Log Out": frees the account for another phone, then logs out. */
 export function ReleaseDeviceSheet({ visible, onClose }: ReleaseDeviceSheetProps) {
+  const theme = useTheme();
   const { t } = useI18n();
   const { user, signOut } = useSession();
   const [busy, setBusy] = useState(false);
@@ -26,6 +28,7 @@ export function ReleaseDeviceSheet({ visible, onClose }: ReleaseDeviceSheetProps
     setFailed(false);
     try {
       await deviceApi.releaseDevice(user.id);
+      await downloadStore.removeAll(); // downloaded content must not stay on a phone the account has left
       onClose();
       signOut();
     } catch {

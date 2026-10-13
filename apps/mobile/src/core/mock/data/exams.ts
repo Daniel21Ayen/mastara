@@ -7,8 +7,9 @@ import { courses } from './courses';
 import { buildChapters, buildQuestions } from './quizzes';
 import { universities } from './universities';
 
-const EXAM_MINUTES = 30;
-const COC_MINUTES = 45;
+/** Stand-in for the admin's settings: the real server stores one value per exam and per COC set. */
+const ADMIN_EXAM_MINUTES: Record<ExamKind, number> = { MID: 45, FINAL: 90, MOCK: 60 };
+const ADMIN_COC_MINUTES = 60;
 const COC_SET_COUNT = 3;
 const COC_MAX_COURSES = 8;
 const QUESTIONS_PER_COC_COURSE = 3;
@@ -27,7 +28,7 @@ export function buildExams(course: Course): Exam[] {
         universityId: university.id,
         kind,
         questionCount: 20,
-        minutes: EXAM_MINUTES,
+        minutes: ADMIN_EXAM_MINUTES[kind],
         isFree: index === 0,
       }),
     ),
@@ -49,7 +50,7 @@ export function buildExamQuestions(exam: Exam): Question[] {
       chapterNumber: part,
       title: { en: `Part ${part}`, am: `ክፍል ${part}` },
       questionCount: 10,
-      minutes: EXAM_MINUTES,
+      minutes: exam.minutes,
       isFree: false,
     };
     return buildQuestions(chapter);
@@ -79,7 +80,7 @@ export function buildCocSets(courseIds: readonly string[]): CocSet[] {
       title: { en: `COC Set ${number}`, am: `COC ስብስብ ${number}` },
       questionCount: count * QUESTIONS_PER_COC_COURSE,
       courseCount: count,
-      minutes: COC_MINUTES,
+      minutes: ADMIN_COC_MINUTES,
       isFree: number === 1,
     };
   });

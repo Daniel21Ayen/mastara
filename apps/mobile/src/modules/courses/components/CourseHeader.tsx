@@ -1,13 +1,14 @@
 // apps/mobile/src/modules/courses/components/CourseHeader.tsx
 import type { MyCourse } from '@mastara/contracts';
 import { progressPercent } from '@mastara/domain';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 import { AppText, ProgressBar } from '@/shared/ui';
 
 export function CourseHeader({ item }: { item: MyCourse }) {
+  const styles = useStyles();
   const { t } = useI18n();
   const percent = progressPercent(item.chaptersDone, item.chaptersTotal);
 
@@ -21,6 +22,6 @@ export function CourseHeader({ item }: { item: MyCourse }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.xs },
-});
+}));

@@ -1,8 +1,8 @@
 // apps/mobile/src/shared/ui/SelectField.tsx
 import { useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 import { BottomSheet } from './BottomSheet';
@@ -33,6 +33,8 @@ export function SelectField({
   loading = false,
   error,
 }: SelectFieldProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const selected = options.find((option) => option.value === value);
   const inactive = disabled || loading;
@@ -82,7 +84,7 @@ export function SelectField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.xs },
   field: {
     minHeight: theme.minTouchTarget,
@@ -100,4 +102,4 @@ const styles = StyleSheet.create({
   inactive: { opacity: 0.5 },
   option: { minHeight: theme.minTouchTarget, justifyContent: 'center', paddingHorizontal: theme.spacing.sm, borderRadius: theme.radius.sm },
   optionActive: { backgroundColor: theme.colors.primarySoft },
-});
+}));

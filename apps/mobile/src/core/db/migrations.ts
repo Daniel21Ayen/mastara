@@ -35,4 +35,45 @@ export const MIGRATIONS: readonly Migration[] = [
       CREATE INDEX idx_outbox_pending ON outbox (user_id, applied_at);
     `,
   },
+  {
+    // F9b: reject state for changes the server refused, a clock reading with every saved answer, and an index for clean-up.
+    version: 2,
+    sql: `
+      ALTER TABLE outbox ADD COLUMN rejected_at INTEGER;
+      ALTER TABLE api_cache ADD COLUMN cached_uptime INTEGER;
+      ALTER TABLE api_cache ADD COLUMN cached_boot TEXT;
+      CREATE INDEX idx_api_cache_age ON api_cache (user_id, cached_at);
+    `,
+  },
+  {
+    // F11: content (materials, tests, exams, COC) is online-first. A student saves it on purpose; the saved copy lives here.
+    version: 3,
+    sql: `
+      CREATE TABLE downloads (
+        user_id TEXT NOT NULL,
+        unit_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        course_id TEXT,
+        title TEXT NOT NULL,
+        meta TEXT NOT NULL,
+        bytes INTEGER NOT NULL,
+        downloaded_at INTEGER NOT NULL,
+        PRIMARY KEY (user_id, unit_id)
+      );
+      CREATE TABLE downloaded_content (
+        user_id TEXT NOT NULL,
+        key TEXT NOT NULL,
+        unit_id TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY (user_id, key)
+      );
+      CREATE INDEX idx_downloads_course ON downloads (user_id, course_id);
+      CREATE INDEX idx_downloaded_content_unit ON downloaded_content (user_id, unit_id);
+
+      -- Earlier builds saved every opened lesson, quiz and exam automatically. Under the new rule content is available
+      -- offline only after the student downloads it, so those silent copies are removed.
+      DELETE FROM api_cache
+       WHERE key LIKE 'content.%' OR key LIKE 'quiz.%' OR key LIKE 'exam.%' OR key LIKE 'coc.%';
+    `,
+  },
 ];

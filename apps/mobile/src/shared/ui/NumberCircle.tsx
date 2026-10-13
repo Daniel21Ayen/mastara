@@ -1,14 +1,17 @@
 // apps/mobile/src/shared/ui/NumberCircle.tsx
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
+import type { AccentName } from '@/core/theme';
 
 import { AppText } from './AppText';
 
-/** Filled primary circle with a white number, for chapters and steps. */
-export function NumberCircle({ value }: { value: number }) {
+/** Filled coloured circle with a white number, for chapters and steps. */
+export function NumberCircle({ value, accent = 'blue' }: { value: number; accent?: AccentName }) {
+  const theme = useTheme();
+  const styles = useStyles();
   return (
-    <View style={styles.circle}>
+    <View style={[styles.circle, { backgroundColor: theme.accents[accent].main }]}>
       <AppText bold color={theme.colors.onPrimary} variant="bodyLarge">
         {value}
       </AppText>
@@ -16,13 +19,12 @@ export function NumberCircle({ value }: { value: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   circle: {
     width: 44,
     height: 44,
     borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}));

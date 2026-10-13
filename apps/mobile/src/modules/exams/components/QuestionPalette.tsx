@@ -1,9 +1,9 @@
 // apps/mobile/src/modules/exams/components/QuestionPalette.tsx
 import type { PaletteCell } from '@mastara/domain';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppText } from '@/shared/ui';
 
 interface QuestionPaletteProps {
@@ -13,6 +13,8 @@ interface QuestionPaletteProps {
 
 /** "All questions": one numbered cell per question. Filled = answered, red ring = flagged, thick blue ring = current. */
 export function QuestionPalette({ cells, onSelect }: QuestionPaletteProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
 
   return (
@@ -58,6 +60,7 @@ export function QuestionPalette({ cells, onSelect }: QuestionPaletteProps) {
 }
 
 function LegendItem({ style, label }: { style: object; label: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.legendItem}>
       <View style={[styles.swatch, style]} />
@@ -68,7 +71,7 @@ function LegendItem({ style, label }: { style: object; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.lg },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
   cell: {
@@ -87,4 +90,4 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
   legendOpen: {},
   swatch: { width: 16, height: 16, borderRadius: theme.radius.sm, borderWidth: 2 },
-});
+}));

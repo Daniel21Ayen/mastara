@@ -1,7 +1,7 @@
 // apps/mobile/src/shared/ui/SegmentedControl.tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -17,6 +17,8 @@ interface SegmentedControlProps<T extends string> {
 }
 
 export function SegmentedControl<T extends string>({ options, value, onChange }: SegmentedControlProps<T>) {
+  const theme = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.row} accessibilityRole="tablist">
       {options.map((option) => {
@@ -39,7 +41,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', gap: theme.spacing.sm },
   segment: {
     flex: 1,
@@ -50,4 +52,4 @@ const styles = StyleSheet.create({
   },
   active: { backgroundColor: theme.colors.primary },
   idle: { backgroundColor: theme.colors.surface },
-});
+}));

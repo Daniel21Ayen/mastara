@@ -4,26 +4,31 @@ import { canOpenContent } from '@mastara/domain';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { LockedSheet } from '@/modules/access';
 import { examResultRepository } from '@/modules/exams';
 import type { ExamResultRecord } from '@/modules/exams';
 import { useAsync, useTimeAgo } from '@/shared/hooks';
-import { AppButton, AppText, Badge, BottomSheet, Card, Icon, ListRow, Screen, TopBar } from '@/shared/ui';
+import { AppText, Badge, BottomSheet, Card, ErrorNotice, IconTile, ListRow, Screen, TopBar } from '@/shared/ui';
 
 import { useCocSets } from '../hooks/useCocData';
+import { DownloadButton } from '@/modules/downloads';
+
+import { cocSetDownload } from '../lib/cocSetDownload';
 
 type Sheet = 'sets' | 'rules' | 'results' | 'locked' | null;
 
 /** COC home (opened from the Home card). Independent of Exams: questions come from all of the student's courses. */
 export function CocScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t, language } = useI18n();
   const router = useRouter();
   const timeAgo = useTimeAgo();
-  const { sets, paid, hasCourses, loading, error, reload } = useCocSets();
+  const { sets, paid, hasCourses, courseIds, loading, error, reload } = useCocSets();
   const [sheet, setSheet] = useState<Sheet>(null);
   const results = useAsync(sheet === 'results' ? () => examResultRepository.list() : null, [sheet]);
 
@@ -41,9 +46,7 @@ export function CocScreen() {
       <TopBar title={t('coc.title')} onBack={() => router.back()} />
 
       <View style={styles.banner}>
-        <View style={styles.bannerTile}>
-          <Icon name="exam" color={theme.colors.onPrimary} size={26} />
-        </View>
+        <IconTile icon="trophy" accent="amber" solid size={52} />
         <View style={styles.flex}>
           <AppText bold variant="bodyLarge" color={theme.colors.onPrimary}>
             {t('coc.title')}
@@ -55,7 +58,7 @@ export function CocScreen() {
       </View>
 
       {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
+      {error ? <ErrorNotice error={error} onRetry={reload} /> : null}
       {!loading && !hasCourses ? (
         <Card>
           <AppText muted>{t('coc.noCourses')}</AppText>
@@ -64,9 +67,9 @@ export function CocScreen() {
 
       {hasCourses ? (
         <>
-          <ListRow icon="play" title={t('coc.start')} subtitle={t('coc.start.sub')} onPress={() => setSheet('sets')} />
-          <ListRow icon="note" title={t('coc.instructions')} subtitle={t('coc.instructions.sub')} onPress={() => setSheet('rules')} />
-          <ListRow icon="stats" title={t('coc.results')} subtitle={t('coc.results.sub')} onPress={() => setSheet('results')} />
+          <ListRow icon="play" accent="emerald" title={t('coc.start')} subtitle={t('coc.start.sub')} onPress={() => setSheet('sets')} />
+          <ListRow icon="note" accent="cyan" title={t('coc.instructions')} subtitle={t('coc.instructions.sub')} onPress={() => setSheet('rules')} />
+          <ListRow icon="stats" accent="amber" title={t('coc.results')} subtitle={t('coc.results.sub')} onPress={() => setSheet('results')} />
         </>
       ) : null}
 
@@ -79,7 +82,12 @@ export function CocScreen() {
               icon={open ? 'exam' : 'lock'}
               title={typeof set.title === 'string' ? set.title : (set.title?.[language] ?? (set.title as any)?.en ?? '')}
               subtitle={t('coc.setMeta', { count: set.questionCount, minutes: set.minutes, courses: set.courseCount })}
-              trailing={set.isFree && !paid ? <Badge label={t('exams.sample')} /> : undefined}
+              trailing={
+                <View style={styles.trailing}>
+                  {open ? <DownloadButton unit={cocSetDownload(set, courseIds)} /> : null}
+                  {set.isFree && !paid ? <Badge label={t('exams.sample')} /> : null}
+                </View>
+              }
               onPress={() => openSet(set)}
             />
           );
@@ -110,22 +118,15 @@ export function CocScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   flex: { flex: 1 },
+  trailing: { flexDirection: 'row', alignItems: 'center' },
   banner: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.accents.fuchsia.main,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.md,
   },
-  bannerTile: {
-    width: 52,
-    height: 52,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.onPrimarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+}));

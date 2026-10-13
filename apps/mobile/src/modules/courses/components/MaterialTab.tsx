@@ -5,12 +5,12 @@ import type { TranslationKey } from '@mastara/i18n';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { LockedSheet } from '@/modules/access';
-import { AppButton, AppText, Icon, UnderlineTabs } from '@/shared/ui';
+import { AppText, ErrorNotice, IconTile, UnderlineTabs } from '@/shared/ui';
 import type { IconName, UnderlineTabOption } from '@/shared/ui';
 
 import { useTopics } from '../hooks/useTopics';
@@ -21,6 +21,7 @@ type MaterialTabId = 'MODULES' | 'NOTES' | 'AMHARIC';
 
 interface TabConfig {
   kind: ContentKind;
+  /** The language of this tab. The lesson page opens in this language only; there is no language switch inside it. */
   lang: ContentLang;
   icon: IconName;
   tab: TranslationKey;
@@ -28,11 +29,14 @@ interface TabConfig {
   subtitle: TranslationKey;
 }
 
-/** Add a lower tab here and it appears in the UI. Notes and Amharic share the same records. */
+/**
+ * Add a lower tab here and it appears in the UI. Notes and Amharic Notes are two views of the same bilingual records:
+ * each tab opens the lesson in its own language only.
+ */
 const TAB_CONFIG: Record<MaterialTabId, TabConfig> = {
   MODULES: { kind: 'MODULE', lang: 'en', icon: 'module', tab: 'material.tab.modules', title: 'material.modules.title', subtitle: 'material.modules.sub' },
   NOTES: { kind: 'NOTE', lang: 'en', icon: 'note', tab: 'material.tab.notes', title: 'material.notes.title', subtitle: 'material.notes.sub' },
-  AMHARIC: { kind: 'NOTE', lang: 'am', icon: 'note', tab: 'material.tab.amharic', title: 'material.amharic.title', subtitle: 'material.amharic.sub' },
+  AMHARIC: { kind: 'NOTE', lang: 'am', icon: 'language', tab: 'material.tab.amharic', title: 'material.amharic.title', subtitle: 'material.amharic.sub' },
 };
 
 const TAB_ORDER: readonly MaterialTabId[] = ['MODULES', 'NOTES', 'AMHARIC'];
@@ -43,6 +47,8 @@ interface MaterialTabProps {
 }
 
 export function MaterialTab({ courseId, access }: MaterialTabProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const [tab, setTab] = useState<MaterialTabId>('MODULES');
@@ -69,9 +75,7 @@ export function MaterialTab({ courseId, access }: MaterialTabProps) {
       <UnderlineTabs options={options} value={tab} onChange={setTab} />
 
       <View style={styles.intro}>
-        <View style={styles.tile}>
-          <Icon name={config.icon} color={theme.colors.primary} />
-        </View>
+        <IconTile icon={config.icon} solid />
         <View style={styles.text}>
           <AppText variant="bodyLarge" bold>
             {t(config.title)}
@@ -83,7 +87,7 @@ export function MaterialTab({ courseId, access }: MaterialTabProps) {
       </View>
 
       {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
+      {error ? <ErrorNotice error={error} onRetry={reload} /> : null}
       {!loading && !error && topics.length === 0 ? <AppText muted>{t('material.empty')}</AppText> : null}
 
       {topics.map((topic) => (
@@ -95,16 +99,8 @@ export function MaterialTab({ courseId, access }: MaterialTabProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.md },
   intro: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
-  tile: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   text: { flex: 1, gap: 2 },
-});
+}));

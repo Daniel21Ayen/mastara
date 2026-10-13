@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { FormTextField } from '@/shared/forms';
 import { useForm } from '@/shared/hooks';
 import { AppButton, AppText, BottomSheet } from '@/shared/ui';
@@ -18,6 +18,7 @@ interface NewTicketSheetProps {
 }
 
 export function NewTicketSheet({ visible, onClose, onCreated }: NewTicketSheetProps) {
+  const theme = useTheme();
   const { t } = useI18n();
   const { user } = useSession();
   const form = useForm(createTicketSchema, { subject: '', message: '' });

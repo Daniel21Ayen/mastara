@@ -8,6 +8,9 @@ import { courseSchema } from './academic';
 export const myCourseSchema = z.object({
   course: courseSchema,
   access: z.enum(ACCESS_STATES),
+  /** The exact moment paid access ends (ISO). The phone counts days from this, so the number stays right offline. */
+  expiresAt: z.string().optional(),
+  /** Whole days until `expiresAt`, rounded up. Display only; the server may omit it and the phone derives it. */
   daysLeft: z.number().int().optional(),
   chaptersDone: z.number().int().min(0),
   chaptersTotal: z.number().int().min(0),
@@ -25,14 +28,6 @@ export const recentItemSchema = z.object({
 });
 
 export const homeSummarySchema = z.object({
-  continueLearning: z
-    .object({
-      courseId: z.string(),
-      courseTitle: z.string(),
-      chapterNumber: z.number().int(),
-      percent: z.number().int(),
-    })
-    .nullable(),
   chaptersDone: z.number().int(),
   chaptersTotal: z.number().int(),
   activeProducts: z.number().int(),

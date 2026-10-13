@@ -1,9 +1,9 @@
 // apps/mobile/src/shared/ui/Screen.tsx
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { ReactNode } from 'react';
 
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 
 interface ScreenProps {
   children: ReactNode;
@@ -13,6 +13,7 @@ interface ScreenProps {
 }
 
 export function Screen({ children, scroll = false, inTabs = false }: ScreenProps) {
+  const styles = useStyles();
   return (
     <SafeAreaView
       style={styles.safe}
@@ -34,8 +35,8 @@ export function Screen({ children, scroll = false, inTabs = false }: ScreenProps
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   safe: { flex: 1, backgroundColor: theme.colors.background },
   flex: { flex: 1 },
   content: { padding: theme.spacing.lg, gap: theme.spacing.md },
-});
+}));

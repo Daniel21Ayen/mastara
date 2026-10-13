@@ -1,10 +1,10 @@
 // apps/mobile/src/modules/store/components/PriceSummary.tsx
 import type { OrderQuote, QuoteLine } from '@mastara/domain';
 import type { TranslationKey } from '@mastara/i18n';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppText, Card } from '@/shared/ui';
 
 function lineLabel(line: QuoteLine): { key: TranslationKey; params?: Record<string, number> } {
@@ -24,6 +24,8 @@ function lineLabel(line: QuoteLine): { key: TranslationKey; params?: Record<stri
 
 /** Itemised price. Display only: the server recalculates and its amount is the one charged. */
 export function PriceSummary({ quote }: { quote: OrderQuote }) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
 
   return (
@@ -47,7 +49,7 @@ export function PriceSummary({ quote }: { quote: OrderQuote }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: theme.spacing.md },
   total: { borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: theme.spacing.sm },
-});
+}));

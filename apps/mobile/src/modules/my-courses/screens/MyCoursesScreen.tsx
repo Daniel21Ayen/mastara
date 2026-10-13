@@ -3,11 +3,11 @@ import type { CourseTab } from '@mastara/domain';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, ScreenHeader, SegmentedControl, Screen } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
@@ -18,6 +18,8 @@ import { CourseSearchBar } from '../components/CourseSearchBar';
 import { useMyCourses } from '../hooks/useMyCourses';
 
 export function MyCoursesScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const { profile } = useSession();
   const router = useRouter();
@@ -89,9 +91,9 @@ export function MyCoursesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   header: { gap: theme.spacing.md, paddingBottom: theme.spacing.md },
   list: { paddingBottom: theme.spacing.lg },
   separator: { height: theme.spacing.sm },
   gap: { gap: theme.spacing.sm },
-});
+}));

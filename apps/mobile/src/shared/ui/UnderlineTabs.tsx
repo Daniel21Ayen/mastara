@@ -1,7 +1,7 @@
 // apps/mobile/src/shared/ui/UnderlineTabs.tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -18,6 +18,8 @@ interface UnderlineTabsProps<T extends string> {
 
 /** Lower tabs: text with a primary underline under the active one. */
 export function UnderlineTabs<T extends string>({ options, value, onChange }: UnderlineTabsProps<T>) {
+  const theme = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.row} accessibilityRole="tablist">
       {options.map((option) => {
@@ -40,7 +42,7 @@ export function UnderlineTabs<T extends string>({ options, value, onChange }: Un
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   tab: {
     flex: 1,
@@ -52,4 +54,4 @@ const styles = StyleSheet.create({
     marginBottom: -1,
   },
   active: { borderBottomColor: theme.colors.primary },
-});
+}));
