@@ -11,6 +11,7 @@ const config: ExpoConfig = {
   version: '0.1.0',
   orientation: 'portrait',
   userInterfaceStyle: 'light',
+  platforms: ['android', 'ios'],
   android: { package: 'com.kewakibt.mastara' },
   ios: { bundleIdentifier: 'com.kewakibt.mastara' },
   plugins: [
