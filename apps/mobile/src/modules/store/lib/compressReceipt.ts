@@ -9,19 +9,14 @@ export interface Receipt {
   bytes: number;
 }
 
-async function sizeOf(uri: string): Promise<number> {
-  const response = await fetch(uri);
-  return (await response.arrayBuffer()).byteLength;
-}
-
 /** Shrinks a screenshot step by step until it is under 300 KB, to save the student's mobile data. */
 export async function compressReceipt(uri: string, originalWidth: number): Promise<Receipt> {
   for (const step of RECEIPT_COMPRESSION_STEPS) {
     const context = ImageManipulator.manipulate(uri);
     context.resize({ width: Math.min(step.width, originalWidth) });
     const image = await context.renderAsync();
-    const saved = await image.saveAsync({ compress: step.quality, format: SaveFormat.JPEG });
-    const bytes = await sizeOf(saved.uri);
+    const saved = await image.saveAsync({ compress: step.quality, format: SaveFormat.JPEG, base64: true });
+    const bytes = saved.base64 ? Math.ceil((saved.base64.length * 3) / 4) : 1024;
 
     if (bytes <= MAX_RECEIPT_BYTES) return { uri: saved.uri, bytes };
   }
