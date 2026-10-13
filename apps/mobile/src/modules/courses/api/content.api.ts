@@ -2,10 +2,8 @@
 import type { Topic } from '@mastara/contracts';
 import type { ContentKind } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
-import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { buildTopics, courses, findTopic } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
+import { cacheReads } from '@/core/db';
+import { httpClient } from '@/core/network';
 
 export interface ContentApi {
   /** Modules or notes of a course, in order. */
@@ -13,37 +11,35 @@ export interface ContentApi {
   getTopic(topicId: string): Promise<Topic | null>;
 }
 
-const mockContentApi: ContentApi = {
+const realContentApi: ContentApi = {
   async getTopics(courseId, kind) {
-    await simulateLatency(150);
-    const course = courses.find((item) => item.id === courseId);
-    return course ? buildTopics(course).filter((topic) => topic.kind === kind) : [];
+    const list = await httpClient.get<any[]>(`/content/courses/${courseId}/topics?kind=${kind}`);
+    return list.map((item) => ({
+      id: item.id,
+      courseId: item.courseId,
+      kind: item.kind,
+      number: item.number,
+      title: item.title,
+      summary: item.summary,
+      body: item.body ?? { en: '', am: '' },
+      isFree: item.isFree,
+    }));
   },
   async getTopic(topicId) {
-    await simulateLatency(100);
-    return findTopic(topicId);
+    const detail = await httpClient.get<any>(`/content/topics/${topicId}`);
+    if (!detail) return null;
+    return {
+      id: detail.id,
+      courseId: detail.courseId,
+      kind: detail.kind,
+      number: detail.number,
+      title: detail.title,
+      summary: detail.summary,
+      body: detail.body,
+      isFree: detail.isFree,
+    };
   },
 };
 
-function createContentApi(): ContentApi {
-  if (env.useMocks) return mockContentApi;
-  throw new Error('The real content API is added in the backend integration phase.');
-}
-
-/** The server, with no download rules. Used to download a lesson. */
-export const contentRemote = createContentApi();
-
-/**
- * Online first. A lesson opens offline only if the student downloaded it. Offline, the lesson lists show what was downloaded.
- */
-export const contentApi = gatewayReads('content', contentRemote, {
-  details: ['getTopic'],
-  lists: {
-    getTopics: async (courseId: string, kind: ContentKind) => {
-      const saved = await downloadStore.listByKind<Topic>('TOPIC', courseId);
-      return saved.map((item) => item.meta).filter((topic) => topic.kind === kind).sort((a, b) => a.number - b.number);
-    },
-  },
-});
-
-export const topicKey = (topicId: string): string => contentKey('content', 'getTopic', [topicId]);
+/** Reads are saved on the phone and used when it is offline; writes always need the server. */
+export const contentApi = cacheReads('content', realContentApi, ['getTopics', 'getTopic']);

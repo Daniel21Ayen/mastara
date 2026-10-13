@@ -27,7 +27,7 @@ enum OrderStatus {
 }
 
 enum PaymentMethod {
-  CBE_MOBILE_BANKING
+  CBE_MOBILE
   CBE_BIRR
   TELEBIRR
 }

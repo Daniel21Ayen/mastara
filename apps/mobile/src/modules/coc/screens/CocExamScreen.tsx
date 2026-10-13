@@ -21,7 +21,7 @@ export function CocExamScreen() {
     return (
       <ExamFlow
         examId={data.set.id}
-        title={data.set.title[language]}
+        title={typeof data.set.title === 'string' ? data.set.title : (data.set.title?.[language] ?? (data.set.title as any)?.en ?? '')}
         subtitle={t('coc.banner')}
         questions={data.questions}
         minutes={data.set.minutes}

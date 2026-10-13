@@ -2,10 +2,8 @@
 import type { Question, QuizChapter } from '@mastara/contracts';
 import type { QuizNumber } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
-import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { buildChapters, buildQuestions, courses, findChapter } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
+import { cacheReads } from '@/core/db';
+import { httpClient } from '@/core/network';
 
 export interface QuizApi {
   getChapters(courseId: string, quizNo: QuizNumber): Promise<QuizChapter[]>;
@@ -13,43 +11,19 @@ export interface QuizApi {
   getQuestions(chapterId: string): Promise<Question[]>;
 }
 
-const mockQuizApi: QuizApi = {
+const realQuizApi: QuizApi = {
   async getChapters(courseId, quizNo) {
-    await simulateLatency(150);
-    const course = courses.find((item) => item.id === courseId);
-    return course ? buildChapters(course).filter((chapter) => chapter.quizNo === quizNo) : [];
+    return httpClient.get<QuizChapter[]>(
+      `/assessment/quizzes/courses/${courseId}/chapters?quizNo=${quizNo}`,
+    );
   },
   async getChapter(chapterId) {
-    await simulateLatency(100);
-    return findChapter(chapterId);
+    return httpClient.get<QuizChapter>(`/assessment/quizzes/chapters/${chapterId}`);
   },
   async getQuestions(chapterId) {
-    await simulateLatency(150);
-    const chapter = findChapter(chapterId);
-    return chapter ? buildQuestions(chapter) : [];
+    return httpClient.get<Question[]>(`/assessment/quizzes/chapters/${chapterId}/questions`);
   },
 };
 
-function createQuizApi(): QuizApi {
-  if (env.useMocks) return mockQuizApi;
-  throw new Error('The real quiz API is added in the backend integration phase.');
-}
-
-/** The server, with no download rules. Used to download a quiz chapter. */
-export const quizRemote = createQuizApi();
-
-/** Online first. A chapter opens offline only if the student downloaded it. */
-export const quizApi = gatewayReads('quiz', quizRemote, {
-  details: ['getChapter', 'getQuestions'],
-  lists: {
-    getChapters: async (courseId: string, quizNo: QuizNumber) => {
-      const saved = await downloadStore.listByKind<QuizChapter>('QUIZ_CHAPTER', courseId);
-      return saved.map((item) => item.meta).filter((chapter) => chapter.quizNo === quizNo).sort((a, b) => a.chapterNumber - b.chapterNumber);
-    },
-  },
-});
-
-export const chapterKeys = (chapterId: string) => ({
-  chapter: contentKey('quiz', 'getChapter', [chapterId]),
-  questions: contentKey('quiz', 'getQuestions', [chapterId]),
-});
+/** Reads are saved on the phone and used when it is offline; writes always need the server. */
+export const quizApi = cacheReads('quiz', realQuizApi, ['getChapters', 'getChapter', 'getQuestions']);

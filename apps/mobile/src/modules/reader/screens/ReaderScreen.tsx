@@ -59,7 +59,14 @@ export function ReaderScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.first.id]);
 
-  const near = current ?? data?.startIndex ?? 0;
+  const rawTitle = data?.topic.title;
+  const topicTitle = typeof rawTitle === 'string' ? rawTitle : (rawTitle?.[lang] ?? (rawTitle as any)?.en ?? '');
+  const rawBody = data?.topic.body;
+  const topicBody = typeof rawBody === 'string' ? rawBody : (rawBody?.[lang] ?? (rawBody as any)?.en ?? '');
+
+  return (
+    <Screen scroll>
+      <TopBar title={topicTitle} onBack={() => router.back()} />
 
   const renderItem = useCallback(
     ({ item, index }: { item: LessonEntry; index: number }) => (
@@ -82,9 +89,9 @@ export function ReaderScreen() {
     <Screen>
       <TopBar title={title} onBack={() => router.back()} />
 
-      {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <ErrorNotice error={error} onRetry={reload} /> : null}
-      {!loading && !error && !data ? <AppText muted>{t('reader.notFound')}</AppText> : null}
+          <Card>
+            <RichText text={topicBody} lang={lang} />
+          </Card>
 
       {data ? (
         <FlatList

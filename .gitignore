@@ -1,9 +1,17 @@
-node_modules/
-.expo/
-.turbo/
-dist/
-build/
+node_modules
+dist
+.next
+.expo
+.turbo
+.env
+android
+ios
 *.log
+.expo
+android
+ios
+
+# Environment
 .env
 .env.local
 .DS_Store

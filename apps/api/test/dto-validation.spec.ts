@@ -1,0 +1,494 @@
+import "reflect-metadata";
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
+import { RegisterDto } from "../src/modules/identity/auth/dto/register.dto";
+import { LoginDto } from "../src/modules/identity/auth/dto/login.dto";
+import { RegisterDeviceDto } from "../src/modules/identity/devices/dto/register-device.dto";
+import { UpdateAcademicScopeDto, StudentStreamSelection } from "../src/modules/identity/students/dto/update-academic.dto";
+import { UpdateCoursesDto } from "../src/modules/identity/students/dto/update-courses.dto";
+import { EditAccountDto } from "../src/modules/identity/students/dto/edit-account.dto";
+import { GetCoursesQueryDto } from "../src/modules/catalog/dto/get-courses-query.dto";
+import { RecordProgressDto } from "../src/modules/content/dto/record-progress.dto";
+import { GetQuizChaptersQueryDto } from "../src/modules/assessment/quizzes/dto/get-quiz-chapters-query.dto";
+import { GetExamsQueryDto } from "../src/modules/assessment/exams/dto/get-exams-query.dto";
+import {
+  StartAttemptDto,
+  SubmitAttemptDto,
+  GetAttemptsQueryDto,
+} from "../src/modules/assessment/attempts/dto";
+import {
+  QuoteOrderDto,
+  GetBuyableCoursesQueryDto,
+  GetFullPackageQueryDto,
+} from "../src/modules/commerce/pricing/dto";
+import { AttemptCategory, DevicePlatform, ExamKind, ProductType, Stream } from "@mastara/database";
+
+let passed = 0;
+let failed = 0;
+
+function assert(condition: boolean, testName: string, details?: any) {
+  if (condition) {
+    console.log(`  ✓ ${testName}`);
+    passed++;
+  } else {
+    console.error(`  ✗ ${testName}`, details || "");
+    failed++;
+  }
+}
+
+async function runTests() {
+  console.log("=== Testing Step 1: Contract & DTO Alignment ===\n");
+
+  // ----------------------------------------------------
+  // Test RegisterDto
+  // ----------------------------------------------------
+  console.log("1. RegisterDto Validation:");
+
+  // 1.1 Valid with Ethiopian phone (+2519...)
+  const regPhone = plainToInstance(RegisterDto, {
+    name: "Abebe Kebede",
+    identifier: "+251911223344",
+    password: "SecurePassword2026!",
+  });
+  const regPhoneErrors = await validate(regPhone);
+  assert(regPhoneErrors.length === 0, "Accepts valid Ethiopian phone (+251911223344)", regPhoneErrors);
+
+  // 1.2 Valid with Ethiopian local phone (09...)
+  const regLocalPhone = plainToInstance(RegisterDto, {
+    name: "Abebe Kebede",
+    identifier: "0911223344",
+    password: "SecurePassword2026!",
+  });
+  const regLocalErrors = await validate(regLocalPhone);
+  assert(regLocalErrors.length === 0, "Accepts local Ethiopian phone (0911223344)", regLocalErrors);
+
+  // 1.3 Valid with email
+  const regEmail = plainToInstance(RegisterDto, {
+    name: "Abebe Kebede",
+    identifier: "abebe@mastara.edu.et",
+    password: "SecurePassword2026!",
+  });
+  const regEmailErrors = await validate(regEmail);
+  assert(regEmailErrors.length === 0, "Accepts valid email (abebe@mastara.edu.et)", regEmailErrors);
+
+  // 1.4 Invalid identifier
+  const regInvalidId = plainToInstance(RegisterDto, {
+    name: "Abebe Kebede",
+    identifier: "invalid-id-12345",
+    password: "SecurePassword2026!",
+  });
+  const regInvalidIdErrors = await validate(regInvalidId);
+  assert(regInvalidIdErrors.some((e) => e.property === "identifier"), "Rejects invalid identifier format");
+
+  // 1.5 Short password (< 8 chars)
+  const regShortPass = plainToInstance(RegisterDto, {
+    name: "Abebe Kebede",
+    identifier: "+251911223344",
+    password: "1234567", // 7 chars
+  });
+  const regShortPassErrors = await validate(regShortPass);
+  assert(regShortPassErrors.some((e) => e.property === "password"), "Rejects password shorter than 8 characters");
+
+  // 1.6 Short name (< 2 chars)
+  const regShortName = plainToInstance(RegisterDto, {
+    name: "A",
+    identifier: "+251911223344",
+    password: "SecurePassword2026!",
+  });
+  const regShortNameErrors = await validate(regShortName);
+  assert(regShortNameErrors.some((e) => e.property === "name"), "Rejects name shorter than 2 characters");
+
+  // ----------------------------------------------------
+  // Test LoginDto
+  // ----------------------------------------------------
+  console.log("\n2. LoginDto Validation:");
+
+  // 2.1 Valid Login with phone
+  const loginValidPhone = plainToInstance(LoginDto, {
+    identifier: "+251911223344",
+    password: "SecurePassword2026!",
+  });
+  const loginPhoneErrors = await validate(loginValidPhone);
+  assert(loginPhoneErrors.length === 0, "Accepts valid login with phone", loginPhoneErrors);
+
+  // 2.2 Valid Login with email
+  const loginValidEmail = plainToInstance(LoginDto, {
+    identifier: "student@mastara.edu.et",
+    password: "SecurePassword2026!",
+  });
+  const loginEmailErrors = await validate(loginValidEmail);
+  assert(loginEmailErrors.length === 0, "Accepts valid login with email", loginEmailErrors);
+
+  // 2.3 Short password (< 8 chars)
+  const loginShortPass = plainToInstance(LoginDto, {
+    identifier: "+251911223344",
+    password: "short",
+  });
+  const loginShortPassErrors = await validate(loginShortPass);
+  assert(loginShortPassErrors.some((e) => e.property === "password"), "Rejects login password < 8 characters");
+
+  // ----------------------------------------------------
+  // Test RegisterDeviceDto
+  // ----------------------------------------------------
+  console.log("\n3. RegisterDeviceDto Validation:");
+
+  const devValid = plainToInstance(RegisterDeviceDto, {
+    deviceId: "hardware-uuid-12345",
+    deviceName: "Samsung Galaxy S23",
+    platform: DevicePlatform.ANDROID,
+  });
+  const devErrors = await validate(devValid);
+  assert(devErrors.length === 0, "Accepts valid device registration", devErrors);
+
+  const devEmpty = plainToInstance(RegisterDeviceDto, {
+    deviceId: "",
+  });
+  const devEmptyErrors = await validate(devEmpty);
+  assert(devEmptyErrors.some((e) => e.property === "deviceId"), "Rejects empty deviceId");
+
+  // ----------------------------------------------------
+  // Test UpdateAcademicScopeDto
+  // ----------------------------------------------------
+  console.log("\n4. UpdateAcademicScopeDto Validation:");
+
+  const acadValid = plainToInstance(UpdateAcademicScopeDto, {
+    universityId: "b1010000-0000-0000-0000-000000000001",
+    programId: "b2010000-0000-0000-0000-000000000001",
+    semesterId: "b3010000-0000-0000-0000-000000000001",
+    stream: StudentStreamSelection.NATURAL,
+  });
+  const acadErrors = await validate(acadValid);
+  assert(acadErrors.length === 0, "Accepts valid academic scope with NATURAL stream", acadErrors);
+
+  const acadInvalidUUID = plainToInstance(UpdateAcademicScopeDto, {
+    universityId: "not-a-uuid",
+    programId: "b2010000-0000-0000-0000-000000000001",
+    semesterId: "b3010000-0000-0000-0000-000000000001",
+    stream: "NATURAL",
+  });
+  const acadInvalidUUIDErrors = await validate(acadInvalidUUID);
+  assert(acadInvalidUUIDErrors.some((e) => e.property === "universityId"), "Rejects invalid university UUID");
+
+  const acadInvalidStream = plainToInstance(UpdateAcademicScopeDto, {
+    universityId: "b1010000-0000-0000-0000-000000000001",
+    programId: "b2010000-0000-0000-0000-000000000001",
+    semesterId: "b3010000-0000-0000-0000-000000000001",
+    stream: "INVALID_STREAM",
+  });
+  const acadInvalidStreamErrors = await validate(acadInvalidStream);
+  assert(acadInvalidStreamErrors.some((e) => e.property === "stream"), "Rejects invalid stream value");
+
+  // ----------------------------------------------------
+  // Test UpdateCoursesDto
+  // ----------------------------------------------------
+  console.log("\n5. UpdateCoursesDto Validation:");
+
+  const coursesValid = plainToInstance(UpdateCoursesDto, {
+    courseIds: [
+      "c1010000-0000-0000-0000-000000000001",
+      "c1010000-0000-0000-0000-000000000002",
+    ],
+  });
+  const coursesErrors = await validate(coursesValid);
+  assert(coursesErrors.length === 0, "Accepts valid course UUIDs array", coursesErrors);
+
+  const coursesEmpty = plainToInstance(UpdateCoursesDto, {
+    courseIds: [],
+  });
+  const coursesEmptyErrors = await validate(coursesEmpty);
+  assert(coursesEmptyErrors.some((e) => e.property === "courseIds"), "Rejects empty courseIds array");
+
+  const coursesInvalidItem = plainToInstance(UpdateCoursesDto, {
+    courseIds: ["c1010000-0000-0000-0000-000000000001", "not-a-uuid"],
+  });
+  const coursesInvalidItemErrors = await validate(coursesInvalidItem);
+  assert(coursesInvalidItemErrors.some((e) => e.property === "courseIds"), "Rejects array with invalid UUID");
+
+  // ----------------------------------------------------
+  // Test EditAccountDto
+  // ----------------------------------------------------
+  console.log("\n6. EditAccountDto Validation:");
+
+  const editValidPhone = plainToInstance(EditAccountDto, {
+    name: "Almaz Kebede",
+    identifier: "+251911223344",
+  });
+  const editValidPhoneErrors = await validate(editValidPhone);
+  assert(editValidPhoneErrors.length === 0, "Accepts valid name and Ethiopian phone", editValidPhoneErrors);
+
+  const editValidEmail = plainToInstance(EditAccountDto, {
+    name: "Almaz Kebede",
+    identifier: "almaz@mastara.edu.et",
+  });
+  const editValidEmailErrors = await validate(editValidEmail);
+  assert(editValidEmailErrors.length === 0, "Accepts valid name and email", editValidEmailErrors);
+
+  const editShortName = plainToInstance(EditAccountDto, {
+    name: "A",
+  });
+  const editShortNameErrors = await validate(editShortName);
+  assert(editShortNameErrors.some((e) => e.property === "name"), "Rejects name shorter than 2 characters");
+
+  const editInvalidId = plainToInstance(EditAccountDto, {
+    identifier: "invalid_phone_or_email",
+  });
+  const editInvalidIdErrors = await validate(editInvalidId);
+  assert(editInvalidIdErrors.some((e) => e.property === "identifier"), "Rejects invalid identifier format");
+
+  // ----------------------------------------------------
+  // Test GetCoursesQueryDto (Catalog)
+  // ----------------------------------------------------
+  console.log("\n7. GetCoursesQueryDto Validation:");
+
+  const validCatalogQuery = plainToInstance(GetCoursesQueryDto, {
+    semesterId: "b3010000-0000-0000-0000-000000000001",
+    stream: Stream.NATURAL,
+  });
+  const validCatalogQueryErrors = await validate(validCatalogQuery);
+  assert(validCatalogQueryErrors.length === 0, "Accepts valid semester UUID and NATURAL stream", validCatalogQueryErrors);
+
+  const missingSemesterQuery = plainToInstance(GetCoursesQueryDto, {
+    stream: Stream.SOCIAL,
+  });
+  const missingSemesterErrors = await validate(missingSemesterQuery);
+  assert(missingSemesterErrors.some((e) => e.property === "semesterId"), "Rejects missing semesterId");
+
+  const invalidSemesterUUIDQuery = plainToInstance(GetCoursesQueryDto, {
+    semesterId: "invalid-uuid-12345",
+  });
+  const invalidSemesterUUIDErrors = await validate(invalidSemesterUUIDQuery);
+  assert(invalidSemesterUUIDErrors.some((e) => e.property === "semesterId"), "Rejects malformed semesterId UUID");
+
+  const invalidStreamQuery = plainToInstance(GetCoursesQueryDto, {
+    semesterId: "b3010000-0000-0000-0000-000000000001",
+    stream: "INVALID_STREAM_SELECTION",
+  });
+  const invalidStreamErrors = await validate(invalidStreamQuery);
+  assert(invalidStreamErrors.some((e) => e.property === "stream"), "Rejects invalid stream enum value");
+
+  // ----------------------------------------------------
+  // Test RecordProgressDto (Content)
+  // ----------------------------------------------------
+  console.log("\n8. RecordProgressDto Validation:");
+
+  const validProgress = plainToInstance(RecordProgressDto, {
+    scrollPosition: 0.85,
+    isCompleted: true,
+  });
+  const validProgressErrors = await validate(validProgress);
+  assert(validProgressErrors.length === 0, "Accepts valid scrollPosition and isCompleted boolean", validProgressErrors);
+
+  const negativeScroll = plainToInstance(RecordProgressDto, {
+    scrollPosition: -0.5,
+  });
+  const negativeScrollErrors = await validate(negativeScroll);
+  assert(negativeScrollErrors.some((e) => e.property === "scrollPosition"), "Rejects negative scrollPosition");
+
+  const invalidBool = plainToInstance(RecordProgressDto, {
+    isCompleted: "not-a-bool" as any,
+  });
+  const invalidBoolErrors = await validate(invalidBool);
+  assert(invalidBoolErrors.some((e) => e.property === "isCompleted"), "Rejects non-boolean isCompleted");
+
+  // ----------------------------------------------------
+  // Test GetQuizChaptersQueryDto (Quizzes)
+  // ----------------------------------------------------
+  console.log("\n9. GetQuizChaptersQueryDto Validation:");
+
+  const validQuizQuery = plainToInstance(GetQuizChaptersQueryDto, {
+    quizNo: 1,
+  });
+  const validQuizQueryErrors = await validate(validQuizQuery);
+  assert(validQuizQueryErrors.length === 0, "Accepts valid quiz number (1)", validQuizQueryErrors);
+
+  const validQuizQuery3 = plainToInstance(GetQuizChaptersQueryDto, {
+    quizNo: 3,
+  });
+  const validQuizQuery3Errors = await validate(validQuizQuery3);
+  assert(validQuizQuery3Errors.length === 0, "Accepts valid quiz number (3)", validQuizQuery3Errors);
+
+  const invalidQuizNo = plainToInstance(GetQuizChaptersQueryDto, {
+    quizNo: 4,
+  });
+  const invalidQuizNoErrors = await validate(invalidQuizNo);
+  assert(invalidQuizNoErrors.some((e) => e.property === "quizNo"), "Rejects invalid quiz number out of range (4)");
+
+  const nonIntegerQuizNo = plainToInstance(GetQuizChaptersQueryDto, {
+    quizNo: "not-a-number" as any,
+  });
+  const nonIntegerQuizNoErrors = await validate(nonIntegerQuizNo);
+  assert(nonIntegerQuizNoErrors.some((e) => e.property === "quizNo"), "Rejects non-integer quizNo");
+
+  // ----------------------------------------------------
+  // Test GetExamsQueryDto (Exams)
+  // ----------------------------------------------------
+  console.log("\n10. GetExamsQueryDto Validation:");
+
+  const validExamQueryEmpty = plainToInstance(GetExamsQueryDto, {});
+  const validExamQueryEmptyErrors = await validate(validExamQueryEmpty);
+  assert(validExamQueryEmptyErrors.length === 0, "Accepts empty query (optional kind)", validExamQueryEmptyErrors);
+
+  const validExamQueryMid = plainToInstance(GetExamsQueryDto, {
+    kind: ExamKind.MID,
+  });
+  const validExamQueryMidErrors = await validate(validExamQueryMid);
+  assert(validExamQueryMidErrors.length === 0, "Accepts valid MID exam kind", validExamQueryMidErrors);
+
+  const invalidExamKind = plainToInstance(GetExamsQueryDto, {
+    kind: "POP_QUIZ" as any,
+  });
+  const invalidExamKindErrors = await validate(invalidExamKind);
+  assert(invalidExamKindErrors.some((e) => e.property === "kind"), "Rejects invalid exam kind enum");
+
+  // ----------------------------------------------------
+  // Test StartAttemptDto (Assessment Attempts)
+  // ----------------------------------------------------
+  console.log("\n11. StartAttemptDto Validation:");
+
+  const validStartExam = plainToInstance(StartAttemptDto, {
+    category: AttemptCategory.EXAM,
+    examId: "a0000000-0000-4000-8000-000000000001",
+  });
+  const validStartExamErrors = await validate(validStartExam);
+  assert(validStartExamErrors.length === 0, "Accepts valid EXAM attempt start payload", validStartExamErrors);
+
+  const invalidCategoryStart = plainToInstance(StartAttemptDto, {
+    category: "INVALID_CAT" as any,
+  });
+  const invalidCategoryStartErrors = await validate(invalidCategoryStart);
+  assert(invalidCategoryStartErrors.some((e) => e.property === "category"), "Rejects invalid attempt category enum");
+
+  const invalidUuidStart = plainToInstance(StartAttemptDto, {
+    category: AttemptCategory.EXAM,
+    examId: "not-a-uuid",
+  });
+  const invalidUuidStartErrors = await validate(invalidUuidStart);
+  assert(invalidUuidStartErrors.some((e) => e.property === "examId"), "Rejects non-UUID examId");
+
+  // ----------------------------------------------------
+  // Test SubmitAttemptDto (Assessment Attempts)
+  // ----------------------------------------------------
+  console.log("\n12. SubmitAttemptDto Validation:");
+
+  const validSubmit = plainToInstance(SubmitAttemptDto, {
+    answers: [
+      {
+        questionId: "b0000000-0000-4000-8000-000000000001",
+        selectedAnswers: ["opt-1", "opt-2"],
+        isFlagged: false,
+        clientTimestamp: "2026-10-12T14:30:00.000Z",
+      },
+    ],
+    elapsedMs: 120000,
+  });
+  const validSubmitErrors = await validate(validSubmit);
+  assert(validSubmitErrors.length === 0, "Accepts valid attempt submission payload", validSubmitErrors);
+
+  const invalidAnswersNonArray = plainToInstance(SubmitAttemptDto, {
+    answers: "not-an-array" as any,
+  });
+  const invalidAnswersNonArrayErrors = await validate(invalidAnswersNonArray);
+  assert(invalidAnswersNonArrayErrors.some((e) => e.property === "answers"), "Rejects non-array answers payload");
+
+  // ----------------------------------------------------
+  // Test GetAttemptsQueryDto (Assessment Attempts)
+  // ----------------------------------------------------
+  console.log("\n13. GetAttemptsQueryDto Validation:");
+
+  const validAttemptsQuery = plainToInstance(GetAttemptsQueryDto, {
+    category: AttemptCategory.EXAM,
+    page: 2,
+    limit: 20,
+  });
+  const validAttemptsQueryErrors = await validate(validAttemptsQuery);
+  assert(validAttemptsQueryErrors.length === 0, "Accepts valid attempts query with pagination", validAttemptsQueryErrors);
+
+  const invalidAttemptsLimit = plainToInstance(GetAttemptsQueryDto, {
+    limit: 100, // max is 50
+  });
+  const invalidAttemptsLimitErrors = await validate(invalidAttemptsLimit);
+  assert(invalidAttemptsLimitErrors.some((e) => e.property === "limit"), "Rejects attempts limit > 50");
+
+  // ----------------------------------------------------
+  // Test QuoteOrderDto (Commerce Pricing)
+  // ----------------------------------------------------
+  console.log("\n14. QuoteOrderDto Validation:");
+
+  const validQuoteBundle = plainToInstance(QuoteOrderDto, {
+    type: ProductType.BUNDLE,
+    courseCount: 8,
+  });
+  const validQuoteBundleErrors = await validate(validQuoteBundle);
+  assert(validQuoteBundleErrors.length === 0, "Accepts valid BUNDLE quote payload", validQuoteBundleErrors);
+
+  const invalidQuoteType = plainToInstance(QuoteOrderDto, {
+    type: "INVALID_PROD" as any,
+  });
+  const invalidQuoteTypeErrors = await validate(invalidQuoteType);
+  assert(invalidQuoteTypeErrors.some((e) => e.property === "type"), "Rejects invalid product type enum");
+
+  const invalidCourseCount = plainToInstance(QuoteOrderDto, {
+    type: ProductType.BUNDLE,
+    courseCount: -1,
+  });
+  const invalidCourseCountErrors = await validate(invalidCourseCount);
+  assert(invalidCourseCountErrors.some((e) => e.property === "courseCount"), "Rejects negative courseCount");
+
+  // ----------------------------------------------------
+  // Test GetBuyableCoursesQueryDto (Commerce Pricing)
+  // ----------------------------------------------------
+  console.log("\n15. GetBuyableCoursesQueryDto Validation:");
+
+  const validBuyableQuery = plainToInstance(GetBuyableCoursesQueryDto, {
+    semesterId: "b3010000-0000-4000-8000-000000000001",
+    stream: Stream.NATURAL,
+  });
+  const validBuyableQueryErrors = await validate(validBuyableQuery);
+  assert(validBuyableQueryErrors.length === 0, "Accepts valid buyable courses query", validBuyableQueryErrors);
+
+  const invalidSemesterId = plainToInstance(GetBuyableCoursesQueryDto, {
+    semesterId: "not-a-uuid",
+    stream: Stream.NATURAL,
+  });
+  const invalidSemesterIdErrors = await validate(invalidSemesterId);
+  assert(invalidSemesterIdErrors.some((e) => e.property === "semesterId"), "Rejects malformed semesterId");
+
+  const invalidBuyableStream = plainToInstance(GetBuyableCoursesQueryDto, {
+    semesterId: "b3010000-0000-4000-8000-000000000001",
+    stream: "ARTS" as any,
+  });
+  const invalidBuyableStreamErrors = await validate(invalidBuyableStream);
+  assert(invalidBuyableStreamErrors.some((e) => e.property === "stream"), "Rejects invalid stream enum");
+
+  // ----------------------------------------------------
+  // Test GetFullPackageQueryDto (Commerce Pricing)
+  // ----------------------------------------------------
+  console.log("\n16. GetFullPackageQueryDto Validation:");
+
+  const validFullPkgQuery = plainToInstance(GetFullPackageQueryDto, {
+    programId: "b2010000-0000-4000-8000-000000000001",
+    stream: Stream.SOCIAL,
+  });
+  const validFullPkgQueryErrors = await validate(validFullPkgQuery);
+  assert(validFullPkgQueryErrors.length === 0, "Accepts valid full package query", validFullPkgQueryErrors);
+
+  const invalidProgramId = plainToInstance(GetFullPackageQueryDto, {
+    programId: "bad-uuid",
+    stream: Stream.SOCIAL,
+  });
+  const invalidProgramIdErrors = await validate(invalidProgramId);
+  assert(invalidProgramIdErrors.some((e) => e.property === "programId"), "Rejects malformed programId");
+
+  console.log(`\n========================================`);
+  console.log(`Results: ${passed} passed, ${failed} failed.`);
+  console.log(`========================================\n`);
+
+  if (failed > 0) {
+    process.exit(1);
+  }
+}
+
+runTests().catch((err) => {
+  console.error("Test execution failed:", err);
+  process.exit(1);
+});
