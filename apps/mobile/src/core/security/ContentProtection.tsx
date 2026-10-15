@@ -40,7 +40,7 @@ export function ContentProtection({ identifier }: { identifier: string }) {
 }
 
 const useStyles = createStyles((theme) => ({
-  overlay: { ...StyleSheet.absoluteFillObject, overflow: 'hidden', elevation: 50, zIndex: 50 },
+  overlay: { ...StyleSheet.absoluteFill, overflow: 'hidden', elevation: 50, zIndex: 50 },
   grid: {
     position: 'absolute',
     top: '50%',

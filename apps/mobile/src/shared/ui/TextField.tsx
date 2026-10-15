@@ -11,7 +11,7 @@ export interface TextFieldProps {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
-  error?: string;
+  error?: string | undefined;
   placeholder?: string;
   secureTextEntry?: boolean;
   keyboardType?: KeyboardTypeOptions;

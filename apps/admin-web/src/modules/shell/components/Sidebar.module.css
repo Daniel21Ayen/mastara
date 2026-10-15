@@ -1,0 +1,127 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  height: 100%;
+  padding: var(--space-lg) var(--space-md);
+  background: var(--color-text);
+  color: var(--color-on-primary);
+  overflow-y: auto;
+}
+
+.brand {
+  padding: 0 var(--space-sm);
+}
+
+.name {
+  margin: 0;
+  font-size: var(--font-size-heading);
+  font-weight: 700;
+}
+
+.portal {
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-on-primary-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  display: block;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  color: var(--color-on-primary-muted);
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.link:hover {
+  background: var(--color-on-primary-soft);
+  color: var(--color-on-primary);
+}
+
+.active,
+.active:hover {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.link:focus-visible {
+  outline-color: var(--color-on-primary);
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0 0;
+  padding: 0 0 0 var(--space-md);
+  list-style: none;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-on-primary);
+  font: inherit;
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.group:hover {
+  background: var(--color-on-primary-soft);
+}
+
+.group:focus-visible {
+  outline: 2px solid var(--color-on-primary);
+}
+
+.sub {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0 var(--space-xs);
+  padding: 0 0 0 var(--space-md);
+  list-style: none;
+}
+
+.leaf {
+  display: block;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  color: var(--color-on-primary-muted);
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.leaf:hover {
+  background: var(--color-on-primary-soft);
+  color: var(--color-on-primary);
+}
+
+.leafActive,
+.leafActive:hover {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.leaf:focus-visible {
+  outline-color: var(--color-on-primary);
+}

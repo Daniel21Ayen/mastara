@@ -1,0 +1,197 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.toolbar > * {
+  min-width: 180px;
+}
+
+.ids {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.idLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.more {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-xs);
+}
+
+.rowActions > * {
+  min-height: 32px;
+  padding: 0 var(--space-sm);
+  font-size: var(--font-size-caption);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.counter {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  text-align: end;
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-caption);
+}
+
+.failure {
+  margin: 0;
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.notice {
+  margin-bottom: var(--space-md);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+.staged {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stagedRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.stagedText {
+  flex: 1;
+  min-width: 200px;
+}
+
+.stagedId {
+  display: block;
+  font-weight: 700;
+}
+
+.stagedPrompt {
+  display: block;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-sm) var(--space-lg);
+  margin: 0;
+}
+
+.summary dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}
+
+.summary dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.problems {
+  margin: 0;
+  padding-inline-start: var(--space-lg);
+  color: var(--color-danger);
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+/* Ten columns: tighter cells so Actions stays in view on a laptop screen. */
+.compact th,
+.compact td {
+  padding-inline: var(--space-xs);
+  font-size: var(--font-size-caption);
+}

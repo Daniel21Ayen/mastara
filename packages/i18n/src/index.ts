@@ -21,3 +21,4 @@ export function interpolate(template: string, params?: TranslationParams): strin
     name in params ? String(params[name]) : match,
   );
 }
+export * from './adminStrings';

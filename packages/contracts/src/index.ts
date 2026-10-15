@@ -1,6 +1,5 @@
 // packages/contracts/src/index.ts
 export * from './academic';
-export * from './admin';
 export * from './auth';
 export * from './commerce';
 export * from './content';
@@ -13,3 +12,4 @@ export * from './support';
 export * from './sync';
 export * from './user';
 export * from './validation';
+export * from './adminExports';

@@ -3,7 +3,6 @@ import * as SecureStore from 'expo-secure-store';
 
 export const STORAGE_KEYS = {
   session: 'mastara.session',
-  token: 'mastara.token',
   deviceId: 'mastara.deviceId',
   language: 'mastara.language',
   theme: 'mastara.theme',

@@ -1,0 +1,25 @@
+.field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-sm);
+  align-items: center;
+}
+
+.box {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-primary);
+}
+
+.label {
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.hint {
+  grid-column: 2;
+  margin: 0;
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}

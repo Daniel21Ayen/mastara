@@ -1,0 +1,28 @@
+.preview {
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-text-muted);
+}
+
+.inline {
+  font-style: italic;
+}
+
+.block {
+  display: block;
+  margin: var(--space-sm) 0;
+  text-align: center;
+  font-style: italic;
+}

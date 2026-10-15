@@ -1,5 +1,9 @@
 // apps/mobile/src/modules/device-lock/api/device.api.ts
-import { httpClient } from '@/core/network';
+import { ERROR_CODES } from '@mastara/domain';
+
+import { env } from '@/core/config/env';
+import { ApiError } from '@/core/network';
+import { simulateLatency } from '@/core/mock/delay';
 
 export interface RegisterDeviceInput {
   userId: string;
@@ -14,14 +18,28 @@ export interface DeviceApi {
   releaseDevice(userId: string): Promise<void>;
 }
 
-export const deviceApi: DeviceApi = {
-  async registerDevice(input) {
-    await httpClient.post('/device/register', {
-      deviceId: input.deviceId,
-      deviceName: input.deviceName,
-    });
+// Mock server memory: userId -> bound device ID.
+const bindings = new Map<string, string>();
+
+const mockDeviceApi: DeviceApi = {
+  async registerDevice({ userId, deviceId }) {
+    await simulateLatency();
+
+    // Demo rule: an account whose ID contains "locked" is already bound to another phone.
+    const bound = bindings.get(userId) ?? (userId.includes('locked') ? 'another-phone' : undefined);
+    if (bound && bound !== deviceId) throw new ApiError(ERROR_CODES.DEVICE_MISMATCH_LOCKED);
+
+    bindings.set(userId, deviceId);
   },
-  async releaseDevice(_userId) {
-    await httpClient.post('/device/release');
+  async releaseDevice(userId) {
+    await simulateLatency();
+    bindings.delete(userId);
   },
 };
+
+function createDeviceApi(): DeviceApi {
+  if (env.useMocks) return mockDeviceApi;
+  throw new Error('The real device API is added in the backend integration phase.');
+}
+
+export const deviceApi = createDeviceApi();

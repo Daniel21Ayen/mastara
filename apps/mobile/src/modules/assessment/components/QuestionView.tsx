@@ -33,15 +33,12 @@ export function QuestionView({ question, lang, answer, checked, correct, skipped
   const chosen = answer?.kind === 'choice' ? answer.optionIds : [];
 
   let correctAnswer: string | undefined;
-  const resolveBilingual = (val: any) =>
-    typeof val === 'string' ? val : (val?.[lang] ?? val?.en ?? '');
-
   if (question.type === 'SHORT') {
     correctAnswer = question.acceptedAnswers[0];
   } else {
     correctAnswer = question.options
       .filter((option) => question.correctOptionIds.includes(option.id))
-      .map((option) => resolveBilingual(option.label))
+      .map((option) => option.label[lang])
       .join(', ');
   }
 
@@ -55,7 +52,7 @@ export function QuestionView({ question, lang, answer, checked, correct, skipped
 
   return (
     <View style={styles.wrap}>
-      <RichText text={resolveBilingual(question.prompt)} lang={lang} />
+      <RichText text={question.prompt[lang]} lang={lang} />
 
       {question.type === 'MULTIPLE' ? (
         <AppText variant="caption" muted>
@@ -77,7 +74,7 @@ export function QuestionView({ question, lang, answer, checked, correct, skipped
           return (
             <OptionButton
               key={option.id}
-              label={resolveBilingual(option.label)}
+              label={option.label[lang]}
               lang={lang}
               state={state}
               multiple={question.type === 'MULTIPLE'}
@@ -96,7 +93,10 @@ export function QuestionView({ question, lang, answer, checked, correct, skipped
           correct={correct}
           lang={lang}
           correctAnswer={correctAnswer}
-          explanation={question.explanation ? resolveBilingual(question.explanation) : undefined}
+          explanation={question.explanation?.[lang]}
+          skipped={skipped}
+          expanded={explanationOpen}
+          onToggleExplanation={onToggleExplanation}
         />
       ) : null}
     </View>

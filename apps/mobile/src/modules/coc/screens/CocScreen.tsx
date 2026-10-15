@@ -79,8 +79,9 @@ export function CocScreen() {
           return (
             <ListRow
               key={set.id}
-              icon={open ? 'exam' : 'lock'}
-              title={typeof set.title === 'string' ? set.title : (set.title?.[language] ?? (set.title as any)?.en ?? '')}
+              icon={open ? 'trophy' : 'lock'}
+              accent={open ? 'fuchsia' : 'danger'}
+              title={set.title[language]}
               subtitle={t('coc.setMeta', { count: set.questionCount, minutes: set.minutes, courses: set.courseCount })}
               trailing={
                 <View style={styles.trailing}>

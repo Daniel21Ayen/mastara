@@ -1,4 +1,4 @@
-import 'expo-blob';
+// apps/mobile/app/_layout.tsx
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreenNative from 'expo-splash-screen';

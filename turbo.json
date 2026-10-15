@@ -10,6 +10,19 @@
       "cache": false,
       "persistent": true
     },
-    "test": {}
+    "test": {},
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ]
+    }
   }
 }
