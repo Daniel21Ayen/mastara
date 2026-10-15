@@ -1,0 +1,30 @@
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  font-size: var(--font-size-body);
+}
+
+.item + .item {
+  border-top: 1px solid var(--color-primary-soft);
+}
+
+.time {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+.empty {
+  margin: 0;
+  color: var(--color-text-muted);
+}

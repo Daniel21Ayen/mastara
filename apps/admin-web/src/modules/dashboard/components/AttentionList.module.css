@@ -1,0 +1,24 @@
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item + .item {
+  border-top: 1px solid var(--color-primary-soft);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: 44px;
+  color: var(--color-text);
+  font-size: var(--font-size-body);
+  text-decoration: none;
+}
+
+.link:hover span:first-child {
+  text-decoration: underline;
+}

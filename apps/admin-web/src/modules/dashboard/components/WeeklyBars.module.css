@@ -1,0 +1,39 @@
+.chart {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-sm);
+  height: 180px;
+}
+
+.column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.track {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.bar {
+  width: 100%;
+  min-height: 4px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--color-primary);
+}
+
+.value {
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+}
+
+.day {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}

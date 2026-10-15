@@ -1,0 +1,18 @@
+.card {
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.label {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.value {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: 700;
+  line-height: 1.1;
+}
