@@ -40,11 +40,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
       onPress={() => onPress(item.course.id)}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <View style={styles.tile}>
-        <AppText variant="heading" color={theme.colors.primary}>
-          {(typeof item.course.title === 'string' ? item.course.title : ((item.course.title as any)?.en ?? '')).charAt(0)}
-        </AppText>
-      </View>
+      <LetterTile label={item.course.title.charAt(0).toUpperCase()} accent={accent} />
       <View style={styles.text}>
         <AppText bold>{item.course.title}</AppText>
         <AppText variant="caption" muted>

@@ -1,39 +1,30 @@
 // apps/mobile/src/modules/profile/api/profile.api.ts
 import type { StudentProfile } from '@mastara/contracts';
 
-import { httpClient } from '@/core/network';
+import { env } from '@/core/config/env';
+import { getMockProfile, saveMockProfile } from '@/core/mock/data';
+import { simulateLatency } from '@/core/mock/delay';
 
 export interface ProfileApi {
   getProfile(userId: string): Promise<StudentProfile | null>;
   saveProfile(userId: string, profile: StudentProfile): Promise<StudentProfile>;
 }
 
-export const profileApi: ProfileApi = {
-  async getProfile() {
-    const res = await httpClient.get<any>('/profile/me');
-    if (!res || !res.academic) return null;
-    return {
-      universityId: res.academic.universityId,
-      programId: res.academic.programId,
-      semesterId: res.academic.semesterId,
-      stream: res.academic.stream,
-      courseIds: res.courseIds ?? [],
-    };
+const mockProfileApi: ProfileApi = {
+  async getProfile(userId) {
+    await simulateLatency();
+    return getMockProfile(userId);
   },
-  async saveProfile(_userId, profile) {
-    if (profile.universityId && profile.programId && profile.semesterId && profile.stream) {
-      await httpClient.put('/profile/academic', {
-        universityId: profile.universityId,
-        programId: profile.programId,
-        semesterId: profile.semesterId,
-        stream: profile.stream,
-      });
-    }
-    if (profile.courseIds) {
-      await httpClient.put('/profile/courses', {
-        courseIds: profile.courseIds,
-      });
-    }
+  async saveProfile(userId, profile) {
+    await simulateLatency();
+    saveMockProfile(userId, profile);
     return profile;
   },
 };
+
+function createProfileApi(): ProfileApi {
+  if (env.useMocks) return mockProfileApi;
+  throw new Error('The real profile API is added in the backend integration phase.');
+}
+
+export const profileApi = createProfileApi();

@@ -11,12 +11,12 @@ import type { SegmentOption } from '@/shared/ui';
 
 import { useAcademicOptions } from '../hooks/useAcademicOptions';
 
-export interface AcademicValues {
+export type AcademicValues = {
   universityId: string;
   programId: string;
   semesterId: string;
   stream: StudentStream;
-}
+};
 
 interface AcademicFieldsProps {
   form: FormApi<AcademicValues, unknown>;

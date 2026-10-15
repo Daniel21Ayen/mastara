@@ -49,7 +49,7 @@ export type IconName = keyof typeof ICONS;
 interface IconProps {
   name: IconName;
   size?: number;
-  color?: ComponentProps<typeof Ionicons>['color'];
+  color?: string;
 }
 
 export function Icon({ name, size = 20, color }: IconProps) {

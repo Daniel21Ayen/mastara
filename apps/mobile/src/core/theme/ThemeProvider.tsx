@@ -83,7 +83,7 @@ export function useThemePreference(): Omit<ThemeValue, 'theme'> {
  * The styles are built once per scheme and reused, so switching themes costs one build per file, not one per render.
  */
 export function createStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
-  factory: (theme: Theme) => T,
+  factory: (theme: Theme) => T | StyleSheet.NamedStyles<T>,
 ): () => T {
   const cache = new Map<ColorScheme, T>();
 
@@ -91,7 +91,7 @@ export function createStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.Na
     const { scheme } = useThemeContext();
     let styles = cache.get(scheme);
     if (!styles) {
-      styles = StyleSheet.create(factory(themes[scheme]));
+      styles = StyleSheet.create(factory(themes[scheme]) as T);
       cache.set(scheme, styles);
     }
     return styles;

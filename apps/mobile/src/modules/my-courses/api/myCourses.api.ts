@@ -2,19 +2,33 @@
 import type { MyCourse } from '@mastara/contracts';
 import { offlineAccess } from '@mastara/domain';
 
+import { env } from '@/core/config/env';
 import { readThrough } from '@/core/db';
-import { httpClient } from '@/core/network';
+import { accessFor, courses, mockProgressFor } from '@/core/mock/data';
+import { simulateLatency } from '@/core/mock/delay';
 
 export interface MyCoursesApi {
   /** The student's courses (in list order) with access state and progress. */
   getMyCourses(courseIds: readonly string[]): Promise<MyCourse[]>;
 }
 
-const realMyCoursesApi: MyCoursesApi = {
-  async getMyCourses(_courseIds) {
-    return httpClient.get<MyCourse[]>('/learning/my-courses');
+const mockMyCoursesApi: MyCoursesApi = {
+  async getMyCourses(courseIds) {
+    await simulateLatency(150);
+
+    return courseIds.flatMap((id) => {
+      const course = courses.find((item) => item.id === id);
+      return course ? [{ course, ...accessFor(id), ...mockProgressFor(id) }] : [];
+    });
   },
 };
+
+function createMyCoursesApi(): MyCoursesApi {
+  if (env.useMocks) return mockMyCoursesApi;
+  throw new Error('The real my-courses API is added in the backend integration phase.');
+}
+
+const network = createMyCoursesApi();
 
 /**
  * Online: fresh data, saved on the phone. Offline: the saved data, but paid access is only trusted for a limited
@@ -25,7 +39,7 @@ export const myCoursesApi: MyCoursesApi = {
   getMyCourses: (courseIds) =>
     readThrough(
       `my-courses.${courseIds.join(',')}`,
-      () => realMyCoursesApi.getMyCourses(courseIds),
+      () => network.getMyCourses(courseIds),
       (saved, cachedAtMs, nowMs) =>
         saved.map(({ daysLeft, expiresAt, ...rest }) => ({
           ...rest,
