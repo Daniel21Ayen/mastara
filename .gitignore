@@ -16,4 +16,5 @@ ios
 .env.local
 .DS_Store
 uploads/
+*.tsbuildinfo
 apps/mobile/src/core/math/katexAssets.generated.ts

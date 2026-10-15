@@ -2,7 +2,7 @@
 import type { Exam, Question, University } from '@mastara/contracts';
 import type { ExamKind } from '@mastara/domain';
 
-import { cacheReads } from '@/core/db';
+import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
 import { httpClient } from '@/core/network';
 
 export interface ExamListing {
@@ -22,7 +22,7 @@ export interface ExamApi {
   getSession(examId: string): Promise<ExamSessionData | null>;
 }
 
-const realExamApi: ExamApi = {
+export const realExamApi: ExamApi = {
   async getExams(courseId, kind) {
     return httpClient.get<ExamListing[]>(`/assessment/exams/courses/${courseId}?kind=${kind}`);
   },
@@ -31,5 +31,18 @@ const realExamApi: ExamApi = {
   },
 };
 
-/** Reads are saved on the phone and used when it is offline; writes always need the server. */
-export const examApi = cacheReads('exam', realExamApi, ['getExams', 'getSession']);
+/** The server, with no download rules. Used to download an exam. */
+export const examRemote = realExamApi;
+
+/** Online first. An exam opens offline only if the student downloaded it. */
+export const examApi = gatewayReads('exam', examRemote, {
+  details: ['getSession'],
+  lists: {
+    getExams: async (courseId: string, kind: ExamKind) => {
+      const saved = await downloadStore.listByKind<ExamListing>('EXAM', courseId);
+      return saved.map((item) => item.meta).filter((listing) => listing.exam.kind === kind);
+    },
+  },
+});
+
+export const examKey = (examId: string): string => contentKey('exam', 'getSession', [examId]);

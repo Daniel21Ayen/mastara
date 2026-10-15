@@ -1,7 +1,7 @@
 // apps/mobile/src/modules/coc/api/coc.api.ts
 import type { CocSet, Question } from '@mastara/contracts';
 
-import { cacheReads } from '@/core/db';
+import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
 import { httpClient } from '@/core/network';
 
 export interface CocSession {
@@ -17,7 +17,7 @@ export interface CocApi {
   getSession(setId: string, courseIds: readonly string[]): Promise<CocSession | null>;
 }
 
-const realCocApi: CocApi = {
+export const realCocApi: CocApi = {
   async getSets(_courseIds) {
     return httpClient.get<CocSet[]>('/assessment/coc/sets');
   },
@@ -26,5 +26,19 @@ const realCocApi: CocApi = {
   },
 };
 
-/** Reads are saved on the phone and used when it is offline; writes always need the server. */
-export const cocApi = cacheReads('coc', realCocApi, ['getSets', 'getSession']);
+/** The server, with no download rules. Used to download a COC set. */
+export const cocRemote = realCocApi;
+
+/**
+ * Online first. A COC set opens offline only if the student downloaded it. A downloaded set is a fixed snapshot,
+ * so its key does not depend on which courses the student has right now.
+ */
+export const cocApi = gatewayReads('coc', cocRemote, {
+  details: ['getSession'],
+  lists: {
+    getSets: async () => (await downloadStore.listByKind<CocSet>('COC_SET')).map((item) => item.meta),
+  },
+  keyArgs: { getSession: (args) => [args[0]] },
+});
+
+export const cocKey = (setId: string): string => contentKey('coc', 'getSession', [setId]);

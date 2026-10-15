@@ -40,7 +40,7 @@ export function ContentProtection({ identifier }: { identifier: string }) {
 }
 
 const useStyles = createStyles((theme) => ({
-  overlay: { ...StyleSheet.absoluteFillObject, overflow: 'hidden', elevation: 50, zIndex: 50 },
+  overlay: { ...StyleSheet.absoluteFill, overflow: 'hidden', elevation: 50, zIndex: 50 },
   grid: {
     position: 'absolute',
     top: '50%',
@@ -50,5 +50,5 @@ const useStyles = createStyles((theme) => ({
     transform: [{ rotate: '-24deg' }],
   },
   cell: { alignItems: 'center', justifyContent: 'center' },
-  text: { fontSize: 13, color: withAlpha(theme.colors.text, 0.09), fontFamily: theme.fontFamily.sans },
+  text: { fontSize: 13, color: withAlpha(theme.colors.text, 0.09), fontFamily: theme.fontFamily.sans.regular },
 }));

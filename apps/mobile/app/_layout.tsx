@@ -1,4 +1,3 @@
-import 'expo-blob';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreenNative from 'expo-splash-screen';

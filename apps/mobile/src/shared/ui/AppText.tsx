@@ -17,13 +17,6 @@ interface AppTextProps extends TextProps {
   lang?: Language;
 }
 
-const sizeByVariant: Record<Variant, number> = {
-  title: theme.fontSize.title,
-  heading: theme.fontSize.heading,
-  bodyLarge: theme.fontSize.bodyLarge,
-  body: theme.fontSize.body,
-  caption: theme.fontSize.caption,
-};
 
 function resolveNode(node: ReactNode, lang: Language): ReactNode {
   if (node == null || typeof node === 'boolean') {
