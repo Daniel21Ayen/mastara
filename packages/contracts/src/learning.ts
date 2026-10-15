@@ -8,6 +8,7 @@ import { courseSchema } from './academic';
 export const myCourseSchema = z.object({
   course: courseSchema,
   access: z.enum(ACCESS_STATES),
+  expiresAt: z.string().optional(),
   daysLeft: z.number().int().optional(),
   chaptersDone: z.number().int().min(0),
   chaptersTotal: z.number().int().min(0),

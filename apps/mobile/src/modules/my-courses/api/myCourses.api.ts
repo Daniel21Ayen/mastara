@@ -28,7 +28,10 @@ export const myCoursesApi: MyCoursesApi = {
       (saved, cachedAtMs, nowMs) =>
         saved.map((item) => ({
           ...item,
-          ...offlineAccess({ access: item.access, daysLeft: item.daysLeft, cachedAtMs }, nowMs),
+          ...offlineAccess(
+            { access: item.access, daysLeft: item.daysLeft, expiresAt: item.expiresAt, cachedAtMs },
+            nowMs,
+          ),
         })),
     ),
 };
