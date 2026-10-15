@@ -15,6 +15,7 @@ export interface CachedAccess {
   expiresAtMs?: number;
   /** Only for data saved before the server sent `expiresAtMs`: a rounded day count at `cachedAtMs`. */
   daysLeft?: number;
+  expiresAt?: string;
   /** When the server last confirmed this access (ms). */
   cachedAtMs: number;
 }
@@ -39,8 +40,8 @@ export function offlineAccess(
 ): OfflineAccessResult {
   if (cached.access !== 'PAID') return { access: cached.access };
 
-  if (nowMs < cached.cachedAtMs) return { access: 'LOCKED' }; // clock rolled back
-  if (nowMs - cached.cachedAtMs > graceDays * DAY_MS) return { access: 'LOCKED' }; // too long without the server
+  if (nowMs < cached.cachedAtMs) return { access: 'LOCKED', expiresAt: cached.expiresAt }; // clock rolled back
+  if (nowMs - cached.cachedAtMs > graceDays * DAY_MS) return { access: 'LOCKED', expiresAt: cached.expiresAt }; // too long without the server
 
   const expiresAtMs = cached.expiresAtMs ?? cached.cachedAtMs + (cached.daysLeft ?? 0) * DAY_MS;
   if (nowMs >= expiresAtMs) return { access: 'LOCKED' };

@@ -44,7 +44,7 @@ export class AttemptsController {
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
-    description: "Assessment is locked and requires an active entitlement",
+    description: "Assessment ips locked and requires an active entitlement",
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,

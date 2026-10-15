@@ -25,10 +25,17 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
       ? t('courses.filter.common')
       : t(item.course.stream === 'NATURAL' ? 'courses.filter.natural' : 'courses.filter.social');
 
+  const daysRemaining =
+    item.daysLeft !== undefined
+      ? item.daysLeft
+      : item.expiresAt
+        ? Math.max(0, Math.ceil((new Date(item.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : undefined;
+
   const accessLabel =
     item.access === 'PAID'
-      ? item.daysLeft !== undefined
-        ? `${t('access.paid')} · ${t('access.daysLeft', { n: item.daysLeft })}`
+      ? daysRemaining !== undefined
+        ? `${t('access.paid')} · ${t('access.daysLeft', { n: daysRemaining })}`
         : t('access.paid')
       : item.access === 'FREE_TRIAL'
         ? t('access.freeTrial')
@@ -37,6 +44,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityHint={item.expiresAt ? `Expires ${new Date(item.expiresAt).toLocaleDateString()}` : undefined}
       onPress={() => onPress(item.course.id)}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >

@@ -12,6 +12,7 @@ export interface MyCourseResponse {
     stream: string;
   };
   access: AccessState;
+  expiresAt?: string;
   daysLeft?: number;
   chaptersDone: number;
   chaptersTotal: number;
@@ -44,7 +45,7 @@ export interface HomeSummaryResponse {
 export class LearningService {
   private readonly logger = new Logger(LearningService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getMyCourses(studentId: string): Promise<MyCourseResponse[]> {
     const studentCourses = await this.prisma.studentCourse.findMany({
@@ -160,6 +161,7 @@ export class LearningService {
           stream: course.stream,
         },
         access,
+        expiresAt: expiry ? expiry.toISOString() : undefined,
         daysLeft,
         chaptersDone,
         chaptersTotal,
