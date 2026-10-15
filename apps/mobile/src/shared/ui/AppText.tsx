@@ -4,7 +4,7 @@ import { Text } from 'react-native';
 import type { TextProps } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 
 type Variant = 'title' | 'heading' | 'body' | 'bodyLarge' | 'caption';
 
@@ -58,6 +58,7 @@ export function AppText({
   children,
   ...rest
 }: AppTextProps) {
+  const theme = useTheme();
   const { language } = useI18n();
   const effectiveLang = lang ?? language;
   const family = effectiveLang === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
@@ -70,7 +71,7 @@ export function AppText({
       style={[
         {
           fontFamily: bold ? family.bold : family.regular,
-          fontSize: sizeByVariant[variant],
+          fontSize: theme.fontSize[variant],
           color: color ?? (muted ? theme.colors.textMuted : theme.colors.text),
         },
         style,

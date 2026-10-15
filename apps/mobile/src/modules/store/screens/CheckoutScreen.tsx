@@ -10,7 +10,7 @@ import { ActivityIndicator } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { isApiError } from '@/core/network';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { AppButton, AppText, Screen, SegmentedControl, TextField, TopBar } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
@@ -24,6 +24,7 @@ import { useOrderDraft } from '../state/OrderDraftContext';
 
 /** Payment instructions, receipt screenshot, reference number and submit. */
 export function CheckoutScreen() {
+  const theme = useTheme();
   const { t, te } = useI18n();
   const router = useRouter();
   const { user, profile } = useSession();

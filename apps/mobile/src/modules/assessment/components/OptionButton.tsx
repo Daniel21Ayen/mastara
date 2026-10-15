@@ -1,8 +1,8 @@
 // apps/mobile/src/modules/assessment/components/OptionButton.tsx
 import type { ContentLang } from '@mastara/domain';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { Icon, RichText } from '@/shared/ui';
 
 export type OptionState = 'idle' | 'selected' | 'correct' | 'wrong';
@@ -20,6 +20,8 @@ interface OptionButtonProps {
 }
 
 export function OptionButton({ label, lang, state, multiple, disabled, stateLabel, onPress }: OptionButtonProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const feedback = state === 'correct' ? 'check' : state === 'wrong' ? 'close' : null;
 
   return (
@@ -29,9 +31,9 @@ export function OptionButton({ label, lang, state, multiple, disabled, stateLabe
       accessibilityLabel={stateLabel ? `${label}, ${stateLabel}` : label}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.row, rowStyle[state]]}
+      style={[styles.row, styles[ROW[state]]]}
     >
-      <View style={[styles.marker, multiple ? styles.square : styles.round, markerStyle[state]]}>
+      <View style={[styles.marker, multiple ? styles.square : styles.round, styles[MARKER[state]]]}>
         {feedback ? (
           <Icon name={feedback} size={16} color={theme.colors.onPrimary} />
         ) : state === 'selected' ? (
@@ -45,7 +47,10 @@ export function OptionButton({ label, lang, state, multiple, disabled, stateLabe
   );
 }
 
-const styles = StyleSheet.create({
+const ROW = { idle: 'rowIdle', selected: 'rowSelected', correct: 'rowCorrect', wrong: 'rowWrong' } as const;
+const MARKER = { idle: 'markerIdle', selected: 'markerSelected', correct: 'markerCorrect', wrong: 'markerWrong' } as const;
+
+const useStyles = createStyles((theme) => ({
   row: {
     minHeight: theme.minTouchTarget + theme.spacing.md,
     borderRadius: theme.radius.md,
@@ -60,18 +65,15 @@ const styles = StyleSheet.create({
   square: { borderRadius: theme.radius.sm },
   dot: { width: 10, height: 10, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary },
   label: { flex: 1 },
-});
 
-const rowStyle = StyleSheet.create({
-  idle: { backgroundColor: theme.colors.surface, borderColor: theme.colors.surface },
-  selected: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
-  correct: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
-  wrong: { backgroundColor: theme.colors.dangerSoft, borderColor: theme.colors.danger },
-});
+  // An unselected option keeps a visible edge, so it stands out from its card in light and dark.
+  rowIdle: { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+  rowSelected: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
+  rowCorrect: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
+  rowWrong: { backgroundColor: theme.colors.dangerSoft, borderColor: theme.colors.danger },
 
-const markerStyle = StyleSheet.create({
-  idle: { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  selected: { borderColor: theme.colors.primary, backgroundColor: theme.colors.surface },
-  correct: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primary },
-  wrong: { borderColor: theme.colors.danger, backgroundColor: theme.colors.danger },
-});
+  markerIdle: { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  markerSelected: { borderColor: theme.colors.primary, backgroundColor: theme.colors.surface },
+  markerCorrect: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primary },
+  markerWrong: { borderColor: theme.colors.danger, backgroundColor: theme.colors.danger },
+}));

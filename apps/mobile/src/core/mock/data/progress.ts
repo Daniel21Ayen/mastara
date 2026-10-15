@@ -16,8 +16,15 @@ export function mockProgressFor(courseId: string): { chaptersDone: number; chapt
 
 const ACCESS_CYCLE: readonly AccessState[] = ['PAID', 'FREE_TRIAL', 'PAID', 'LOCKED', 'FREE_TRIAL'];
 
-export function mockAccessFor(courseId: string): { access: AccessState; daysLeft?: number } {
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export function mockAccessFor(courseId: string): { access: AccessState; daysLeft?: number; expiresAt?: string } {
   const seed = hash(courseId);
   const access = ACCESS_CYCLE[seed % ACCESS_CYCLE.length] ?? 'FREE_TRIAL';
-  return access === 'PAID' ? { access, daysLeft: 10 + (seed % 30) } : { access };
+  if (access !== 'PAID') return { access };
+
+  // Anchored to the start of today so the expiry does not drift between calls.
+  const days = 10 + (seed % 30);
+  const expiresAtMs = Math.floor(Date.now() / DAY_MS) * DAY_MS + days * DAY_MS;
+  return { access, daysLeft: days, expiresAt: new Date(expiresAtMs).toISOString() };
 }

@@ -26,6 +26,7 @@ export function useCocSets() {
     sets: state.data?.sets ?? [],
     paid: state.data?.paid ?? false,
     hasCourses: courseIds.length > 0,
+    courseIds,
     loading: state.loading,
     error: state.error,
     reload: state.reload,

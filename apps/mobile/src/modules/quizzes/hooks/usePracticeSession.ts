@@ -2,14 +2,18 @@
 import type { Question } from '@mastara/contracts';
 import { correctCount, createPracticeState, gradeAnswer, practiceReducer } from '@mastara/domain';
 import type { Answer } from '@mastara/domain';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { outbox } from '@/core/sync';
 import { usePersistedReducer } from '@/shared/hooks';
 
 import { attemptRepository } from '../repo/attempt.repository';
 
-/** Runs one practice session: answer, immediate feedback, next. All rules come from `@mastara/domain`. */
+/**
+ * Runs one practice session: every question on one scrolling page, instant feedback after each answer.
+ * Actions take the question they apply to and keep one identity between renders, so a list of memoized question items
+ * does not re-render when another question is answered. All rules come from `@mastara/domain`.
+ */
 export function usePracticeSession(chapterId: string, questions: readonly Question[]) {
   // Every answer is saved on the phone at once, so a practice run survives the app being closed.
   const { state, dispatch, ready } = usePersistedReducer(
@@ -18,12 +22,10 @@ export function usePracticeSession(chapterId: string, questions: readonly Questi
     createPracticeState,
     (saved) => !saved.finished, // a finished run is not kept: its result is stored instead
   );
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const total = questions.length;
-  const question = questions[state.index];
-  const answer = question ? state.answers[question.id] : undefined;
-  const checked = question ? question.id in state.results : false;
-  const correct = question ? state.results[question.id] : undefined;
 
   const checkWith = useCallback(
     (target: Question, given: Answer) =>
@@ -32,70 +34,70 @@ export function usePracticeSession(chapterId: string, questions: readonly Questi
   );
 
   /** Tap an option. Single choice and True/False check at once; multiple choice just toggles. */
-  const choose = useCallback(
-    (optionId: string) => {
-      if (!question || question.type === 'SHORT' || checked) return;
+  const chooseFor = useCallback(
+    (question: Question, optionId: string) => {
+      const current = stateRef.current;
+      if (question.type === 'SHORT' || question.id in current.results) return;
 
       if (question.type === 'MULTIPLE') {
-        const current = answer?.kind === 'choice' ? answer.optionIds : [];
-        const optionIds = current.includes(optionId)
-          ? current.filter((id) => id !== optionId)
-          : [...current, optionId];
+        const saved = current.answers[question.id];
+        const picked = saved?.kind === 'choice' ? saved.optionIds : [];
+        const optionIds = picked.includes(optionId) ? picked.filter((id) => id !== optionId) : [...picked, optionId];
         dispatch({ type: 'answer', questionId: question.id, answer: { kind: 'choice', optionIds } });
         return;
       }
 
-      const picked: Answer = { kind: 'choice', optionIds: [optionId] };
-      dispatch({ type: 'answer', questionId: question.id, answer: picked });
-      checkWith(question, picked);
+      const answer: Answer = { kind: 'choice', optionIds: [optionId] };
+      dispatch({ type: 'answer', questionId: question.id, answer });
+      checkWith(question, answer);
     },
-    [question, answer, checked, checkWith, dispatch],
+    [checkWith, dispatch],
   );
 
-  const setText = useCallback(
-    (text: string) => {
-      if (question?.type === 'SHORT' && !checked) {
+  const setTextFor = useCallback(
+    (question: Question, text: string) => {
+      if (question.type === 'SHORT' && !(question.id in stateRef.current.results)) {
         dispatch({ type: 'answer', questionId: question.id, answer: { kind: 'text', text } });
       }
     },
-    [question, checked, dispatch],
+    [dispatch],
   );
 
   /** For multiple choice and short answers. */
-  const check = useCallback(() => {
-    if (question && answer && !checked) checkWith(question, answer);
-  }, [question, answer, checked, checkWith]);
+  const checkFor = useCallback(
+    (question: Question) => {
+      const current = stateRef.current;
+      const answer = current.answers[question.id];
+      if (answer && !(question.id in current.results)) checkWith(question, answer);
+    },
+    [checkWith],
+  );
 
-  const move = useCallback((delta: 1 | -1) => dispatch({ type: 'move', delta, total }), [total, dispatch]);
+  const goto = useCallback((index: number) => dispatch({ type: 'goto', index, total }), [total, dispatch]);
   const restart = useCallback(() => dispatch({ type: 'restart' }), [dispatch]);
 
   const finish = useCallback(async () => {
     dispatch({ type: 'finish' });
-    const result = { chapterId, correct: correctCount(state), total, finishedAt: new Date().toISOString() };
+    const result = {
+      chapterId,
+      correct: correctCount(stateRef.current),
+      total,
+      finishedAt: new Date().toISOString(),
+    };
     await attemptRepository.saveResult(result);
     await outbox.enqueue('ATTEMPT_FINISHED', result); // the server gets it when the phone is online
-  }, [chapterId, state, total, dispatch]);
-
-  const canCheck =
-    !checked &&
-    answer !== undefined &&
-    (answer.kind === 'text' ? answer.text.trim().length > 0 : answer.optionIds.length > 0);
+  }, [chapterId, total, dispatch]);
 
   return {
     ready,
     state,
     total,
-    question,
-    answer,
-    checked,
-    correct,
-    canCheck,
-    isLast: state.index === total - 1,
+    answered: Object.keys(state.results).length,
     correctTotal: correctCount(state),
-    choose,
-    setText,
-    check,
-    move,
+    chooseFor,
+    setTextFor,
+    checkFor,
+    goto,
     finish,
     restart,
   };

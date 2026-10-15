@@ -2,11 +2,14 @@
 import type { QuizChapter } from '@mastara/contracts';
 import { canOpenContent } from '@mastara/domain';
 import type { AccessState } from '@mastara/domain';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { accentForKey, createStyles, useTheme } from '@/core/theme';
+import { DownloadButton } from '@/modules/downloads';
 import { AppText, Badge, Icon, NumberCircle } from '@/shared/ui';
+
+import { chapterDownload } from '../lib/chapterDownload';
 
 interface QuizChapterRowProps {
   chapter: QuizChapter;
@@ -16,6 +19,8 @@ interface QuizChapterRowProps {
 }
 
 export function QuizChapterRow({ chapter, access, best, onPress }: QuizChapterRowProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const open = canOpenContent(access, chapter.isFree);
 
@@ -31,19 +36,20 @@ export function QuizChapterRow({ chapter, access, best, onPress }: QuizChapterRo
       onPress={() => onPress(chapter, open)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <NumberCircle value={chapter.chapterNumber} />
+      <NumberCircle value={chapter.chapterNumber} accent={accentForKey(chapter.id)} />
       <View style={styles.text}>
         <AppText bold>{`${t('tests.quiz', { n: chapter.quizNo })} · ${t('tests.chapter', { n: chapter.chapterNumber })}`}</AppText>
         <AppText variant="caption" muted>
           {t('tests.meta', { count: chapter.questionCount, minutes: chapter.minutes })}
         </AppText>
       </View>
+      {open ? <DownloadButton unit={chapterDownload(chapter)} /> : null}
       {trailing}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
@@ -54,4 +60,4 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.85 },
   text: { flex: 1, gap: 2 },
-});
+}));

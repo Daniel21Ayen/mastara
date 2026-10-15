@@ -1,9 +1,9 @@
 // apps/mobile/src/modules/store/components/OrderRow.tsx
 import type { Order } from '@mastara/contracts';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
 import { AppButton, AppText, Badge, Card } from '@/shared/ui';
 
@@ -15,6 +15,8 @@ interface OrderRowProps {
 const TONE = { PENDING: 'muted', APPROVED: 'primary', REJECTED: 'danger' } as const;
 
 export function OrderRow({ order, onResubmit }: OrderRowProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const timeAgo = useTimeAgo();
 
@@ -54,7 +56,7 @@ export function OrderRow({ order, onResubmit }: OrderRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   head: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
   flex: { flex: 1, gap: 2 },
-});
+}));

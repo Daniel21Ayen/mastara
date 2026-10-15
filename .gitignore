@@ -14,15 +14,6 @@ ios
 # Environment
 .env
 .env.local
-
-# Logs
-*.log
-
-# OS
 .DS_Store
-
-# TypeScript
-*.tsbuildinfo
-
-# Test coverage
-coverage/
+uploads/
+apps/mobile/src/core/math/katexAssets.generated.ts

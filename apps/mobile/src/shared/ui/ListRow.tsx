@@ -1,24 +1,30 @@
 // apps/mobile/src/shared/ui/ListRow.tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
+import type { AccentName } from '@/core/theme';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 import type { IconName } from './Icon';
+import { IconTile } from './IconTile';
 
 interface ListRowProps {
   title: string;
   subtitle?: string;
   icon: IconName;
+  /** Colour of the icon tile. Defaults to the icon's own colour. */
+  accent?: AccentName;
   onPress?: () => void;
   /** Replaces the chevron, for example a <Badge />. */
   trailing?: ReactNode;
 }
 
 /** Card row: icon tile, two text lines and a chevron. */
-export function ListRow({ title, subtitle, icon, onPress, trailing }: ListRowProps) {
+export function ListRow({ title, subtitle, icon, accent, onPress, trailing }: ListRowProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -26,9 +32,7 @@ export function ListRow({ title, subtitle, icon, onPress, trailing }: ListRowPro
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <View style={styles.tile}>
-        <Icon name={icon} color={theme.colors.primary} />
-      </View>
+      <IconTile icon={icon} accent={accent} />
       <View style={styles.text}>
         <AppText bold>{title}</AppText>
         {subtitle ? (
@@ -42,7 +46,7 @@ export function ListRow({ title, subtitle, icon, onPress, trailing }: ListRowPro
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
@@ -52,13 +56,5 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   pressed: { opacity: 0.85 },
-  tile: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   text: { flex: 1, gap: 2 },
-});
+}));

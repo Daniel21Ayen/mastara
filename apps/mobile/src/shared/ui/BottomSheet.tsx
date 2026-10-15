@@ -2,7 +2,7 @@
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -16,6 +16,7 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ visible, title, onClose, children, scroll = false }: BottomSheetProps) {
+  const styles = useStyles();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modal}>
@@ -37,7 +38,7 @@ export function BottomSheet({ visible, title, onClose, children, scroll = false 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   modal: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: theme.colors.overlay },
   sheet: {
@@ -49,4 +50,4 @@ const styles = StyleSheet.create({
   },
   title: { paddingBottom: theme.spacing.md },
   content: { gap: theme.spacing.md, paddingBottom: theme.spacing.lg },
-});
+}));

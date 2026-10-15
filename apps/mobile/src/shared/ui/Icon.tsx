@@ -2,32 +2,46 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
-/** The only place that knows which icon library is used. Add new icons here. */
+/** The only place that knows which icon library is used. Filled icons are used for tiles so colours read clearly. */
 const ICONS = {
-  home: 'home-outline',
-  course: 'book-outline',
-  progress: 'stats-chart-outline',
-  profile: 'person-outline',
-  bell: 'notifications-outline',
-  search: 'search-outline',
-  filter: 'options-outline',
+  home: 'home',
+  course: 'book',
+  progress: 'stats-chart',
+  profile: 'person',
+  bell: 'notifications',
+  search: 'search',
+  filter: 'options',
   chevron: 'chevron-forward',
   check: 'checkmark',
   close: 'close',
   play: 'play',
-  store: 'cart-outline',
-  exam: 'ribbon-outline',
-  stats: 'bar-chart-outline',
-  lock: 'lock-closed-outline',
+  store: 'cart',
+  exam: 'ribbon',
+  stats: 'bar-chart',
+  lock: 'lock-closed',
   back: 'chevron-back',
-  module: 'layers-outline',
-  note: 'document-text-outline',
-  flag: 'flag-outline',
-  grid: 'apps-outline',
+  module: 'layers',
+  note: 'document-text',
+  flag: 'flag',
+  grid: 'apps',
+  trophy: 'trophy',
+  language: 'language',
+  phone: 'phone-portrait',
+  shield: 'shield-checkmark',
+  support: 'help-buoy',
+  receipt: 'receipt',
+  clock: 'time',
+  star: 'star',
+  quiz: 'help-circle',
+  review: 'eye',
+  palette: 'color-palette',
+  download: 'cloud-download-outline',
+  downloaded: 'checkmark-circle',
+  trash: 'trash',
 } as const satisfies Record<string, IoniconName>;
 
 export type IconName = keyof typeof ICONS;
@@ -38,6 +52,7 @@ interface IconProps {
   color?: ComponentProps<typeof Ionicons>['color'];
 }
 
-export function Icon({ name, size = 20, color = theme.colors.text }: IconProps) {
-  return <Ionicons name={ICONS[name]} size={size} color={color} accessible={false} />;
+export function Icon({ name, size = 20, color }: IconProps) {
+  const theme = useTheme();
+  return <Ionicons name={ICONS[name]} size={size} color={color ?? theme.colors.text} accessible={false} />;
 }

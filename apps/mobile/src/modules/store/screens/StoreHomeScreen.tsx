@@ -3,11 +3,11 @@ import type { OrderStream, ProductType } from '@mastara/domain';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppText, ListRow, Screen, SegmentedControl, TopBar } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
@@ -16,6 +16,8 @@ import { usePricing } from '../hooks/useStoreData';
 import { useOrderDraft } from '../state/OrderDraftContext';
 
 export function StoreHomeScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const { profile } = useSession();
@@ -50,6 +52,7 @@ export function StoreHomeScreen() {
         <View style={styles.list}>
           <ProductCard
             icon="module"
+            accent="violet"
             title={t('store.product.BUNDLE')}
             subtitle={t('store.product.BUNDLE.sub')}
             price={config.bundle.bundlePrice}
@@ -57,7 +60,8 @@ export function StoreHomeScreen() {
             onPress={() => buy('BUNDLE')}
           />
           <ProductCard
-            icon="exam"
+            icon="star"
+            accent="amber"
             title={t(both ? 'store.product.FULL_BOTH' : 'store.product.FULL_STREAM')}
             subtitle={t(both ? 'store.product.FULL_BOTH.sub' : 'store.product.FULL_STREAM.sub')}
             price={both ? config.fullBothPrice : config.fullStreamPrice}
@@ -65,6 +69,7 @@ export function StoreHomeScreen() {
           />
           <ProductCard
             icon="note"
+            accent="cyan"
             title={t('store.product.SINGLE')}
             subtitle={t('store.product.SINGLE.sub')}
             price={config.singlePrice}
@@ -85,7 +90,7 @@ export function StoreHomeScreen() {
       ) : null}
 
       <ListRow
-        icon="stats"
+        icon="receipt"
         title={t('store.myOrders')}
         subtitle={t('store.myOrders.sub')}
         onPress={() => router.push('/store/orders' as Href)}
@@ -94,6 +99,6 @@ export function StoreHomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   list: { gap: theme.spacing.sm },
-});
+}));

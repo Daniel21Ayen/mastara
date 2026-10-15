@@ -1,9 +1,9 @@
 // apps/mobile/src/modules/home/components/RecentlyAccessedList.tsx
 import type { RecentItem } from '@mastara/contracts';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
 import { AppText, ListRow, SectionHeader } from '@/shared/ui';
 import type { IconName } from '@/shared/ui';
@@ -16,18 +16,19 @@ interface RecentlyAccessedListProps {
 
 const ICON_BY_KIND: Record<RecentItem['kind'], IconName> = {
   TOPIC: 'course',
-  NOTE: 'course',
+  NOTE: 'note',
   EXAM: 'exam',
 };
 
 export function RecentlyAccessedList({ items, onSeeAll, onItemPress }: RecentlyAccessedListProps) {
+  const styles = useStyles();
   const { t } = useI18n();
   const timeAgo = useTimeAgo();
 
   function describe(item: RecentItem): string {
     const label =
       item.kind === 'TOPIC'
-        ? t('home.continue.chapter', { n: item.chapterNumber ?? 1 })
+        ? t('home.recent.chapter', { n: item.chapterNumber ?? 1 })
         : item.kind === 'NOTE'
           ? t('recent.kind.note')
           : t('recent.kind.exam');
@@ -60,6 +61,6 @@ export function RecentlyAccessedList({ items, onSeeAll, onItemPress }: RecentlyA
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.sm },
-});
+}));

@@ -1,15 +1,17 @@
 // apps/mobile/src/modules/progress/screens/ProgressScreen.tsx
 import { progressPercent } from '@mastara/domain';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { accentForKey, createStyles, useTheme } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
 import { AppButton, AppText, Card, ListRow, ProgressBar, Screen, ScreenHeader } from '@/shared/ui';
 
 import { useProgress } from '../hooks/useProgress';
 
 export function ProgressScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const timeAgo = useTimeAgo();
   const { data, loading, error, reload } = useProgress();
@@ -27,10 +29,10 @@ export function ProgressScreen() {
         <>
           <Card>
             <AppText bold>{t('progress.overall')}</AppText>
-            <AppText variant="title" color={theme.colors.primary}>
+            <AppText variant="title" color={theme.accents.emerald.main}>
               {data.percent}%
             </AppText>
-            <ProgressBar value={data.percent} />
+            <ProgressBar value={data.percent} accent="emerald" />
             <AppText variant="caption" muted>
               {t('progress.chapters', { done: data.done, total: data.total })}
             </AppText>
@@ -46,11 +48,11 @@ export function ProgressScreen() {
                     <AppText bold style={styles.flex}>
                       {item.course.title}
                     </AppText>
-                    <AppText bold color={theme.colors.primary}>
+                    <AppText bold color={theme.accents[accentForKey(item.course.id)].main}>
                       {percent}%
                     </AppText>
                   </View>
-                  <ProgressBar value={percent} />
+                  <ProgressBar value={percent} accent={accentForKey(item.course.id)} />
                 </Card>
               );
             })}
@@ -62,7 +64,7 @@ export function ProgressScreen() {
             {data.results.map((record) => (
               <ListRow
                 key={record.id}
-                icon="stats"
+                icon="trophy"
                 title={record.title}
                 subtitle={`${t('result.score', { correct: record.correct, total: record.total })} · ${timeAgo(record.submittedAt)}`}
               />
@@ -74,8 +76,8 @@ export function ProgressScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   list: { gap: theme.spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
   flex: { flex: 1 },
-});
+}));

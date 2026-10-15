@@ -6,12 +6,13 @@ import { getDeviceId, getDeviceName } from '@/core/device';
 import { useI18n } from '@/core/i18n';
 import { isApiError } from '@/core/network';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { AppButton, AppText, Card, Screen, ScreenHeader } from '@/shared/ui';
 
 import { deviceApi } from '../api/device.api';
 
 export function DeviceRegistrationScreen() {
+  const theme = useTheme();
   const { t } = useI18n();
   const { user, bindDevice, lockDevice } = useSession();
   const [loading, setLoading] = useState(false);

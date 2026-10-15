@@ -1,7 +1,7 @@
 // apps/mobile/src/shared/ui/SectionHeader.tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -12,6 +12,8 @@ interface SectionHeaderProps {
 }
 
 export function SectionHeader({ title, actionLabel, onAction }: SectionHeaderProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <AppText bold accessibilityRole="header">
@@ -28,6 +30,6 @@ export function SectionHeader({ title, actionLabel, onAction }: SectionHeaderPro
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-});
+}));

@@ -1,21 +1,25 @@
 // apps/mobile/src/modules/exams/components/ExamResultView.tsx
 import type { ExamScore } from '@mastara/domain';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Card, ProgressBar } from '@/shared/ui';
 
 interface ExamResultViewProps {
   score: ExamScore;
   /** When given, a per-course breakdown is shown (COC mixes courses). */
   courseTitles?: Record<string, string>;
+  /** Opens the answer review. Not shown when there is nothing to review. */
+  onReview?: () => void;
   onBack: () => void;
 }
 
 const percentOf = (correct: number, total: number) => (total > 0 ? Math.round((correct / total) * 100) : 0);
 
-export function ExamResultView({ score, courseTitles, onBack }: ExamResultViewProps) {
+export function ExamResultView({ score, courseTitles, onReview, onBack }: ExamResultViewProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const percent = percentOf(score.correct, score.total);
   const lines = Object.entries(score.byCourse);
@@ -26,10 +30,10 @@ export function ExamResultView({ score, courseTitles, onBack }: ExamResultViewPr
         <AppText variant="heading" accessibilityRole="header">
           {t('exam.result.title')}
         </AppText>
-        <AppText variant="title" color={theme.colors.primary}>
+        <AppText variant="title" color={theme.accents.fuchsia.main}>
           {t('result.score', { correct: score.correct, total: score.total })}
         </AppText>
-        <ProgressBar value={percent} />
+        <ProgressBar value={percent} accent="fuchsia" />
         <AppText muted>{t('result.percent', { n: percent })}</AppText>
       </Card>
 
@@ -50,13 +54,14 @@ export function ExamResultView({ score, courseTitles, onBack }: ExamResultViewPr
         </Card>
       ) : null}
 
-      <AppButton label={t('exam.result.back')} onPress={onBack} />
+      {onReview ? <AppButton label={t('exam.result.review')} onPress={onReview} /> : null}
+      <AppButton label={t('exam.result.back')} variant={onReview ? 'outline' : 'primary'} onPress={onBack} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.md },
   line: { gap: theme.spacing.xs },
   lineText: { flexDirection: 'row', justifyContent: 'space-between' },
-});
+}));

@@ -1,12 +1,14 @@
 // apps/mobile/src/modules/boot/screens/SplashScreen.tsx
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppText } from '@/shared/ui';
 
 /** Shown while the saved session is restored. The route guard then moves the student on. */
 export function SplashScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
 
   return (
@@ -27,7 +29,7 @@ export function SplashScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   root: {
     flex: 1,
     backgroundColor: theme.colors.primary,
@@ -45,4 +47,4 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   spinner: { marginTop: theme.spacing.xl },
-});
+}));

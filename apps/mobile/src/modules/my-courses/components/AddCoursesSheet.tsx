@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { CoursePicker } from '@/modules/course-list';
 import { useSaveProfile } from '@/modules/profile';
 import { AppButton, AppText, BottomSheet } from '@/shared/ui';
@@ -17,6 +17,7 @@ interface AddCoursesSheetProps {
 
 /** Add or remove courses without leaving My Courses. Saves to the profile, which refreshes the list. */
 export function AddCoursesSheet({ visible, profile, onClose }: AddCoursesSheetProps) {
+  const theme = useTheme();
   const { t } = useI18n();
   const { user } = useSession();
   const saveProfile = useSaveProfile();

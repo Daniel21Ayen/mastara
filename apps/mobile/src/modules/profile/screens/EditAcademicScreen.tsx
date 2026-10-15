@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { useForm } from '@/shared/hooks';
 import { AppButton, AppText, BottomSheet, Screen, TopBar } from '@/shared/ui';
 
@@ -14,6 +14,7 @@ import { useSaveProfile } from '../hooks/useSaveProfile';
 
 /** Change university, program, semester or stream. Because courses depend on them, the course list is cleared after a confirmation. */
 export function EditAcademicScreen() {
+  const theme = useTheme();
   const { t } = useI18n();
   const router = useRouter();
   const { user, profile } = useSession();

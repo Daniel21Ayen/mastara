@@ -1,7 +1,7 @@
 // apps/mobile/src/shared/ui/ChipGroup.tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -18,6 +18,8 @@ interface ChipGroupProps<T extends string> {
 
 /** Multi-select chips. */
 export function ChipGroup<T extends string>({ options, selected, onToggle }: ChipGroupProps<T>) {
+  const theme = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       {options.map((option) => {
@@ -40,7 +42,7 @@ export function ChipGroup<T extends string>({ options, selected, onToggle }: Chi
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
   chip: {
     minHeight: 40,
@@ -52,4 +54,4 @@ const styles = StyleSheet.create({
   },
   active: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   idle: { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-});
+}));

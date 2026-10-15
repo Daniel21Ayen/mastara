@@ -1,10 +1,10 @@
 // apps/mobile/src/modules/store/components/AccountCard.tsx
 import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Card } from '@/shared/ui';
 
 interface AccountCardProps {
@@ -14,6 +14,8 @@ interface AccountCardProps {
 
 /** Where to send the money, with a Copy button and the exact amount. */
 export function AccountCard({ account, amount }: AccountCardProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
@@ -45,7 +47,7 @@ export function AccountCard({ account, amount }: AccountCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
   flex: { flex: 1 },
-});
+}));

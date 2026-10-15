@@ -8,3 +8,10 @@ export type SyncResultStatus = (typeof SYNC_RESULT_STATUSES)[number];
 
 /** How long paid access cached on the phone is trusted without reaching the server. Admin-managed later. */
 export const OFFLINE_GRACE_DAYS = 7;
+
+/** Housekeeping on the phone's database (see core/db/maintenance.ts). */
+export const CACHE_MAX_AGE_DAYS = 30;
+export const CACHE_MAX_ROWS = 500;
+/** Confirmed changes are kept briefly (for support) and then removed; rejected ones are kept longer for diagnosis. */
+export const APPLIED_OP_KEEP_DAYS = 7;
+export const REJECTED_OP_KEEP_DAYS = 30;

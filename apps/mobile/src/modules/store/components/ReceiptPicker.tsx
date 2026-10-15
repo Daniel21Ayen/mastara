@@ -1,8 +1,8 @@
 // apps/mobile/src/modules/store/components/ReceiptPicker.tsx
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText } from '@/shared/ui';
 
 import type { Receipt } from '../lib/compressReceipt';
@@ -17,6 +17,8 @@ interface ReceiptPickerProps {
 }
 
 export function ReceiptPicker({ receipt, busy, failed, error, onPick }: ReceiptPickerProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
 
   return (
@@ -43,8 +45,8 @@ export function ReceiptPicker({ receipt, busy, failed, error, onPick }: ReceiptP
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.sm },
   preview: { gap: theme.spacing.xs },
   image: { width: '100%', height: 160, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft },
-});
+}));

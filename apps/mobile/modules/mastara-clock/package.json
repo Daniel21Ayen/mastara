@@ -1,0 +1,7 @@
+{
+  "name": "mastara-clock",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tamper-resistant clock for the exam timer (counts time asleep; reports restarts)",
+  "main": "index.ts"
+}

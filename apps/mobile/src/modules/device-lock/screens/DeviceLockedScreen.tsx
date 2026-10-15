@@ -3,11 +3,12 @@ import { Alert } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
-import { theme } from '@/core/theme';
+import { useTheme } from '@/core/theme';
 import { AppButton, AppText, Card, Screen } from '@/shared/ui';
 
 /** Full-screen block: no app content is reachable while the account is bound to another phone. */
 export function DeviceLockedScreen() {
+  const theme = useTheme();
   const { t } = useI18n();
   const { signOut } = useSession();
 

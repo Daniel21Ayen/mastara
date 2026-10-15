@@ -36,8 +36,10 @@ export function examReducer(state: ExamSessionState, action: ExamAction): ExamSe
     }
     case 'move':
       return { ...state, index: clamp(state.index + action.delta, action.total) };
-    case 'goto':
-      return { ...state, index: clamp(action.index, action.total) };
+    case 'goto': {
+      const index = clamp(action.index, action.total);
+      return index === state.index ? state : { ...state, index };
+    }
     case 'submit':
       return { ...state, submitted: true };
   }

@@ -1,9 +1,9 @@
 // apps/mobile/src/shared/ui/TopBar.tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -16,6 +16,8 @@ interface TopBarProps {
 }
 
 export function TopBar({ title, onBack, right }: TopBarProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
 
   return (
@@ -31,7 +33,7 @@ export function TopBar({ title, onBack, right }: TopBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
   back: {
     width: theme.minTouchTarget,
@@ -40,4 +42,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: { flex: 1 },
-});
+}));

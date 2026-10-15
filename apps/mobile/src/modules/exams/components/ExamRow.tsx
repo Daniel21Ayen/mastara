@@ -1,10 +1,13 @@
 // apps/mobile/src/modules/exams/components/ExamRow.tsx
 import type { Exam, University } from '@mastara/contracts';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
-import { AppText, Badge, Icon } from '@/shared/ui';
+import { accentForKey, createStyles, useTheme } from '@/core/theme';
+import { AppText, Badge, Icon, LetterTile } from '@/shared/ui';
+import { DownloadButton } from '@/modules/downloads';
+
+import { examDownload } from '../lib/examDownload';
 
 interface ExamRowProps {
   exam: Exam;
@@ -14,6 +17,8 @@ interface ExamRowProps {
 }
 
 export function ExamRow({ exam, university, open, onPress }: ExamRowProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const kindLabel = t(`exams.tab.${exam.kind.toLowerCase() as 'mid' | 'final' | 'mock'}`);
 
@@ -28,23 +33,23 @@ export function ExamRow({ exam, university, open, onPress }: ExamRowProps) {
       onPress={() => onPress(exam, open)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <View style={styles.logo}>
-        <AppText bold color={theme.colors.primary}>
-          {university.shortName.slice(0, 2).toUpperCase()}
-        </AppText>
-      </View>
+      <LetterTile label={university.shortName.slice(0, 2).toUpperCase()} accent={accentForKey(university.id)} round />
       <View style={styles.text}>
         <AppText bold>{`${university.shortName} (${kindLabel})`}</AppText>
         <AppText variant="caption" muted>
           {university.name}
         </AppText>
+        <AppText variant="caption" muted>
+          {t('exams.meta', { count: exam.questionCount, minutes: exam.minutes })}
+        </AppText>
       </View>
+      {open ? <DownloadButton unit={examDownload({ exam, university })} /> : null}
       {trailing}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   row: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
@@ -54,13 +59,5 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   pressed: { opacity: 0.85 },
-  logo: {
-    width: 48,
-    height: 48,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   text: { flex: 1, gap: 2 },
-});
+}));

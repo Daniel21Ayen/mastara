@@ -1,13 +1,17 @@
 // apps/mobile/src/core/timer/monotonicClock.ts
+import { nativeElapsedRealtimeMs } from '../../../modules/mastara-clock';
+
 /** Milliseconds from a clock that only moves forward and ignores the phone's date/time settings. */
 export interface MonotonicClock {
   nowMs(): number;
 }
 
 /**
- * Uses the JavaScript engine's monotonic timer. A native Android SystemClock.elapsedRealtime() module
- * (which also counts time asleep and survives restarts) replaces this object in Phase 9 without changing callers.
+ * The exam clock. With the native module (development or release build) it is Android `SystemClock.elapsedRealtime()`
+ * / iOS `mach_continuous_time`, which keep counting while the phone sleeps. In Expo Go, or in a build without the
+ * module, it falls back to the JavaScript engine's timer, which may pause during deep sleep.
+ * Never mix readings from the two sources: one app run uses one of them.
  */
 export const monotonicClock: MonotonicClock = {
-  nowMs: () => globalThis.performance.now(),
+  nowMs: () => nativeElapsedRealtimeMs() ?? globalThis.performance.now(),
 };

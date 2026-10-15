@@ -1,10 +1,10 @@
 // apps/mobile/src/modules/profile/components/AcademicFields.tsx
 import { STUDENT_STREAMS } from '@mastara/domain';
 import type { StudentStream } from '@mastara/domain';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import type { FormApi } from '@/shared/hooks';
 import { AppText, SegmentedControl, SelectField } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
@@ -26,6 +26,8 @@ interface AcademicFieldsProps {
 
 /** University, program, semester and stream pickers. Shared by Profile Setup and Edit academic details. */
 export function AcademicFields({ form, onChange }: AcademicFieldsProps) {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t, te } = useI18n();
   const { values, errors } = form;
   const options = useAcademicOptions(values.universityId, values.programId);
@@ -77,6 +79,6 @@ export function AcademicFields({ form, onChange }: AcademicFieldsProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   group: { gap: theme.spacing.xs },
-});
+}));

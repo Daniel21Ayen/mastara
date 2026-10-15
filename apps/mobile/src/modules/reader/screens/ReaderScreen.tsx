@@ -1,35 +1,63 @@
 // apps/mobile/src/modules/reader/screens/ReaderScreen.tsx
 import { CONTENT_LANGS } from '@mastara/domain';
 import type { ContentLang } from '@mastara/domain';
-import type { Href } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
-import { AppButton, AppText, Card, RichText, Screen, SegmentedControl, TopBar } from '@/shared/ui';
-import type { SegmentOption } from '@/shared/ui';
+import { createStyles, useTheme } from '@/core/theme';
+import { useScrollList, useVisibleIndex } from '@/shared/hooks';
+import { AppText, ErrorNotice, Screen, TopBar } from '@/shared/ui';
 
-import { useReader } from '../hooks/useReader';
+import { LessonPage } from '../components/LessonPage';
+import type { LessonEntry } from '../hooks/useLessonFeed';
+import { useLessonFeed } from '../hooks/useLessonFeed';
 
+/** The tab the student came from decides the language. Anything else falls back to English. */
 function asLang(value: string | undefined): ContentLang {
   return CONTENT_LANGS.find((lang) => lang === value) ?? 'en';
 }
 
+/**
+ * Reads lessons by scrolling: the lessons of the tab follow one another on one continuous page, in one language
+ * (no language switch). A Next button under each lesson jumps to the next one for students who prefer tapping.
+ */
 export function ReaderScreen() {
+  const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const params = useLocalSearchParams<{ topicId: string; lang?: string }>();
-  const [lang, setLang] = useState<ContentLang>(asLang(params.lang));
-  const { data, loading, error, reload } = useReader(params.topicId ?? '');
+  const lang = asLang(params.lang);
+  const { data, loading, error, reload } = useLessonFeed(params.topicId ?? '');
 
-  const languages: SegmentOption<ContentLang>[] = [
-    { value: 'en', label: t('common.english') },
-    { value: 'am', label: t('common.amharic') },
-  ];
+  const { listRef, scrollTo, onScrollToIndexFailed } = useScrollList<LessonEntry>();
+  const [current, setCurrent] = useState<number | null>(null);
+  // While the page scrolls to the tapped lesson it passes the first ones; those must not start downloading.
+  const settled = useRef(false);
+  const { onViewableItemsChanged, viewabilityConfig } = useVisibleIndex((index) => {
+    if (settled.current) setCurrent(index);
+  });
 
-  const goTo = (topicId: string) => router.replace(`/reader/${topicId}?lang=${lang}` as Href);
+  // Start at the lesson the student tapped; the lessons before it are above, one scroll away.
+  useEffect(() => {
+    if (!data) return;
+    if (data.startIndex === 0) {
+      settled.current = true;
+      return;
+    }
+    const jump = setTimeout(() => scrollTo(data.startIndex), 350);
+    const settle = setTimeout(() => {
+      settled.current = true;
+      setCurrent(data.startIndex);
+    }, 1200);
+    return () => {
+      clearTimeout(jump);
+      clearTimeout(settle);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.first.id]);
 
   const rawTitle = data?.topic.title;
   const topicTitle = typeof rawTitle === 'string' ? rawTitle : (rawTitle?.[lang] ?? (rawTitle as any)?.en ?? '');
@@ -40,53 +68,54 @@ export function ReaderScreen() {
     <Screen scroll>
       <TopBar title={topicTitle} onBack={() => router.back()} />
 
-      {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
-      {!loading && !error && !data ? <AppText muted>{t('reader.notFound')}</AppText> : null}
+  const renderItem = useCallback(
+    ({ item, index }: { item: LessonEntry; index: number }) => (
+      <LessonPage
+        entry={item}
+        index={index}
+        total={data?.lessons.length ?? 0}
+        lang={lang}
+        load={Math.abs(index - near) <= 2}
+        preloaded={data && item.topic.id === data.first.id ? data.first : null}
+        onNext={scrollTo}
+      />
+    ),
+    [data, lang, near, scrollTo],
+  );
 
-      {data && !data.canOpen ? (
-        <Card>
-          <AppText muted>{t('reader.locked')}</AppText>
-        </Card>
-      ) : null}
+  const title = data ? (data.lessons[near]?.topic.title[lang] ?? '') : '';
 
-      {data?.canOpen ? (
-        <>
-          {/* One bilingual record: switching language keeps the same topic and place. */}
-          <SegmentedControl options={languages} value={lang} onChange={setLang} />
+  return (
+    <Screen>
+      <TopBar title={title} onBack={() => router.back()} />
 
           <Card>
             <RichText text={topicBody} lang={lang} />
           </Card>
 
-          <AppText variant="caption" muted style={styles.position}>
-            {t('reader.position', { current: data.index + 1, total: data.total })}
-          </AppText>
-          <View style={styles.nav}>
-            <View style={styles.flex}>
-              <AppButton
-                label={t('reader.previous')}
-                variant="outline"
-                disabled={!data.previousId}
-                onPress={() => data.previousId && goTo(data.previousId)}
-              />
-            </View>
-            <View style={styles.flex}>
-              <AppButton
-                label={t('reader.next')}
-                disabled={!data.nextId}
-                onPress={() => data.nextId && goTo(data.nextId)}
-              />
-            </View>
-          </View>
-        </>
+      {data ? (
+        <FlatList
+          ref={listRef}
+          style={styles.flex}
+          contentContainerStyle={styles.list}
+          data={data.lessons}
+          keyExtractor={(item) => item.topic.id}
+          renderItem={renderItem}
+          extraData={near}
+          // Only the lessons near the screen are built and loaded.
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          windowSize={5}
+          viewabilityConfig={viewabilityConfig}
+          onViewableItemsChanged={onViewableItemsChanged}
+          onScrollToIndexFailed={onScrollToIndexFailed}
+        />
       ) : null}
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
-  position: { textAlign: 'center' },
-  nav: { flexDirection: 'row', gap: theme.spacing.sm },
+const useStyles = createStyles((theme) => ({
   flex: { flex: 1 },
-});
+  list: { gap: theme.spacing.md, paddingBottom: theme.spacing.xl },
+}));

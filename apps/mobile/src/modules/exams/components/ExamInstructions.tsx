@@ -1,8 +1,8 @@
 // apps/mobile/src/modules/exams/components/ExamInstructions.tsx
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { theme } from '@/core/theme';
+import { createStyles } from '@/core/theme';
 import { AppButton, AppText, Card } from '@/shared/ui';
 
 interface ExamInstructionsProps {
@@ -14,6 +14,7 @@ interface ExamInstructionsProps {
 }
 
 export function ExamInstructions({ title, subtitle, questionCount, minutes, onStart }: ExamInstructionsProps) {
+  const styles = useStyles();
   const { t } = useI18n();
 
   return (
@@ -35,6 +36,6 @@ export function ExamInstructions({ title, subtitle, questionCount, minutes, onSt
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.md },
-});
+}));

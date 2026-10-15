@@ -1,7 +1,7 @@
 // apps/mobile/src/shared/ui/Badge.tsx
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
-import { theme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
@@ -11,7 +11,15 @@ interface BadgeProps {
 }
 
 export function Badge({ label, tone = 'primary' }: BadgeProps) {
-  const palette = TONES[tone];
+  const theme = useTheme();
+  const styles = useStyles();
+
+  const tones = {
+    primary: { background: theme.colors.primarySoft, text: theme.colors.primary },
+    danger: { background: theme.colors.dangerSoft, text: theme.colors.danger },
+    muted: { background: theme.colors.border, text: theme.colors.text },
+  } as const;
+  const palette = tones[tone];
 
   return (
     <View style={[styles.base, { backgroundColor: palette.background }]}>
@@ -22,17 +30,11 @@ export function Badge({ label, tone = 'primary' }: BadgeProps) {
   );
 }
 
-const TONES = {
-  primary: { background: theme.colors.primarySoft, text: theme.colors.primary },
-  danger: { background: theme.colors.dangerSoft, text: theme.colors.danger },
-  muted: { background: theme.colors.border, text: theme.colors.text },
-} as const;
-
-const styles = StyleSheet.create({
+const useStyles = createStyles((theme) => ({
   base: {
     borderRadius: theme.radius.sm,
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
     alignSelf: 'flex-start',
   },
-});
+}));
