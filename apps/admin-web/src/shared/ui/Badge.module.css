@@ -1,0 +1,25 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-caption);
+  font-weight: 700;
+}
+
+.neutral {
+  background: var(--color-text-soft);
+  color: var(--color-text);
+}
+
+.primary {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
