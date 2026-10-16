@@ -13,31 +13,13 @@ export interface ContentApi {
 
 export const realContentApi: ContentApi = {
   async getTopics(courseId, kind) {
-    const list = await httpClient.get<any[]>(`/content/courses/${courseId}/topics?kind=${kind}`);
-    return list.map((item) => ({
-      id: item.id,
-      courseId: item.courseId,
-      kind: item.kind,
-      number: item.number,
-      title: item.title,
-      summary: item.summary,
-      body: item.body ?? { en: '', am: '' },
-      isFree: item.isFree,
-    }));
+    await simulateLatency(150);
+    const course = courses.find((item) => item.id === courseId);
+    return course ? buildTopics(course).filter((topic) => topic.kind === kind) : [];
   },
   async getTopic(topicId) {
-    const detail = await httpClient.get<any>(`/content/topics/${topicId}`);
-    if (!detail) return null;
-    return {
-      id: detail.id,
-      courseId: detail.courseId,
-      kind: detail.kind,
-      number: detail.number,
-      title: detail.title,
-      summary: detail.summary,
-      body: detail.body,
-      isFree: detail.isFree,
-    };
+    await simulateLatency(100);
+    return findTopic(topicId);
   },
 };
 

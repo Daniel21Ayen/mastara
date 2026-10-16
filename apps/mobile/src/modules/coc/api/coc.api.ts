@@ -1,8 +1,10 @@
 // apps/mobile/src/modules/coc/api/coc.api.ts
 import type { CocSet, Question } from '@mastara/contracts';
 
+import { env } from '@/core/config/env';
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { httpClient } from '@/core/network';
+import { buildCocQuestions, buildCocSets, courseTitles } from '@/core/mock/data';
+import { simulateLatency } from '@/core/mock/delay';
 
 export interface CocSession {
   set: CocSet;
@@ -21,8 +23,11 @@ export const realCocApi: CocApi = {
   async getSets(_courseIds) {
     return httpClient.get<CocSet[]>('/assessment/coc/sets');
   },
-  async getSession(setId, _courseIds) {
-    return httpClient.get<CocSession>(`/assessment/coc/sets/${setId}/session`);
+  async getSession(setId, courseIds) {
+    await simulateLatency(150);
+    const set = buildCocSets(courseIds).find((item) => item.id === setId);
+    if (!set) return null;
+    return { set, questions: buildCocQuestions(setId, courseIds), courseTitles: courseTitles(courseIds) };
   },
 };
 

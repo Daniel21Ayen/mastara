@@ -1,6 +1,14 @@
 // apps/mobile/src/shared/hooks/useScrollList.ts
 import { useCallback, useRef } from 'react';
-import type { FlatList, ViewToken } from 'react-native';
+import type { FlatList } from 'react-native';
+
+/** Local copy: newer React Native typings no longer export ViewToken from the package root. */
+interface ViewToken<T = unknown> {
+  item: T;
+  key: string;
+  index: number | null;
+  isViewable: boolean;
+}
 
 /**
  * Helpers for a page-after-page scrolling list (lessons, quiz questions, exam questions).

@@ -1,5 +1,5 @@
+// apps/mobile/src/shared/ui/AppText.tsx
 import type { Language } from '@mastara/i18n';
-import React, { type ReactNode } from 'react';
 import { Text } from 'react-native';
 import type { TextProps } from 'react-native';
 
@@ -48,15 +48,11 @@ export function AppText({
   color,
   lang,
   style,
-  children,
   ...rest
 }: AppTextProps) {
   const theme = useTheme();
   const { language } = useI18n();
-  const effectiveLang = lang ?? language;
-  const family = effectiveLang === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
-
-  const resolvedChildren = resolveNode(children, effectiveLang);
+  const family = (lang ?? language) === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
 
   return (
     <Text
@@ -69,8 +65,6 @@ export function AppText({
         },
         style,
       ]}
-    >
-      {resolvedChildren}
-    </Text>
+    />
   );
 }

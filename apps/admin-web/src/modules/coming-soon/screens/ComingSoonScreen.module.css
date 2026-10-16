@@ -1,0 +1,14 @@
+.heading {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-body-large);
+}
+
+.body {
+  margin: 0 0 var(--space-md);
+  color: var(--color-text-muted);
+}
+
+.link {
+  color: var(--color-primary);
+  font-weight: 700;
+}

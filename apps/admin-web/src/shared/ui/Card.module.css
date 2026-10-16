@@ -1,0 +1,12 @@
+.card {
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.title {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-size-body);
+  font-weight: 700;
+  color: var(--color-text);
+}

@@ -1,26 +1,41 @@
 # Build roadmap
 
-Front-end first on mock data, then the backend, then integration. Every phase is small, ends with something runnable and has an explicit "done when".
+Front-end first on mock data, then the backend, then integration. Each phase is small and ends with something runnable.
 
 ## Front-end (mock data)
 
 | Phase | Scope | Done when |
 |---|---|---|
-| F1–F9 | ✅ Setup, onboarding, Home and My Courses, Course screen, quizzes, exams and COC, store, profile and support, offline database and outbox | Answers survive app kill |
-| **F4b** | ✅ **KaTeX renderer** (this change): `needsLayout` rule, offline KaTeX page, `KatexParagraph`, `RichText` routing | Fractions, roots, matrices and limits lay out offline. **Device gate:** checked on a 2–3 GB Android phone (memory, Amharic text) |
-| R1 | ✅ **Refactor and polish** (code done; needs a device test): Continue Learning removed, Review Answers after exams and COC, screenshot blocking and watermark, accent colours and icons everywhere | See `docs/changes/PHASE-R1-CHANGES.md` |
-| R2 | ✅ **Student portal refactor** (code done; needs a device test): Show/Hide explanations, COC as a Home card, admin-set exam time, scrollable exams and review, light and dark themes on every page | See `docs/changes/PHASE-R2-CHANGES.md` |
-| R3 | ✅ **Content online and downloads** (code done; needs a device test): online-first content, per-item download and delete, Downloads screen, no language tabs, app-size controls and gate | See `docs/changes/PHASE-R3-CHANGES.md` |
-| R4 | ✅ **Scrolling pages with a Next button** (code done; needs a device test): lessons, quizzes, exams, COC and review scroll continuously, with Next under each page | See `docs/changes/PHASE-R4-CHANGES.md` |
-| F4c | ✅ **Native exam clock** (code done; needs a device test). Local Expo module `mastara-clock`: Android `SystemClock.elapsedRealtime()`, iOS continuous clock, plus a reboot counter. Replaces `monotonicClock.ts` and `uptime.ts`. Falls back to the JS clock in Expo Go | Locking the phone for 10 minutes mid-exam costs 10 minutes; changing the date gains nothing. Needs a development build |
-| F4d | ✅ **Exam integrity** (code done; needs a device test). (1) Decide the "leave exam" rule (the design says the timer keeps running; the code discards the sitting). (2) `EXAM_SUBMITTED` carries answers, elapsed time and duration. (3) Result IDs become UUIDv7 | Leaving and re-entering cannot restart the clock; the server can re-grade from the upload |
-| F9b | ✅ **Offline hardening** (code done; needs a device test). `getDb()` retries after a failed open; outbox gives up on permanently rejected changes; access carries `expiresAt` instead of `daysLeft`; read-cache clean-up | A rejected change stops retrying and the pending badge clears |
-| T0 | **Tests for the pure rules** in `packages/domain`: timer, downtime, offline access, backoff, UUIDv7, pricing, grading | `npm test` passes in CI |
-| F10a | **Admin scaffold.** Next.js app, tokens, sidebar layout, mock login and route guard, API interface + mock pattern like mobile | Login → empty Dashboard shell |
-| F10b | Dashboard and **Students** (list, profile, device revoke, grant or extend access) | Matches admin designs 2, 3 and 4 |
-| F10c | **Courses** and **Content** (bilingual editor, formula preview using `parseMath` and KaTeX, free-trial flags, publish) | Designs 5 and 6 |
-| F10d | **Scan to PDF** (4 steps) and **Questions and COC sets**, including the **time (minutes) of every exam and COC set** (5 to 240, validated by `isValidExamMinutes`) | Designs 7 and 8 |
-| F10e | **Payment queue and review**, **Products and Pricing**, **Audit log** | Designs 9 to 12 |
+| F1 | ✅ **Setup:** monorepo, tooling, shared packages, Expo shell, theme, i18n, mock data layer | Setup check screen runs; typecheck passes |
+| F2 | ✅ **Onboarding:** Splash, Login/Register, Device Registration, Profile Setup, Course picker | Flow reaches Home on mock data |
+| F3 | ✅ Card-based Home, My Courses (search, filter icon, tabs All / Ongoing / Completed, add/remove), bottom tabs | Matches the approved screen designs |
+| F4 | ✅ Course screen (top tabs Material / Tests / Exams) and Material: Modules, Notes, Amharic, reader with offline math (KaTeX) | Notes open; formulas render offline |
+| F4b ✅ (Phase 10) | Full formula rendering: replace `MathSpan` with bundled KaTeX and fonts (no network) | Fractions, roots and matrices lay out correctly offline |
+| F5 | ✅ Quizzes 1–3: chapter lists, practice, immediate feedback | A quiz can be completed |
+| F6 | ✅ Exams (Mid, Final, Mock) with All Questions palette and timer, plus standalone COC Exam | An exam can be submitted |
+| F7 | ✅ Store: bundle builder (7–10), extras, full package, receipt upload, order status | Price summary matches pricing rules |
+| F8 | ✅ Profile, settings, language, device release, notifications, support, progress | All bottom-tab screens exist |
+| F9 | ✅ Local database, offline outbox, free-trial and lock states (still mock server) | Answers survive app kill |
+| F11 | Admin web (Next.js) on mock data, split into the small phases below | Admin pages from the design exist |
+
+### F11 Admin web, step by step (mock data, one phase = one zip)
+
+Screen numbers are the numbers on the approved Admin design sheets. SRS references: section 6 (flows) and partition G (FR-110 to FR-119, FR-140 to FR-147).
+
+| Phase | Scope | Design screens | Done when |
+|---|---|---|---|
+| F11a ✅ (Phase 11) | **Foundation:** Next.js app, theme from `ui-tokens`, sidebar shell, mock admin sign-in with route guard, Dashboard, shared audit store, placeholder pages for every menu item | 1 Admin Login, 2 Dashboard | Log in, see the dashboard, every menu item opens |
+| F11b ✅ (Phase 12) | **Students:** list with search and filters, student profile with device and access, Suspend, Revoke device, Grant or extend access (reason required, audited) | 3 Students, 4 Student Profile · Device · Access | A device can be revoked and access extended, and both show in the audit store; the dashboard numbers come from the student store |
+| F11c ✅ (Phase 13) | **Courses and catalog:** courses table (university and stream filters, free-trial count, promotional flag, status), add and edit course, universities, programs and semesters | 5 Courses Management | A course can be added, edited and published; unpublishing needs a reason and is audited |
+| F11d ✅ (Phase 14) | **Content → Material:** sidebar sub-menu (Material, Tests), Material Management overview, Modules (with topics and progress), Notes, Amharic Notes (one bilingual record), note editor with formula preview, free-trial flag, Review as student, Save Draft / Publish with versions | Updated Content designs (Material pages) | A note can be written in both languages, published as version 1 and republished as version 2 |
+| F11d2 ✅ (Phase 15) | **Content → Tests:** Tests overview (Quiz 1, 2, 3), Test Management question list, Create / Edit Question (topic tree, question types, correct answer), Review as student, Save Draft / Publish | Updated Content designs (Test Management) | A quiz question can be created, assigned to a topic and published |
+| F11e ✅ (Phase 16) | **Scan to PDF:** scanned pages (add, order, remove) saved with the details of a COC paper, exam, material or quiz; answers typed or attached as image / PDF; scan list with details | Your Scan to PDF field lists | A COC, an exam, a material and a quiz scan can each be saved with their details and answers |
+| F11f ✅ (Phase 17) | **Questions and exam sets** (the quiz questions themselves are in F11d2): Exam Set Management with Mid, Final, COC and Mock tabs; sets list with Edit / Verify / View; question form with set details, topic, question ID, type, answers, access, year and allowed time; Build Exam Set; publish and unpublish with checks | Your Exam Set Management designs (5 images) | A Mid, Final, COC or Mock set can be built with questions, verified and published |
+| F11g ✅ (Phase 18) | **Payments:** payment queue (Pending / Approved / Rejected), review page with receipt zoom and rotate, duplicate-reference warning, Approve or Reject with reason | 9 Payment Queue, 10 Payment Review | An approval unlocks access in the mock store and writes an audit entry |
+| F11h | **Pricing and audit:** products and pricing form with free-trial defaults, versioned saves, Audit Log viewer with filters | 11 Products and Pricing, 12 Audit Log | A price change shows in the audit log |
+| F11i (no design yet) | Notifications to students and support ticket replies (FR-118, FR-153, FR-155), reports (FR-194) | to be designed | An admin can reply to a ticket in the portal (mock tickets) |
+
+Rules for every F11 phase: follow the module template, keep the four colours, put all text in `packages/i18n/src/admin/en.json`, add Zod shapes to `packages/contracts`, put rules in `packages/domain`, and write an audit entry (`recordAudit`) for every sensitive action.
 
 ## Backend
 
@@ -29,17 +44,14 @@ Front-end first on mock data, then the backend, then integration. Every phase is
 | B1 | API setup: NestJS, PostgreSQL schema (Prisma), local Redis queue, health check |
 | B2 | Identity and device lock |
 | B3 | Catalog, My Course List, content |
-| B4 | Assessment: quizzes, exams, COC, attempts (server re-grades from uploaded answers) |
+| B4 | Assessment: quizzes, exams, COC, attempts |
 | B5 | Commerce: products, orders, receipts, entitlements, expiry job |
 | B6 | Sync endpoint, scan-to-PDF worker, notifications, audit |
 | I1 | Connect mobile and admin to the real API (turn `EXPO_PUBLIC_USE_MOCKS` off) |
-| I2 | Hardening: security, app size **under 20 MB** (gate: `check-app-size.mjs`), memory, pilot |
+| I2 | Hardening: security, app size under 50 MB, memory, pilot |
 
-## Order and why
+## Still open before the backend
 
-F4b → F4c → F4d first: they change the exam contract, so doing them before F10 and the backend avoids rebuilding the exam upload and the admin question tools twice. F9b and T0 are one-day tasks that can run in parallel. F10a to F10e then B1 onward.
-
-## Still open
-
-- Encrypted database needs a development build (`EXPO_PUBLIC_DB_ENCRYPTION=true`). F4c needs one too, so build it once.
-- Amharic font inside formula paragraphs uses the phone's system font (see F4b notes).
+- Run the native clock on a real Android phone (development build) and the KaTeX bundle on a real device: both need a device to confirm.
+- Encrypted database needs a development build (`EXPO_PUBLIC_DB_ENCRYPTION=true`).
+- F11f to F11i Admin web on mock data (see the table above).

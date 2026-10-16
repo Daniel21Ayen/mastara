@@ -1,0 +1,25 @@
+.list {
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: 40px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--color-primary-soft);
+}
+
+.label {
+  color: var(--color-text-muted);
+}
+
+.value {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}

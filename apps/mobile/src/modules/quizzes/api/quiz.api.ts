@@ -13,15 +13,18 @@ export interface QuizApi {
 
 export const realQuizApi: QuizApi = {
   async getChapters(courseId, quizNo) {
-    return httpClient.get<QuizChapter[]>(
-      `/assessment/quizzes/courses/${courseId}/chapters?quizNo=${quizNo}`,
-    );
+    await simulateLatency(150);
+    const course = courses.find((item) => item.id === courseId);
+    return course ? buildChapters(course).filter((chapter) => chapter.quizNo === quizNo) : [];
   },
   async getChapter(chapterId) {
-    return httpClient.get<QuizChapter>(`/assessment/quizzes/chapters/${chapterId}`);
+    await simulateLatency(100);
+    return findChapter(chapterId);
   },
   async getQuestions(chapterId) {
-    return httpClient.get<Question[]>(`/assessment/quizzes/chapters/${chapterId}/questions`);
+    await simulateLatency(150);
+    const chapter = findChapter(chapterId);
+    return chapter ? buildQuestions(chapter) : [];
   },
 };
 

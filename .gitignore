@@ -1,20 +1,13 @@
-node_modules
-dist
-.next
-.expo
-.turbo
-.env
-android
-ios
+node_modules/
+.expo/
+.turbo/
+dist/
+build/
 *.log
-.expo
-android
-ios
-
-# Environment
 .env
 .env.local
 .DS_Store
 uploads/
 *.tsbuildinfo
 apps/mobile/src/core/math/katexAssets.generated.ts
+.next/
