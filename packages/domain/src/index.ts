@@ -2,6 +2,7 @@
 export * from './access/canOpenContent';
 export * from './access/offlineAccess';
 export * from './constants/academic';
+export * from './constants/admin';
 export * from './constants/assessment';
 export * from './constants/commerce';
 export * from './constants/content';

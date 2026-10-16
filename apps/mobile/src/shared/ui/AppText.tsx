@@ -17,6 +17,30 @@ interface AppTextProps extends TextProps {
   lang?: Language;
 }
 
+
+function resolveNode(node: ReactNode, lang: Language): ReactNode {
+  if (node == null || typeof node === 'boolean') {
+    return null;
+  }
+  if (typeof node === 'string' || typeof node === 'number') {
+    return node;
+  }
+  if (Array.isArray(node)) {
+    return node.map((child, index) => <React.Fragment key={index}>{resolveNode(child, lang)}</React.Fragment>);
+  }
+  if (typeof node === 'object') {
+    if (React.isValidElement(node)) {
+      return node;
+    }
+    if ('en' in (node as any) || 'am' in (node as any)) {
+      const b = node as { en?: string; am?: string };
+      return lang === 'am' ? (b.am ?? b.en ?? '') : (b.en ?? b.am ?? '');
+    }
+    return '';
+  }
+  return String(node);
+}
+
 export function AppText({
   variant = 'body',
   bold = variant === 'title' || variant === 'heading',

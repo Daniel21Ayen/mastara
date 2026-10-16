@@ -2,10 +2,8 @@
 import type { Topic } from '@mastara/contracts';
 import type { ContentKind } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { buildTopics, courses, findTopic } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
+import { httpClient } from '@/core/network';
 
 export interface ContentApi {
   /** Modules or notes of a course, in order. */
@@ -13,7 +11,7 @@ export interface ContentApi {
   getTopic(topicId: string): Promise<Topic | null>;
 }
 
-const mockContentApi: ContentApi = {
+export const realContentApi: ContentApi = {
   async getTopics(courseId, kind) {
     await simulateLatency(150);
     const course = courses.find((item) => item.id === courseId);
@@ -25,13 +23,8 @@ const mockContentApi: ContentApi = {
   },
 };
 
-function createContentApi(): ContentApi {
-  if (env.useMocks) return mockContentApi;
-  throw new Error('The real content API is added in the backend integration phase.');
-}
-
 /** The server, with no download rules. Used to download a lesson. */
-export const contentRemote = createContentApi();
+export const contentRemote = realContentApi;
 
 /**
  * Online first. A lesson opens offline only if the student downloaded it. Offline, the lesson lists show what was downloaded.

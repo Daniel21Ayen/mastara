@@ -2,10 +2,8 @@
 import type { Question, QuizChapter } from '@mastara/contracts';
 import type { QuizNumber } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { buildChapters, buildQuestions, courses, findChapter } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
+import { httpClient } from '@/core/network';
 
 export interface QuizApi {
   getChapters(courseId: string, quizNo: QuizNumber): Promise<QuizChapter[]>;
@@ -13,7 +11,7 @@ export interface QuizApi {
   getQuestions(chapterId: string): Promise<Question[]>;
 }
 
-const mockQuizApi: QuizApi = {
+export const realQuizApi: QuizApi = {
   async getChapters(courseId, quizNo) {
     await simulateLatency(150);
     const course = courses.find((item) => item.id === courseId);
@@ -30,13 +28,8 @@ const mockQuizApi: QuizApi = {
   },
 };
 
-function createQuizApi(): QuizApi {
-  if (env.useMocks) return mockQuizApi;
-  throw new Error('The real quiz API is added in the backend integration phase.');
-}
-
 /** The server, with no download rules. Used to download a quiz chapter. */
-export const quizRemote = createQuizApi();
+export const quizRemote = realQuizApi;
 
 /** Online first. A chapter opens offline only if the student downloaded it. */
 export const quizApi = gatewayReads('quiz', quizRemote, {

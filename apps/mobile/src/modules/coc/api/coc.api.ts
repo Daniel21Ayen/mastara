@@ -19,10 +19,9 @@ export interface CocApi {
   getSession(setId: string, courseIds: readonly string[]): Promise<CocSession | null>;
 }
 
-const mockCocApi: CocApi = {
-  async getSets(courseIds) {
-    await simulateLatency(150);
-    return buildCocSets(courseIds);
+export const realCocApi: CocApi = {
+  async getSets(_courseIds) {
+    return httpClient.get<CocSet[]>('/assessment/coc/sets');
   },
   async getSession(setId, courseIds) {
     await simulateLatency(150);
@@ -32,13 +31,8 @@ const mockCocApi: CocApi = {
   },
 };
 
-function createCocApi(): CocApi {
-  if (env.useMocks) return mockCocApi;
-  throw new Error('The real COC API is added in the backend integration phase.');
-}
-
 /** The server, with no download rules. Used to download a COC set. */
-export const cocRemote = createCocApi();
+export const cocRemote = realCocApi;
 
 /**
  * Online first. A COC set opens offline only if the student downloaded it. A downloaded set is a fixed snapshot,

@@ -50,5 +50,5 @@ const useStyles = createStyles((theme) => ({
     transform: [{ rotate: '-24deg' }],
   },
   cell: { alignItems: 'center', justifyContent: 'center' },
-  text: { fontSize: 13, color: withAlpha(theme.colors.text, 0.09), fontFamily: theme.fontFamily.sans },
+  text: { fontSize: 13, color: withAlpha(theme.colors.text, 0.09), fontFamily: theme.fontFamily.sans.regular },
 }));

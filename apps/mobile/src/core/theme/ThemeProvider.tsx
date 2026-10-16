@@ -45,7 +45,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Android rejects null here ("Parameter specified as non-null is null"), and a failure must never crash the app.
   useEffect(() => {
     try {
-      Appearance.setColorScheme(preference === 'system' ? ('unspecified' as unknown as null) : preference);
+      Appearance.setColorScheme((preference === 'system' ? 'unspecified' : preference) as any);
     } catch {
       // The app's own colours still follow the choice; only system dialogs and the keyboard may not.
     }

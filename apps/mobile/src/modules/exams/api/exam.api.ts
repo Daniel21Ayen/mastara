@@ -2,10 +2,8 @@
 import type { Exam, Question, University } from '@mastara/contracts';
 import type { ExamKind } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { buildExamQuestions, buildExams, courses, findExam, universities } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
+import { httpClient } from '@/core/network';
 
 export interface ExamListing {
   exam: Exam;
@@ -24,11 +22,7 @@ export interface ExamApi {
   getSession(examId: string): Promise<ExamSessionData | null>;
 }
 
-function universityOf(id: string): University | undefined {
-  return universities.find((item) => item.id === id);
-}
-
-const mockExamApi: ExamApi = {
+export const realExamApi: ExamApi = {
   async getExams(courseId, kind) {
     await simulateLatency(150);
     const course = courses.find((item) => item.id === courseId);
@@ -49,13 +43,8 @@ const mockExamApi: ExamApi = {
   },
 };
 
-function createExamApi(): ExamApi {
-  if (env.useMocks) return mockExamApi;
-  throw new Error('The real exam API is added in the backend integration phase.');
-}
-
 /** The server, with no download rules. Used to download an exam. */
-export const examRemote = createExamApi();
+export const examRemote = realExamApi;
 
 /** Online first. An exam opens offline only if the student downloaded it. */
 export const examApi = gatewayReads('exam', examRemote, {
