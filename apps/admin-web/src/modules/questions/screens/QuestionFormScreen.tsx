@@ -102,7 +102,7 @@ function FormBody({ kind, set }: BodyProps) {
   const hasCourse = needsCourse(kind);
   const isMidOrFinal = kind === 'MID' || kind === 'FINAL';
 
-  const allCatalogCourses = useAsync(() => catalogApi.listCourses({ limit: 100 }), []);
+  const allCatalogCourses = useAsync(() => catalogApi.listCourses({ page: 1 }), []);
   const selectedMidFinalCourse = (allCatalogCourses.data?.items ?? []).find(
     (c) => c.id === details.courseId,
   );
