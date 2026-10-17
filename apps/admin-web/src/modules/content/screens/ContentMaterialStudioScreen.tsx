@@ -66,8 +66,14 @@ export function ContentMaterialStudioScreen({ initialTab = 'modules' }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedChapter =
-    chapters.find((ch) => ch.id === selectedChapterId) || chapters[0] || DEFAULT_CHAPTERS[0];
+  const fallbackChapter: ChapterData = DEFAULT_CHAPTERS[0] ?? {
+    id: 'ch-1',
+    name: 'Chapter 1',
+    title: 'Chapter 1',
+    content: '',
+  };
+  const selectedChapter: ChapterData =
+    chapters.find((ch) => ch.id === selectedChapterId) ?? chapters[0] ?? fallbackChapter;
 
   const handleTitleChange = (newTitle: string) => {
     setChapters((prev) =>
@@ -96,6 +102,7 @@ export function ContentMaterialStudioScreen({ initialTab = 'modules' }: Props) {
   const handlePdfUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const file = files[0];
+    if (!file) return;
     setAttachedPdf({
       name: file.name,
       sizeKb: Math.round(file.size / 1024),

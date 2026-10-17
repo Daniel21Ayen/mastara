@@ -62,8 +62,13 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
   );
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
-  const selectedChapter =
-    chapters.find((ch) => ch.id === selectedChapterId) || chapters[0] || DEFAULT_QUIZ_CHAPTERS[0];
+  const fallbackQuizChapter: ChapterQuizItem = DEFAULT_QUIZ_CHAPTERS[0] ?? {
+    id: 'ch-1',
+    name: 'Chapter 1',
+    title: 'Chapter 1',
+  };
+  const selectedChapter: ChapterQuizItem =
+    chapters.find((ch) => ch.id === selectedChapterId) ?? chapters[0] ?? fallbackQuizChapter;
 
   const handleTitleChange = (newTitle: string) => {
     setChapters((prev) =>
