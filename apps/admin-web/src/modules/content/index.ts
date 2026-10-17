@@ -13,4 +13,6 @@ export { matchesSearch } from './lib/matchesSearch';
 export { MaterialScreen } from './screens/MaterialScreen';
 export { ModulesScreen } from './screens/ModulesScreen';
 export { AmharicNotesScreen, NotesScreen } from './screens/NotesScreen';
+export { ContentManagementScreen } from './screens/ContentManagementScreen';
+export { ContentMaterialStudioScreen } from './screens/ContentMaterialStudioScreen';
 export { useContentCourse } from './state/ContentCourseContext';

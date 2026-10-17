@@ -15,7 +15,7 @@
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
+  align-items: flex-end;
   gap: var(--space-md);
   margin-bottom: var(--space-md);
 }
@@ -79,6 +79,68 @@
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: var(--space-md);
   align-items: start;
+}
+
+.row5 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.row4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.row3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .row5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .row4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .row3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .row5,
+  .row4,
+  .row2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .counter {
@@ -187,6 +249,28 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-sm);
+}
+
+.buildSection {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.buildSectionTitle {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* Ten columns: tighter cells so Actions stays in view on a laptop screen. */

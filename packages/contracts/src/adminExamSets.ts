@@ -33,6 +33,8 @@ const semesterNumber = z.union([z.literal(1), z.literal(2)]);
 
 // ---- read shapes ----
 
+const ANSWER_DESCRIPTION_MAX = 500;
+
 /** One question of an exam set. Its ID is typed by the admin and is unique across all sets. */
 export const examQuestionSchema = z.object({
   id: z.string(),
@@ -44,6 +46,8 @@ export const examQuestionSchema = z.object({
   correctOption: z.number().int().min(0).nullable(),
   trueIsCorrect: z.boolean().nullable(),
   acceptedAnswers: z.array(z.string()),
+  /** Explanation shown to the student after they answer. */
+  answerDescription: z.string().max(ANSWER_DESCRIPTION_MAX).optional(),
 });
 
 export const examSetSchema = z.object({
@@ -99,7 +103,10 @@ export const examQuestionInputSchema = z.object({
   correctOption: z.number().int().min(0).nullable(),
   trueIsCorrect: z.boolean().nullable(),
   acceptedAnswers: z.array(z.string()).max(10),
+  answerDescription: z.string().max(ANSWER_DESCRIPTION_MAX).optional(),
 });
+
+export { ANSWER_DESCRIPTION_MAX };
 
 /**
  * Saves a whole exam set: creates it when the ID is new, otherwise replaces its details and its
@@ -109,7 +116,7 @@ export const examSetInputSchema = z
   .object({
     id: examSetIdSchema,
     kind: z.enum(EXAM_SET_KINDS),
-    universityId: required,
+    universityId: z.string(),
     programId: required,
     semesterNumber: z.union([z.literal(1), z.literal(2)], { message: VALIDATION.required }),
     stream: z.enum(STREAMS, { message: VALIDATION.required }),
@@ -118,7 +125,8 @@ export const examSetInputSchema = z
       .number({ message: EXAM_SET_VALIDATION.year })
       .refine((value) => (SET_YEARS as readonly number[]).includes(value), {
         message: EXAM_SET_VALIDATION.year,
-      }),
+      })
+      .optional(),
     isFree: z.boolean(),
     minutes: z
       .number({ message: EXAM_SET_VALIDATION.minutes })
@@ -130,6 +138,14 @@ export const examSetInputSchema = z
     reason: reasonSchema.optional(),
   })
   .superRefine((value, context) => {
+    if (value.kind !== 'MOCK') {
+      if (!value.universityId || value.universityId.trim() === '') {
+        context.addIssue({ code: 'custom', path: ['universityId'], message: VALIDATION.required });
+      }
+      if (value.year === undefined) {
+        context.addIssue({ code: 'custom', path: ['year'], message: EXAM_SET_VALIDATION.year });
+      }
+    }
     if (needsCourse(value.kind) && !value.courseId) {
       context.addIssue({ code: 'custom', path: ['courseId'], message: VALIDATION.required });
     }

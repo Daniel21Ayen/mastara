@@ -1,10 +1,10 @@
 // apps/admin-web/src/modules/questions/components/SetFields.tsx
-import { needsCourse, SET_MINUTES_MAX, SET_MINUTES_MIN, SET_YEARS, STREAMS } from '@mastara/domain';
+import { needsCourse, SET_YEARS, STREAMS } from '@mastara/domain';
 import type { ExamSetKind, Stream } from '@mastara/domain';
 
 import { adminText } from '@/core/i18n';
 import { programsOf, useScanCourses, useUniversities, usePrograms } from '@/modules/scans';
-import { SelectField, TextField } from '@/shared/ui';
+import { SelectField } from '@/shared/ui';
 
 import type { SetDetailsState } from '../lib/examSetForm';
 
@@ -29,24 +29,14 @@ interface IdFieldProps extends FieldsProps {
   onIdBlur?: () => void;
 }
 
-/** Exam Set ID, University, Program / Department, Semester, Stream and (not for COC) Course. */
-export function SetScopeFields({ kind, details, errors, onChange, locked, onIdBlur }: IdFieldProps) {
+/** University, Program / Department, Semester, Stream and (not for COC) Course. */
+export function SetScopeFields({ kind, details, errors, onChange, locked: _locked, onIdBlur: _onIdBlur }: IdFieldProps) {
   const universities = useUniversities();
   const programs = usePrograms();
   const courses = useScanCourses(details.programId, details.semester, details.stream);
 
   return (
     <div className={styles.grid}>
-      <TextField
-        label={adminText('admin.questions.field.examSetId')}
-        autoComplete="off"
-        value={details.id}
-        readOnly={locked}
-        placeholder={adminText('admin.questions.field.examSetIdPlaceholder')}
-        onChange={(event) => onChange({ id: event.target.value }, 'id')}
-        onBlur={onIdBlur}
-        error={errors.id}
-      />
       <SelectField
         label={adminText('admin.questions.field.university')}
         placeholder={adminText('admin.scans.field.selectUniversity')}
@@ -123,7 +113,7 @@ export function SetScopeFields({ kind, details, errors, onChange, locked, onIdBl
   );
 }
 
-/** Access / Permission, Year and Allowed Time. */
+/** Year (the academic year for the set). */
 export function SetTermsFields({
   details,
   errors,
@@ -132,30 +122,11 @@ export function SetTermsFields({
   return (
     <div className={styles.grid}>
       <SelectField
-        label={adminText('admin.questions.field.access')}
-        options={(['PAID', 'FREE'] as const).map((value) => ({
-          value,
-          label: adminText(`admin.questions.access.${value}`),
-        }))}
-        value={details.isFree ? 'FREE' : 'PAID'}
-        onChange={(event) => onChange({ isFree: event.target.value === 'FREE' })}
-      />
-      <SelectField
         label={adminText('admin.questions.field.year')}
         options={SET_YEARS.map((year) => ({ value: String(year), label: yearText(year) }))}
         value={details.year}
         onChange={(event) => onChange({ year: event.target.value }, 'year')}
         error={errors.year}
-      />
-      <TextField
-        label={adminText('admin.questions.field.minutes')}
-        type="number"
-        inputMode="numeric"
-        min={SET_MINUTES_MIN}
-        max={SET_MINUTES_MAX}
-        value={details.minutes}
-        onChange={(event) => onChange({ minutes: event.target.value }, 'minutes')}
-        error={errors.minutes}
       />
     </div>
   );

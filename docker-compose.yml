@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     container_name: mastara-postgres
     restart: unless-stopped
     environment:
@@ -22,7 +22,7 @@ services:
       - mastara-network
 
   redis:
-    image: redis:7-alpine
+    image: docker.io/library/redis:7-alpine
     container_name: mastara-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-mastara_redis_pass_2026}"]
@@ -38,29 +38,31 @@ services:
     networks:
       - mastara-network
 
-  minio:
-    image: minio/minio:RELEASE.2024-10-02T01-58-21Z
-    container_name: mastara-minio
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mastara_admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mastara_minio_pass_2026}
-    ports:
-      - "${MINIO_API_HOST_PORT:-9002}:9000"
-      - "${MINIO_CONSOLE_HOST_PORT:-9003}:9001"
-    volumes:
-      - mastara_minio_data:/data
-    networks:
-      - mastara-network
+# MinIO is optional for local development (STORAGE_DRIVER=local is active).
+# Uncomment if using S3 object storage driver with custom built image.
+#  minio:
+#    image: quay.io/minio/minio:RELEASE.2024-10-02T01-58-21Z
+#    container_name: mastara-minio
+#    restart: unless-stopped
+#    command: server /data --console-address ":9001"
+#    environment:
+#      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mastara_admin}
+#      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mastara_minio_pass_2026}
+#    ports:
+#      - "${MINIO_API_HOST_PORT:-9002}:9000"
+#      - "${MINIO_CONSOLE_HOST_PORT:-9003}:9001"
+#    volumes:
+#      - mastara_minio_data:/data
+#    networks:
+#      - mastara-network
 
 volumes:
   mastara_pg_data:
     name: mastara_pg_data
   mastara_redis_data:
     name: mastara_redis_data
-  mastara_minio_data:
-    name: mastara_minio_data
+#  mastara_minio_data:
+#    name: mastara_minio_data
 
 networks:
   mastara-network:

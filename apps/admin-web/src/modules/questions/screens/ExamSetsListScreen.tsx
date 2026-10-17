@@ -2,18 +2,20 @@
 'use client';
 
 import type { ExamQuestion, ExamSet } from '@mastara/contracts';
-import { CATALOG_STATUSES, examSetSlug, needsCourse } from '@mastara/domain';
+import { CATALOG_STATUSES, examSetSlug, needsCourse, SET_YEARS, STREAMS } from '@mastara/domain';
 import type { CatalogStatus, ExamSetKind } from '@mastara/domain';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { adminText } from '@/core/i18n';
+import { usePrograms, useUniversities } from '@/modules/scans';
 import { QuestionPreviewDialog, StatusBadge } from '@/modules/tests';
 import {
   Button,
   ButtonLink,
   Card,
   DataTable,
+  Icon,
   PageHeader,
   Pagination,
   SelectField,
@@ -30,16 +32,23 @@ import { previewOf } from '../lib/examSetForm';
 
 import styles from '../components/Questions.module.css';
 
-const IDS_SHOWN = 3;
 
 /** Exam Set Management: the sets of one kind, with Edit, Verify and View, and the top-bar search. */
 export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
   const q = useSearchParams().get('q')?.trim() || undefined;
   const [status, setStatus] = useState<CatalogStatus | ''>('');
+  const [university, setUniversity] = useState('');
+  const [course, setCourse] = useState('');
+  const [year, setYear] = useState('');
+  const [stream, setStream] = useState('');
+  const [program, setProgram] = useState('');
   const [page, setPage] = useState(1);
   const [building, setBuilding] = useState(false);
   const [review, setReview] = useState<{ set: ExamSet; canChange: boolean } | null>(null);
   const [preview, setPreview] = useState<ExamQuestion | null>(null);
+
+  const universities = useUniversities();
+  const programs = usePrograms();
 
   const { data, error, loading, reload } = useExamSets({
     kind,
@@ -51,14 +60,14 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
 
   const columns: Column<ExamSet>[] = [
     {
+      key: 'questionNumber',
+      header: adminText('admin.questions.col.questionIds'),
+      render: (row) => row.questions[0]?.id ?? row.id,
+    },
+    {
       key: 'university',
       header: adminText('admin.questions.col.university'),
       render: (row) => row.universityName,
-    },
-    {
-      key: 'id',
-      header: adminText('admin.questions.col.examSetId'),
-      render: (row) => row.id,
     },
     {
       key: 'program',
@@ -86,30 +95,6 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
       render: (row) => <span className={styles.nowrap}>{yearText(row.year)}</span>,
     },
     {
-      key: 'questions',
-      header: adminText('admin.questions.col.questionIds'),
-      render: (row) => (
-        <span className={styles.ids}>
-          {row.questions.slice(0, IDS_SHOWN).map((question) => (
-            <button
-              key={question.id}
-              type="button"
-              className={styles.idLink}
-              onClick={() => setPreview(question)}
-            >
-              {question.id}
-            </button>
-          ))}
-          {row.questions.length > IDS_SHOWN ? (
-            <span className={styles.more}>
-              {adminText('admin.questions.moreIds', { n: row.questions.length - IDS_SHOWN })}
-            </span>
-          ) : null}
-          {row.questions.length === 0 ? adminText('admin.common.none') : null}
-        </span>
-      ),
-    },
-    {
       key: 'status',
       header: adminText('admin.questions.col.status'),
       render: (row) => <StatusBadge status={row.status} />,
@@ -124,12 +109,14 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
             href={`/questions/${slug}/${row.id}`}
             aria-label={adminText('admin.questions.editNamed', { id: row.id })}
           >
+            <Icon name="edit" size={14} />
             {adminText('admin.catalog.edit')}
           </ButtonLink>
           <Button
             aria-label={adminText('admin.questions.verifyNamed', { id: row.id })}
             onClick={() => setReview({ set: row, canChange: true })}
           >
+            <Icon name="shieldCheck" size={14} />
             {adminText('admin.questions.verifyAction')}
           </Button>
           <Button
@@ -137,6 +124,7 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
             aria-label={adminText('admin.questions.viewNamed', { id: row.id })}
             onClick={() => setReview({ set: row, canChange: false })}
           >
+            <Icon name="eye" size={14} />
             {adminText('admin.questions.viewAction')}
           </Button>
         </span>
@@ -151,9 +139,11 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
         actions={
           <>
             <ButtonLink variant="outline" href={`/questions/${slug}/new`}>
+              <Icon name="plus" size={16} />
               {adminText('admin.questions.newQuestion')}
             </ButtonLink>
             <Button onClick={() => setBuilding(true)}>
+              <Icon name="grid" size={16} />
               {adminText(kind === 'COC' ? 'admin.questions.buildCoc' : 'admin.questions.buildSet')}
             </Button>
           </>
@@ -186,6 +176,54 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
                 setStatus(event.target.value as CatalogStatus | '');
                 setPage(1);
               }}
+            />
+            <SelectField
+              label={adminText('admin.questions.filter.university')}
+              placeholder={adminText('admin.questions.filter.allUniversities')}
+              options={(universities.data ?? []).map((u) => ({ value: u.id, label: u.shortName }))}
+              value={university}
+              onChange={(event) => { setUniversity(event.target.value); setPage(1); }}
+            />
+            <SelectField
+              label={adminText('admin.questions.filter.course')}
+              placeholder={adminText('admin.questions.filter.allCourses')}
+              options={
+                data
+                  ? Array.from(
+                      new Map(
+                        data.items
+                          .filter((row) => row.courseTitle)
+                          .map((row) => [row.courseId, row.courseTitle!])
+                      ).entries()
+                    ).map(([value, label]) => ({ value: value!, label }))
+                  : []
+              }
+              value={course}
+              onChange={(event) => { setCourse(event.target.value); setPage(1); }}
+            />
+            <SelectField
+              label={adminText('admin.questions.filter.year')}
+              placeholder={adminText('admin.questions.filter.allYears')}
+              options={SET_YEARS.map((y) => ({ value: String(y), label: yearText(y) }))}
+              value={year}
+              onChange={(event) => { setYear(event.target.value); setPage(1); }}
+            />
+            <SelectField
+              label={adminText('admin.questions.filter.stream')}
+              placeholder={adminText('admin.questions.filter.allStreams')}
+              options={STREAMS.map((value) => ({
+                value,
+                label: adminText(`admin.stream.${value}`),
+              }))}
+              value={stream}
+              onChange={(event) => { setStream(event.target.value); setPage(1); }}
+            />
+            <SelectField
+              label={adminText('admin.questions.filter.program')}
+              placeholder={adminText('admin.questions.filter.allPrograms')}
+              options={(programs.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+              value={program}
+              onChange={(event) => { setProgram(event.target.value); setPage(1); }}
             />
           </div>
           <div className={styles.compact}>

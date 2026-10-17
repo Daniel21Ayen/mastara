@@ -1,0 +1,655 @@
+/* apps/admin-web/src/modules/scans/components/ScanWizard.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: var(--space-xs);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Stepper Tabs Bar */
+.stepper {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.stepTab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stepTabActive {
+  background: #0066ff !important;
+  color: #ffffff !important;
+}
+
+.stepTabDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Step 1: Import Dropzone */
+.dropzoneCard {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 56px 24px;
+  border: 2px dashed #3b82f6;
+  border-radius: var(--radius-md);
+  background: rgba(59, 130, 246, 0.02);
+  transition: background-color 0.2s ease;
+}
+
+.dropzoneTitle {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dropzoneSubtitle {
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.dropzoneButtons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.dropzoneBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+}
+
+.countText {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+/* Step 2: Two-column grid */
+.step2Grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .step2Grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leftCard,
+.rightCard {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+}
+
+.cardHeading {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.subHeading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.toolsBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toolBtn:hover:not(:disabled) {
+  border-color: #0066ff;
+  color: #0066ff;
+}
+
+.toolBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Thumbnails Grid */
+.thumbsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 600px) {
+  .thumbsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.thumbCard {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border: 1.5px dashed #3b82f6;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.thumbCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.thumbCardSelected {
+  border: 2px solid #0066ff !important;
+  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.2);
+}
+
+.thumbCardDragging {
+  opacity: 0.45;
+  border-style: solid;
+  border-color: #0066ff !important;
+  transform: scale(0.96);
+}
+
+.pageBadge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0066ff;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.addMoreRow {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-sm);
+}
+
+.addMoreBtn {
+  border: 0;
+  background: transparent;
+  color: #0066ff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.addMoreBtn:hover {
+  text-decoration: underline;
+}
+
+/* Right Card Form */
+.detailsForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Answer Input Field (Typed or Attached PDF / Scanned Image) */
+.answerSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.answerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.answerLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.answerToggleGroup {
+  display: inline-flex;
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.answerToggleBtn {
+  border: 0;
+  background: transparent;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.answerToggleBtnActive {
+  background: #ffffff;
+  color: #0066ff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.answerTextarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #ffffff;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.answerTextarea:focus {
+  border-color: #0066ff;
+  box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
+}
+
+.answerFileDrop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  border: 1.5px dashed #3b82f6;
+  border-radius: var(--radius-sm);
+  background: rgba(59, 130, 246, 0.03);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.answerFileDrop:hover {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.answerFileDropText {
+  font-size: 0.8rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.answerFileAttachedCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 1px solid #93c5fd;
+  background: #eff6ff;
+  border-radius: var(--radius-sm);
+}
+
+.answerFileInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #1e3a8a;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.answerFileSize {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.answerFileRemoveBtn {
+  border: 0;
+  background: transparent;
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.answerFileRemoveBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.pagesSummaryNote {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.convertBtn {
+  width: 100%;
+  margin-top: var(--space-sm);
+  padding: 12px;
+  font-size: 0.95rem;
+}
+
+/* Step 3: Convert Ready */
+.convertCard {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.badgesRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 24px;
+}
+
+.pagesBadge {
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 9999px;
+}
+
+.sizeBadge {
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 9999px;
+}
+
+.previewPdfBtn {
+  width: 100%;
+  padding: 14px;
+  border: 1.5px solid #0066ff;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #0066ff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 28px;
+  transition: all 0.15s ease;
+}
+
+.previewPdfBtn:hover {
+  background: rgba(0, 102, 255, 0.05);
+}
+
+.step3Actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Step 4: Publish */
+.publishCard {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.metaList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: var(--space-lg) 0;
+}
+
+.metaItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.metaLabel {
+  font-size: 0.95rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.metaValue {
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+}
+
+.publishHint {
+  margin: var(--space-lg) 0 var(--space-xl);
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.step4Actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.actionsRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Modal PDF Viewer */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.modalContent {
+  background: #1e293b;
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 900px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.modalBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.modalBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.9rem;
+}
+
+.modalBarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  background: #334155;
+}
+
+.modalPageSheet {
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.modalPageSheet img {
+  width: 100%;
+  display: block;
+}
+
+.closeBtn {
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.successCard {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.successIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #166534;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}

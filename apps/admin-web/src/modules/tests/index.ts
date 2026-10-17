@@ -1,5 +1,6 @@
 // apps/admin-web/src/modules/tests/index.ts
 export { QuestionEditorScreen } from './screens/QuestionEditorScreen';
+export { ContentQuizStudioScreen } from './screens/ContentQuizStudioScreen';
 export { TestListScreen } from './screens/TestListScreen';
 export { TestsOverviewScreen } from './screens/TestsOverviewScreen';
 export { AnswerList } from './components/AnswerList';

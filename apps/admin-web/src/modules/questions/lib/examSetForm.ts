@@ -49,6 +49,7 @@ export const emptyQuestion = (keepForm?: ExamQuestionInput['form']): ExamQuestio
   correctOption: null,
   trueIsCorrect: null,
   acceptedAnswers: [''],
+  answerDescription: '',
 });
 
 export const questionFromExisting = (question: ExamQuestion): ExamQuestionInput => ({
@@ -58,6 +59,7 @@ export const questionFromExisting = (question: ExamQuestion): ExamQuestionInput 
       ? [...question.options]
       : Array.from({ length: OPTIONS_DEFAULT }, () => ''),
   acceptedAnswers: question.acceptedAnswers.length > 0 ? [...question.acceptedAnswers] : [''],
+  answerDescription: question.answerDescription ?? '',
 });
 
 /** True while nothing has been typed into the question part of the form. */
@@ -65,6 +67,7 @@ export const isBlankQuestion = (question: ExamQuestionInput): boolean =>
   question.id.trim() === '' &&
   question.prompt.trim() === '' &&
   question.topic.trim() === '' &&
+  (question.answerDescription ?? '').trim() === '' &&
   question.options.every((option) => option.trim() === '') &&
   question.acceptedAnswers.every((answer) => answer.trim() === '');
 

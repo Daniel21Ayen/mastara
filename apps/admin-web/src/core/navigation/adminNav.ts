@@ -1,5 +1,6 @@
 // apps/admin-web/src/core/navigation/adminNav.ts
 import type { AdminTranslationKey } from '@mastara/i18n';
+import type { IconName } from '@/shared/ui';
 
 export interface AdminNavLeaf {
   id: string;
@@ -17,19 +18,24 @@ export interface AdminNavGroup {
 export interface AdminNavItem extends AdminNavLeaf {
   /** Pages under this address also highlight the item (Courses owns all of `/catalog`). */
   section?: string;
+  /** Icon shown beside the item label. */
+  icon?: IconName;
+  /** Flat sub-items directly under the item (no intermediate group button). */
+  items?: readonly AdminNavLeaf[];
   /** Sub-menu shown while the item is active. */
   groups?: readonly AdminNavGroup[];
 }
 
 /** Sidebar order follows the approved Admin designs. Routes follow the folder structure. */
 export const ADMIN_NAV: readonly AdminNavItem[] = [
-  { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/dashboard' },
-  { id: 'students', labelKey: 'admin.nav.students', href: '/students' },
-  { id: 'courses', labelKey: 'admin.nav.courses', href: '/catalog/courses', section: '/catalog' },
+  { id: 'dashboard', labelKey: 'admin.nav.dashboard', href: '/dashboard', icon: 'home' },
+  { id: 'students', labelKey: 'admin.nav.students', href: '/students', icon: 'users' },
+  { id: 'courses', labelKey: 'admin.nav.courses', href: '/catalog/courses', section: '/catalog', icon: 'graduationCap' },
   {
     id: 'content',
     labelKey: 'admin.nav.content',
     href: '/content',
+    icon: 'fileText',
     groups: [
       {
         id: 'material',
@@ -55,11 +61,26 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
       },
     ],
   },
-  { id: 'scan-to-pdf', labelKey: 'admin.nav.scanToPdf', href: '/scan-to-pdf' },
-  { id: 'questions', labelKey: 'admin.nav.questions', href: '/questions' },
-  { id: 'payments', labelKey: 'admin.nav.payments', href: '/commerce/payments' },
-  { id: 'pricing', labelKey: 'admin.nav.pricing', href: '/commerce/pricing' },
-  { id: 'audit', labelKey: 'admin.nav.audit', href: '/audit' },
+  { id: 'scan-to-pdf', labelKey: 'admin.nav.scanToPdf', href: '/scan-to-pdf', icon: 'scan' },
+  {
+    id: 'questions',
+    labelKey: 'admin.nav.questions',
+    href: '/questions/mid-exams',
+    section: '/questions',
+    icon: 'helpCircle',
+    items: [
+      { id: 'mid-exams', labelKey: 'admin.nav.midExams', href: '/questions/mid-exams' },
+      { id: 'final-exams', labelKey: 'admin.nav.finalExams', href: '/questions/final-exams' },
+      { id: 'mock-exams', labelKey: 'admin.nav.mockExams', href: '/questions/mock-exams' },
+      { id: 'coc-exams', labelKey: 'admin.nav.cocExams', href: '/questions/coc-exams' },
+    ],
+  },
+  { id: 'payments', labelKey: 'admin.nav.payments', href: '/commerce/payments', icon: 'creditCard' },
+  { id: 'pricing', labelKey: 'admin.nav.pricing', href: '/commerce/pricing', icon: 'tag' },
+  { id: 'support', labelKey: 'admin.nav.support', href: '/support', icon: 'headset' },
+  { id: 'announcements', labelKey: 'admin.nav.announcements', href: '/announcements', icon: 'megaphone' },
+  { id: 'reports', labelKey: 'admin.nav.reports', href: '/reports', icon: 'barChart' },
+  { id: 'audit', labelKey: 'admin.nav.audit', href: '/audit', icon: 'shield' },
 ];
 
 const startsWith = (pathname: string, base: string): boolean =>
@@ -74,6 +95,15 @@ export function activeNavId(pathname: string): string | null {
 /** The sub-menu link that is open at `pathname`, for example `notes` at `/content/notes`. */
 export function activeSubNavId(pathname: string): string | null {
   for (const item of ADMIN_NAV) {
+    if (item.items) {
+      const match = item.items.find(
+        (leaf) =>
+          startsWith(pathname, leaf.href) ||
+          startsWith(pathname, leaf.href.replace(/-exams$/, '')) ||
+          startsWith(pathname, `${leaf.href}-exams`),
+      );
+      if (match) return match.id;
+    }
     for (const group of item.groups ?? []) {
       const match = group.items.find((leaf) => startsWith(pathname, leaf.href));
       if (match) return match.id;

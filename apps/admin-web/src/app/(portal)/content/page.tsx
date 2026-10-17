@@ -2,10 +2,10 @@
 import type { Metadata } from 'next';
 
 import { adminText } from '@/core/i18n';
-import { MaterialScreen } from '@/modules/content';
+import { ContentManagementScreen } from '@/modules/content';
 
 export const metadata: Metadata = { title: adminText('admin.content.title') };
 
 export default function Page() {
-  return <MaterialScreen />;
+  return <ContentManagementScreen initialTab="materials" />;
 }

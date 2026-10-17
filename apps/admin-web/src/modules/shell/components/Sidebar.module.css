@@ -4,59 +4,131 @@
   gap: var(--space-lg);
   height: 100%;
   padding: var(--space-lg) var(--space-md);
-  background: var(--color-text);
-  color: var(--color-on-primary);
+  background: #08101e;
+  color: #ffffff;
   overflow-y: auto;
 }
 
 .brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   padding: 0 var(--space-sm);
+}
+
+.brandIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
 }
 
 .name {
   margin: 0;
-  font-size: var(--font-size-heading);
+  font-size: 1.1rem;
   font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
 }
 
 .portal {
   margin: 0;
   font-size: var(--font-size-caption);
-  color: var(--color-on-primary-muted);
+  color: #94a3b8;
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.link {
-  display: block;
-  padding: var(--space-sm) var(--space-md);
+.item {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border-radius: var(--radius-sm);
-  color: var(--color-on-primary-muted);
+  color: #94a3b8;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.rowActive,
+.rowActive:hover {
+  background: #0066ff;
+  color: #ffffff;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: inherit;
   font-size: var(--font-size-body);
-  font-weight: 700;
+  font-weight: 500;
   text-decoration: none;
 }
 
-.link:hover {
-  background: var(--color-on-primary-soft);
-  color: var(--color-on-primary);
+.linkLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.active,
-.active:hover {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+.active {
+  font-weight: 600;
+  color: #ffffff;
 }
 
-.link:focus-visible {
-  outline-color: var(--color-on-primary);
+.link:focus-visible,
+.toggleBtn:focus-visible {
+  outline: 2px solid #ffffff;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.toggleBtn:hover {
+  opacity: 0.85;
+}
+
+.subDirect {
+  position: relative;
+  margin: 4px 0 6px 20px;
+  padding: 0 0 0 10px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  list-style: none;
 }
 
 .groups {
@@ -77,19 +149,20 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: none;
-  color: var(--color-on-primary);
+  color: #cbd5e1;
   font: inherit;
   font-size: var(--font-size-body);
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .group:hover {
-  background: var(--color-on-primary-soft);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
 }
 
 .group:focus-visible {
-  outline: 2px solid var(--color-on-primary);
+  outline: 2px solid #ffffff;
 }
 
 .sub {
@@ -102,26 +175,35 @@
 }
 
 .leaf {
-  display: block;
-  padding: var(--space-xs) var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
   border-radius: var(--radius-sm);
-  color: var(--color-on-primary-muted);
-  font-size: var(--font-size-body);
-  font-weight: 700;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 500;
   text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .leaf:hover {
-  background: var(--color-on-primary-soft);
-  color: var(--color-on-primary);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .leafActive,
 .leafActive:hover {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  background: #0066ff;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.bullet {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .leaf:focus-visible {
-  outline-color: var(--color-on-primary);
+  outline: 2px solid #ffffff;
 }

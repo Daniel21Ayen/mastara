@@ -2,10 +2,10 @@
 import type { Metadata } from 'next';
 
 import { adminText } from '@/core/i18n';
-import { TestsOverviewScreen } from '@/modules/tests';
+import { ContentManagementScreen } from '@/modules/content';
 
 export const metadata: Metadata = { title: adminText('admin.nav.tests') };
 
 export default function Page() {
-  return <TestsOverviewScreen />;
+  return <ContentManagementScreen initialTab="tests" />;
 }

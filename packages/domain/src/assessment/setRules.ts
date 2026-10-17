@@ -33,10 +33,32 @@ export function setProblems(set: {
   return problems;
 }
 
-/** The address part of each tab: /questions/mid, /questions/final, /questions/coc, /questions/mock. */
-export const examSetSlug = (kind: ExamSetKind): string => kind.toLowerCase();
+const KIND_SLUGS: Record<ExamSetKind, string> = {
+  MID: 'mid-exams',
+  FINAL: 'final-exams',
+  MOCK: 'mock-exams',
+  COC: 'coc-exams',
+};
+
+const SLUG_TO_KIND: Record<string, ExamSetKind> = {
+  mid: 'MID',
+  'mid-exams': 'MID',
+  'mid-exam': 'MID',
+  final: 'FINAL',
+  'final-exams': 'FINAL',
+  'final-exam': 'FINAL',
+  mock: 'MOCK',
+  'mock-exams': 'MOCK',
+  'mock-exam': 'MOCK',
+  coc: 'COC',
+  'coc-exams': 'COC',
+  'coc-exam': 'COC',
+};
+
+/** The address part of each tab: /questions/mid-exams, /questions/final-exams, etc. */
+export const examSetSlug = (kind: ExamSetKind): string => KIND_SLUGS[kind] ?? kind.toLowerCase();
 
 export function examSetKindFromSlug(slug: string): ExamSetKind | null {
-  const match = EXAM_SET_KINDS.find((kind) => kind.toLowerCase() === slug);
-  return match ?? null;
+  const normalized = slug.toLowerCase().trim();
+  return SLUG_TO_KIND[normalized] ?? null;
 }

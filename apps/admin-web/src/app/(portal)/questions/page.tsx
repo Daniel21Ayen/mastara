@@ -2,5 +2,5 @@
 import { redirect } from 'next/navigation';
 
 export default function Page() {
-  redirect('/questions/mid');
+  redirect('/questions/mid-exams');
 }
