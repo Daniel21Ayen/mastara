@@ -6,6 +6,8 @@ import { env } from '@/core/config/env';
 import { buildDashboardSummary } from '@/core/mock/data';
 import { simulateLatency } from '@/core/mock/delay';
 
+import { httpClient } from '@/core/network';
+
 export interface DashboardApi {
   getSummary(): Promise<DashboardSummary>;
 }
@@ -17,9 +19,16 @@ const mockDashboardApi: DashboardApi = {
   },
 };
 
+export const realDashboardApi: DashboardApi = {
+  async getSummary() {
+    const summary = await httpClient.get<DashboardSummary>('/dashboard/summary');
+    return dashboardSummarySchema.parse(summary);
+  },
+};
+
 function createDashboardApi(): DashboardApi {
   if (env.useMocks) return mockDashboardApi;
-  throw new Error('The real dashboard API is added in the backend integration phase.');
+  return realDashboardApi;
 }
 
 export const dashboardApi = createDashboardApi();
