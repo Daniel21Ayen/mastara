@@ -16,7 +16,13 @@ import {
   Role,
 } from "@mastara/database";
 import { isValidReference, normalizeReference, MAX_RECEIPT_BYTES } from "@mastara/domain";
-import { SubmitProofDto } from "../dto";
+import {
+  AdminPaymentDto,
+  PaymentDecisionDto,
+  PaymentListQueryDto,
+  PaymentListResultDto,
+  SubmitProofDto,
+} from "../dto";
 import { AuditService } from "../../../platform/audit/services/audit.service";
 
 export interface ProofResponse {
@@ -186,6 +192,7 @@ export class PaymentProofsService {
       include: {
         order: {
           include: {
+            student: true,
             items: { select: { course_id: true } },
           },
         },
@@ -243,13 +250,17 @@ export class PaymentProofsService {
       });
     });
 
+    const studentName = proof.order.student
+      ? `${proof.order.student.first_name} ${proof.order.student.last_name}`.trim()
+      : "Student";
+
     await this.auditService.log({
       actorId: adminId,
       actorRole: Role.ADMIN,
-      action: "payment_proof.approved",
+      action: "PAYMENT_APPROVED",
       targetType: "PaymentProof",
       targetId: proofId,
-      metadata: { orderId: proof.order_id, durationDays },
+      metadata: { target: `Order · ${studentName}`, orderId: proof.order_id, durationDays },
     });
 
     this.logger.log(`Proof ${proofId} approved by admin ${adminId}`);
@@ -265,7 +276,11 @@ export class PaymentProofsService {
   ): Promise<void> {
     const proof = await this.prisma.paymentProof.findUnique({
       where: { id: proofId },
-      include: { order: true },
+      include: {
+        order: {
+          include: { student: true },
+        },
+      },
     });
 
     if (!proof) throw new NotFoundException(`Proof not found with ID ${proofId}`);
@@ -303,21 +318,266 @@ export class PaymentProofsService {
       });
     });
 
+    const studentName = proof.order.student
+      ? `${proof.order.student.first_name} ${proof.order.student.last_name}`.trim()
+      : "Student";
+
     await this.auditService.log({
       actorId: adminId,
       actorRole: Role.ADMIN,
-      action: "payment_proof.rejected",
+      action: "PAYMENT_REJECTED",
       targetType: "PaymentProof",
       targetId: proofId,
-      metadata: { orderId: proof.order_id, rejectReason },
+      metadata: { target: `Order · ${studentName}`, orderId: proof.order_id, rejectReason },
     });
 
     this.logger.log(`Proof ${proofId} rejected by admin ${adminId}: ${rejectReason}`);
   }
 
   // --------------------------------------------------------------------------
+  // Admin Methods
+  // --------------------------------------------------------------------------
+
+  async getAdminPayments(query: PaymentListQueryDto): Promise<PaymentListResultDto> {
+    const page = Math.max(1, query.page ?? 1);
+    const pageSize = 10;
+    const skip = (page - 1) * pageSize;
+
+    let statusCondition: ProofStatus = ProofStatus.PENDING;
+    if (query.status === "APPROVED") {
+      statusCondition = ProofStatus.APPROVED;
+    } else if (query.status === "REJECTED") {
+      statusCondition = ProofStatus.REJECTED;
+    }
+
+    const where: any = {
+      status: statusCondition,
+    };
+
+    if (query.method) {
+      where.method = query.method;
+    }
+
+    if (query.q && query.q.trim()) {
+      const needle = query.q.trim();
+      where.OR = [
+        { transaction_reference: { contains: needle, mode: "insensitive" } },
+        { id: { contains: needle, mode: "insensitive" } },
+        { order_id: { contains: needle, mode: "insensitive" } },
+        {
+          order: {
+            OR: [
+              { student: { first_name: { contains: needle, mode: "insensitive" } } },
+              { student: { last_name: { contains: needle, mode: "insensitive" } } },
+              { student: { id: { contains: needle, mode: "insensitive" } } },
+            ],
+          },
+        },
+      ];
+    }
+
+    const [total, items, pendingCount, approvedCount, rejectedCount] = await Promise.all([
+      this.prisma.paymentProof.count({ where }),
+      this.prisma.paymentProof.findMany({
+        where,
+        skip,
+        take: pageSize,
+        orderBy: { created_at: "desc" },
+        include: {
+          order: {
+            include: {
+              student: { include: { university: true } },
+              product: true,
+              items: { include: { course: true } },
+            },
+          },
+        },
+      }),
+      this.prisma.paymentProof.count({ where: { status: ProofStatus.PENDING } }),
+      this.prisma.paymentProof.count({ where: { status: ProofStatus.APPROVED } }),
+      this.prisma.paymentProof.count({ where: { status: ProofStatus.REJECTED } }),
+    ]);
+
+    const refs = items.map((i) => i.transaction_reference);
+    const earlierProofs =
+      refs.length > 0
+        ? await this.prisma.paymentProof.findMany({
+            where: { transaction_reference: { in: refs } },
+            select: { id: true, transaction_reference: true, created_at: true },
+            orderBy: { created_at: "asc" },
+          })
+        : [];
+
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+
+    const mappedItems = items.map((proof) => {
+      const earlier = earlierProofs.find(
+        (other) =>
+          other.id !== proof.id &&
+          other.transaction_reference === proof.transaction_reference &&
+          new Date(other.created_at).getTime() < new Date(proof.created_at).getTime(),
+      );
+      return this._mapToAdminPayment(proof, earlier?.id ?? null);
+    });
+
+    return {
+      items: mappedItems,
+      total,
+      page,
+      pageCount,
+      counts: {
+        pending: pendingCount,
+        approved: approvedCount,
+        rejected: rejectedCount,
+      },
+    };
+  }
+
+  async getAdminPaymentById(id: string): Promise<AdminPaymentDto> {
+    const proof = await this.prisma.paymentProof.findFirst({
+      where: {
+        OR: [{ id }, { order_id: id }],
+      },
+      include: {
+        order: {
+          include: {
+            student: { include: { university: true } },
+            product: true,
+            items: { include: { course: true } },
+          },
+        },
+      },
+    });
+
+    if (!proof) {
+      throw new NotFoundException(`Payment proof or order not found for ID: ${id}`);
+    }
+
+    const earlier = await this.prisma.paymentProof.findFirst({
+      where: {
+        transaction_reference: proof.transaction_reference,
+        id: { not: proof.id },
+        created_at: { lt: proof.created_at },
+      },
+      select: { id: true },
+    });
+
+    return this._mapToAdminPayment(proof, earlier?.id ?? null);
+  }
+
+  async decidePayment(
+    adminId: string,
+    id: string,
+    decision: PaymentDecisionDto,
+  ): Promise<AdminPaymentDto> {
+    const proof = await this.prisma.paymentProof.findFirst({
+      where: {
+        OR: [{ id }, { order_id: id }],
+      },
+      include: {
+        order: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    if (!proof) {
+      throw new NotFoundException(`Payment not found for ID: ${id}`);
+    }
+
+    if (proof.status !== ProofStatus.PENDING) {
+      throw new ConflictException("Payment has already been decided");
+    }
+
+    if (decision.action === "APPROVE") {
+      const durationDays = proof.order?.product?.duration_days ?? 120;
+      await this.approveProof(adminId, proof.id, durationDays);
+    } else if (decision.action === "REJECT") {
+      if (!decision.reason) {
+        throw new BadRequestException("Reject reason is required when rejecting a payment");
+      }
+      await this.rejectProof(adminId, proof.id, decision.reason);
+    } else {
+      throw new BadRequestException(`Unknown decision action: ${(decision as any).action}`);
+    }
+
+    return this.getAdminPaymentById(proof.id);
+  }
+
+  // --------------------------------------------------------------------------
   // Private helpers
   // --------------------------------------------------------------------------
+
+  private _mapToAdminPayment(proof: any, duplicateOfId: string | null = null): AdminPaymentDto {
+    const order = proof.order;
+    const student = order?.student;
+    const product = order?.product;
+
+    const studentName = student
+      ? `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim() || "Student"
+      : "Unknown Student";
+
+    const universityShortName = student?.university?.code ?? "AAU";
+
+    let type: "BUNDLE" | "SINGLE" | "FULL_STREAM" | "FULL_BOTH" = "BUNDLE";
+    if (product?.type === "SINGLE") type = "SINGLE";
+    else if (product?.type === "FULL_STREAM") type = "FULL_STREAM";
+    else if (product?.type === "FULL_BOTH") type = "FULL_BOTH";
+    else type = "BUNDLE";
+
+    let stream: "NATURAL" | "SOCIAL" | "BOTH" = "NATURAL";
+    if (order?.stream === "SOCIAL") stream = "SOCIAL";
+    else if (order?.stream === "COMMON" || product?.stream_scope === "BOTH") stream = "BOTH";
+    else stream = "NATURAL";
+
+    const courses = (order?.items ?? []).map((item: any) => ({
+      courseId: item.course?.id ?? item.course_id,
+      code: item.course?.code ?? "COURSE",
+      title: item.course?.title_en ?? item.course?.title ?? "Course",
+    }));
+
+    let status: "PENDING" | "APPROVED" | "REJECTED" = "PENDING";
+    if (proof.status === ProofStatus.APPROVED) status = "APPROVED";
+    else if (proof.status === ProofStatus.REJECTED) status = "REJECTED";
+    else status = "PENDING";
+
+    let rejectReason: "MISMATCH" | "UNREADABLE" | "DUPLICATE" | null = null;
+    if (
+      proof.reject_reason === "MISMATCH" ||
+      proof.reject_reason === "UNREADABLE" ||
+      proof.reject_reason === "DUPLICATE"
+    ) {
+      rejectReason = proof.reject_reason;
+    }
+
+    return {
+      id: proof.id,
+      studentId: student?.id ?? order?.student_id ?? "",
+      studentName,
+      universityShortName,
+      type,
+      stream,
+      courses,
+      amount: Math.round(Number(order?.quoted_amount ?? 0)),
+      method: proof.method,
+      reference: proof.transaction_reference,
+      status,
+      rejectReason,
+      createdAt:
+        proof.created_at instanceof Date
+          ? proof.created_at.toISOString()
+          : new Date(proof.created_at).toISOString(),
+      decidedAt: proof.reviewed_at
+        ? proof.reviewed_at instanceof Date
+          ? proof.reviewed_at.toISOString()
+          : new Date(proof.reviewed_at).toISOString()
+        : null,
+      durationDays: product?.duration_days ?? 120,
+      duplicateOf: duplicateOfId,
+    };
+  }
 
   private _mapProof(proof: any): ProofResponse {
     return {
