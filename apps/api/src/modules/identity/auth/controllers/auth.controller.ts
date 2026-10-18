@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "../services/auth.service";
-import { RegisterDto, LoginDto, AuthResponseDto } from "../dto";
+import { RegisterDto, LoginDto, AuthResponseDto, AdminAuthResponseDto } from "../dto";
 import { Public } from "../../../../common/decorators/public.decorator";
 
 @ApiTags("Identity & Auth")
@@ -41,5 +41,22 @@ export class AuthController {
   })
   async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post("admin/login")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Administrator login for admin portal" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: AdminAuthResponseDto,
+    description: "Administrator logged in successfully",
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: "Invalid credentials or not an administrator",
+  })
+  async adminLogin(@Body() dto: LoginDto): Promise<AdminAuthResponseDto> {
+    return this.authService.adminLogin(dto);
   }
 }

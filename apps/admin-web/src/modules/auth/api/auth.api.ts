@@ -6,7 +6,7 @@ import { ADMIN_ERROR_CODES } from '@mastara/domain';
 import { env } from '@/core/config/env';
 import { simulateLatency } from '@/core/mock/delay';
 import { MOCK_ADMIN_ACCOUNTS } from '@/core/mock/data';
-import { ApiError } from '@/core/network';
+import { ApiError, httpClient } from '@/core/network';
 
 export interface AdminAuthApi {
   /** Signs an admin in. Fails with UNAUTHORIZED for a wrong identifier or password. */
@@ -29,9 +29,16 @@ const mockAdminAuthApi: AdminAuthApi = {
   },
 };
 
+export const realAdminAuthApi: AdminAuthApi = {
+  async login(input) {
+    const result = await httpClient.post<AdminAuthResult>('/auth/admin/login', input);
+    return adminAuthResultSchema.parse(result);
+  },
+};
+
 function createAdminAuthApi(): AdminAuthApi {
   if (env.useMocks) return mockAdminAuthApi;
-  throw new Error('The real admin auth API is added in the backend integration phase.');
+  return realAdminAuthApi;
 }
 
 export const adminAuthApi = createAdminAuthApi();
