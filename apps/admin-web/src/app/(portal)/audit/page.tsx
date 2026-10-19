@@ -2,10 +2,10 @@
 import type { Metadata } from 'next';
 
 import { adminText } from '@/core/i18n';
-import { ComingSoonScreen } from '@/modules/coming-soon';
+import { AuditLogScreen } from '@/modules/audit';
 
 export const metadata: Metadata = { title: adminText('admin.nav.audit') };
 
 export default function Page() {
-  return <ComingSoonScreen titleKey="admin.nav.audit" phase="F11h" />;
+  return <AuditLogScreen />;
 }
