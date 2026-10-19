@@ -160,6 +160,7 @@ export function ScanWizardScreen() {
   const handleAnswerFileChosen = (files: FileList | null) => {
     if (!files || files.length === 0 || !files[0]) return;
     const file = files[0];
+    if (!file) return;
     setAttachedAnswerFile({
       name: file.name,
       sizeBytes: file.size,

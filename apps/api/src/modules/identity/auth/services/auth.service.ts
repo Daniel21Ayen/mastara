@@ -9,7 +9,7 @@ import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
 import { Role, StudentStatus, SecurityEventType } from "@mastara/database";
-import { RegisterDto, LoginDto, AuthResponseDto } from "../dto";
+import { RegisterDto, LoginDto, AuthResponseDto, AdminAuthResponseDto } from "../dto";
 
 export interface NormalizedIdentifier {
   isEmail: boolean;
@@ -182,6 +182,94 @@ export class AuthService {
         id: student.id,
         name: `${student.first_name} ${student.last_name}`.trim(),
         identifier,
+      },
+      token,
+    };
+  }
+
+  async adminLogin(dto: LoginDto): Promise<AdminAuthResponseDto> {
+    const { isEmail, normalized } = this.normalizeIdentifier(dto.identifier);
+
+    const user = await this.prisma.student.findFirst({
+      where: {
+        OR: [
+          isEmail ? { email: normalized } : { phone: normalized },
+          { email: dto.identifier.trim().toLowerCase() },
+          { phone: dto.identifier.trim() },
+        ],
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException({
+        statusCode: 401,
+        errorCode: "UNAUTHORIZED",
+        message: "Invalid administrator credentials",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password_hash);
+    if (!isPasswordValid) {
+      try {
+        await this.prisma.securityEventLog.create({
+          data: {
+            student_id: user.id,
+            event_type: SecurityEventType.LOGIN_FAILED,
+            metadata: { context: "admin_portal" },
+          },
+        });
+      } catch (e) {
+        this.logger.warn(`Failed to log admin login failure: ${e}`);
+      }
+
+      throw new UnauthorizedException({
+        statusCode: 401,
+        errorCode: "UNAUTHORIZED",
+        message: "Invalid administrator credentials",
+      });
+    }
+
+    if (user.role !== Role.ADMIN) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        errorCode: "UNAUTHORIZED",
+        message: "Access denied: Account is not an administrator",
+      });
+    }
+
+    if (user.status !== StudentStatus.ACTIVE) {
+      throw new ForbiddenException({
+        statusCode: 403,
+        errorCode: "ACCOUNT_INACTIVE",
+        message: "Your administrator account has been deactivated or suspended",
+      });
+    }
+
+    try {
+      await this.prisma.securityEventLog.create({
+        data: {
+          student_id: user.id,
+          event_type: SecurityEventType.LOGIN_SUCCESS,
+          metadata: { context: "admin_portal" },
+        },
+      });
+    } catch (e) {
+      this.logger.warn(`Failed to log admin login success: ${e}`);
+    }
+
+    const identifier = user.email || user.phone || dto.identifier;
+    const token = this.jwtService.sign({
+      sub: user.id,
+      role: Role.ADMIN,
+      identifier,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        name: `${user.first_name} ${user.last_name}`.trim(),
+        identifier,
+        role: "ADMIN",
       },
       token,
     };

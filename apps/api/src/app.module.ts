@@ -6,6 +6,7 @@ import { APP_GUARD, APP_FILTER } from "@nestjs/core";
 import { DatabaseModule } from "./infrastructure/database/database.module";
 import { HealthModule } from "./modules/platform/health/health.module";
 import { AuditModule } from "./modules/platform/audit/audit.module";
+import { DashboardModule } from "./modules/platform/dashboard/dashboard.module";
 import { AuthModule } from "./modules/identity/auth/auth.module";
 import { DevicesModule } from "./modules/identity/devices/devices.module";
 import { StudentsModule } from "./modules/identity/students/students.module";
@@ -36,6 +37,7 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     // Platform
     HealthModule,
     AuditModule,
+    DashboardModule,
     // Identity
     AuthModule,
     DevicesModule,

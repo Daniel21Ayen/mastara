@@ -96,6 +96,7 @@ export function ContentMaterialStudioScreen({ initialTab = 'modules' }: Props) {
   const handlePdfUpload = (files: FileList | null) => {
     if (!files || files.length === 0 || !files[0]) return;
     const file = files[0];
+    if (!file) return;
     setAttachedPdf({
       name: file.name,
       sizeKb: Math.round(file.size / 1024),
