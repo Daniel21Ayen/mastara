@@ -45,7 +45,7 @@
 }
 
 .stepTabActive {
-  background: #0066ff !important;
+  background: #1a56db !important;
   color: #ffffff !important;
 }
 
@@ -70,9 +70,9 @@
   justify-content: center;
   text-align: center;
   padding: 56px 24px;
-  border: 2px dashed #3b82f6;
+  border: 2px dashed #1a56db;
   border-radius: var(--radius-md);
-  background: rgba(59, 130, 246, 0.02);
+  background: rgba(26, 86, 219, 0.03);
   transition: background-color 0.2s ease;
 }
 
@@ -178,8 +178,8 @@
 }
 
 .toolBtn:hover:not(:disabled) {
-  border-color: #0066ff;
-  color: #0066ff;
+  border-color: #1a56db;
+  color: #1a56db;
 }
 
 .toolBtn:disabled {
@@ -204,7 +204,7 @@
 .thumbCard {
   position: relative;
   aspect-ratio: 3 / 4;
-  border: 1.5px dashed #3b82f6;
+  border: 1.5px dashed #1a56db;
   border-radius: var(--radius-sm);
   background: #f8fafc;
   overflow: hidden;
@@ -218,14 +218,14 @@
 }
 
 .thumbCardSelected {
-  border: 2px solid #0066ff !important;
+  border: 2px solid #1a56db !important;
   box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.2);
 }
 
 .thumbCardDragging {
   opacity: 0.45;
   border-style: solid;
-  border-color: #0066ff !important;
+  border-color: #1a56db !important;
   transform: scale(0.96);
 }
 
@@ -236,7 +236,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #0066ff;
+  background: #1a56db;
   color: #ffffff;
   font-size: 11px;
   font-weight: 700;
@@ -264,7 +264,7 @@
 .addMoreBtn {
   border: 0;
   background: transparent;
-  color: #0066ff;
+  color: #1a56db;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -325,7 +325,7 @@
 
 .answerToggleBtnActive {
   background: #ffffff;
-  color: #0066ff;
+  color: #1a56db;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
@@ -346,7 +346,7 @@
 }
 
 .answerTextarea:focus {
-  border-color: #0066ff;
+  border-color: #1a56db;
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -357,16 +357,16 @@
   justify-content: center;
   gap: 6px;
   padding: 16px;
-  border: 1.5px dashed #3b82f6;
+  border: 1.5px dashed #1a56db;
   border-radius: var(--radius-sm);
-  background: rgba(59, 130, 246, 0.03);
+  background: rgba(26, 86, 219, 0.03);
   cursor: pointer;
   text-align: center;
   transition: all 0.15s ease;
 }
 
 .answerFileDrop:hover {
-  background: rgba(59, 130, 246, 0.06);
+  background: rgba(26, 86, 219, 0.06);
 }
 
 .answerFileDropText {
@@ -380,7 +380,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border: 1px solid #93c5fd;
+  border: 1px solid #bfdbfe;
   background: #eff6ff;
   border-radius: var(--radius-sm);
 }
@@ -390,7 +390,7 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: #1e3a8a;
+  color: #1a56db;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -399,14 +399,14 @@
 
 .answerFileSize {
   font-size: 0.75rem;
-  color: #3b82f6;
+  color: #1a56db;
   font-weight: 500;
 }
 
 .answerFileRemoveBtn {
   border: 0;
   background: transparent;
-  color: #ef4444;
+  color: var(--color-danger, #b91c1c);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -451,8 +451,9 @@
 }
 
 .pagesBadge {
-  background: #dcfce7;
-  color: #166534;
+  background: #eff6ff;
+  color: #1a56db;
+  border: 1px solid #bfdbfe;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 4px 14px;
@@ -460,8 +461,9 @@
 }
 
 .sizeBadge {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #eff6ff;
+  color: #1a56db;
+  border: 1px solid #bfdbfe;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 4px 14px;
@@ -471,10 +473,10 @@
 .previewPdfBtn {
   width: 100%;
   padding: 14px;
-  border: 1.5px solid #0066ff;
+  border: 1.5px solid #1a56db;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: #0066ff;
+  color: #1a56db;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -646,8 +648,9 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #dcfce7;
-  color: #166534;
+  background: #eff6ff;
+  color: #1a56db;
+  border: 1px solid #bfdbfe;
   display: inline-flex;
   align-items: center;
   justify-content: center;

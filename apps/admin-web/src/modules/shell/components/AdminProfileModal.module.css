@@ -1,0 +1,344 @@
+/* apps/admin-web/src/modules/shell/components/AdminProfileModal.module.css */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 16px;
+}
+
+.modal {
+  background-color: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 580px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: scaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.header {
+  padding: 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatarLarge {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--color-primary, #1a56db);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(26, 86, 219, 0.25);
+}
+
+.name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.roleBadge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #1a56db;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.closeBtn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.statusActive {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary, #1a56db);
+}
+
+.permissionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.permissionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.permIconCheck {
+  color: #1a56db;
+  background-color: #eff6ff;
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.permissionItem strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.permissionItem p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.doneBtn {
+  background-color: #1a56db;
+  color: #ffffff;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.doneBtn:hover {
+  background-color: #1e40af;
+}
+
+/* ---- Audit · Needs Attention panel ---- */
+.auditHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.auditBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-danger, #b91c1c);
+  background-color: var(--color-danger-soft, #fee2e2);
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  padding: 1px 7px;
+  border-radius: 20px;
+  line-height: 1.5;
+}
+
+.auditList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auditItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.auditLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.auditAction {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text, #0f172a);
+  white-space: nowrap;
+}
+
+.auditTarget {
+  font-size: 12px;
+  color: var(--color-text-muted, #64748b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auditTime {
+  font-size: 11.5px;
+  color: var(--color-text-muted, #94a3b8);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.auditEmpty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: var(--color-primary-soft, #eff6ff);
+  border: 1px solid var(--color-border, #bfdbfe);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--color-primary, #1a56db);
+  font-weight: 500;
+}
+
+/* Chip variants */
+.chipDanger {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-danger, #b91c1c);
+  background-color: var(--color-danger-soft, #fee2e2);
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.chipWarning {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-primary, #1a56db);
+  background-color: var(--color-primary-soft, #eff6ff);
+  border: 1px solid var(--color-border, #bfdbfe);
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.chipInfo {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-text, #0f172a);
+  background-color: var(--color-surface-subtle, #f1f5f9);
+  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}

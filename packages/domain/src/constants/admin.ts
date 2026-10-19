@@ -49,6 +49,8 @@ export const AUDIT_ACTIONS = [
   'EXAM_SET_UNPUBLISHED',
   'COURSE_DELETED',
   'CATALOG_DELETED',
+  'SUPPORT_TICKET_REPLIED',
+  'SUPPORT_TICKET_RESOLVED',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 

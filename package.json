@@ -16,7 +16,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "turbo run test",
+    "test": "npm test --workspaces --if-present",
     "dev:admin": "npm run dev --workspace @mastara/admin-web"
   },
   "devDependencies": {

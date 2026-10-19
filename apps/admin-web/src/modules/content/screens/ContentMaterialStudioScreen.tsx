@@ -66,14 +66,8 @@ export function ContentMaterialStudioScreen({ initialTab = 'modules' }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fallbackChapter: ChapterData = DEFAULT_CHAPTERS[0] ?? {
-    id: 'ch-1',
-    name: 'Chapter 1',
-    title: 'Chapter 1',
-    content: '',
-  };
-  const selectedChapter: ChapterData =
-    chapters.find((ch) => ch.id === selectedChapterId) ?? chapters[0] ?? fallbackChapter;
+  const selectedChapter =
+    chapters.find((ch) => ch.id === selectedChapterId) ?? chapters[0] ?? DEFAULT_CHAPTERS[0]!;
 
   const handleTitleChange = (newTitle: string) => {
     setChapters((prev) =>
@@ -100,7 +94,7 @@ export function ContentMaterialStudioScreen({ initialTab = 'modules' }: Props) {
   };
 
   const handlePdfUpload = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !files[0]) return;
     const file = files[0];
     if (!file) return;
     setAttachedPdf({
@@ -127,7 +121,7 @@ export function ContentMaterialStudioScreen({ initialTab = 'modules' }: Props) {
           <h1 className={styles.title}>Courses</h1>
           <span className={styles.draftBadge}>Draft v3</span>
           {saveStatus && (
-            <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.85rem', color: '#1a56db', fontWeight: 600 }}>
               ✓ {saveStatus}
             </span>
           )}

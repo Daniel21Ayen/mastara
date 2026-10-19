@@ -38,7 +38,7 @@
   padding: 3px 12px;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  color: #2563eb;
+  color: #1a56db;
   font-size: 0.8rem;
   font-weight: 600;
   border-radius: 9999px;
@@ -58,7 +58,7 @@
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   background: #ffffff;
-  color: #0066ff;
+  color: #1a56db;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -67,7 +67,7 @@
 
 .actionBtnOutline:hover {
   background: #f8fafc;
-  border-color: #0066ff;
+  border-color: #1a56db;
 }
 
 .actionBtnPrimary {
@@ -77,17 +77,17 @@
   padding: 8px 18px;
   border: 0;
   border-radius: 8px;
-  background: #0066ff;
+  background: #1a56db;
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 102, 255, 0.25);
+  box-shadow: 0 1px 3px rgba(26, 86, 219, 0.25);
   transition: all 0.15s ease;
 }
 
 .actionBtnPrimary:hover {
-  background: #0052cc;
+  background: #1e40af;
 }
 
 /* Workspace Grid (2 Columns) */
@@ -139,7 +139,7 @@
 .courseSelectIcon {
   position: absolute;
   left: 12px;
-  color: #0066ff;
+  color: #1a56db;
   pointer-events: none;
 }
 
@@ -164,7 +164,7 @@
 }
 
 .courseSelect:focus {
-  border-color: #0066ff;
+  border-color: #1a56db;
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -199,15 +199,15 @@
 }
 
 .chapterItemActiveBlue {
-  background: #0066ff !important;
+  background: #1a56db !important;
   color: #ffffff !important;
-  border-color: #0066ff !important;
-  box-shadow: 0 2px 6px rgba(0, 102, 255, 0.28);
+  border-color: #1a56db !important;
+  box-shadow: 0 2px 6px rgba(26, 86, 219, 0.28);
 }
 
 .chapterItemActiveLight {
-  background: #e0edff !important;
-  color: #0052cc !important;
+  background: #eff6ff !important;
+  color: #1a56db !important;
   border-color: #bfdbfe !important;
 }
 
@@ -224,7 +224,7 @@
   height: 40px;
   border: 0;
   border-radius: 8px;
-  background: #0066ff;
+  background: #1a56db;
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 600;
@@ -237,7 +237,7 @@
 }
 
 .addChapterBtn:hover {
-  background: #0052cc;
+  background: #1e40af;
 }
 
 /* Right Column: Editor Card */
@@ -279,11 +279,11 @@
 }
 
 .tabBtn:hover {
-  color: #0066ff;
+  color: #1a56db;
 }
 
 .tabBtnActive {
-  color: #0066ff !important;
+  color: #1a56db !important;
   font-weight: 700;
 }
 
@@ -294,7 +294,7 @@
   left: 0;
   right: 0;
   height: 2.5px;
-  background: #0066ff;
+  background: #1a56db;
   border-radius: 2px;
 }
 
@@ -311,7 +311,7 @@
 .freeTrialCheckbox {
   width: 16px;
   height: 16px;
-  accent-color: #0066ff;
+  accent-color: #1a56db;
   cursor: pointer;
 }
 
@@ -358,7 +358,7 @@
 }
 
 .textInput:focus {
-  border-color: #0066ff;
+  border-color: #1a56db;
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -383,7 +383,7 @@
 }
 
 .selectInput:focus {
-  border-color: #0066ff;
+  border-color: #1a56db;
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -405,7 +405,7 @@
 }
 
 .textareaInput:focus {
-  border-color: #0066ff;
+  border-color: #1a56db;
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -428,10 +428,10 @@
   align-items: center;
   gap: 8px;
   padding: 9px 18px;
-  border: 1.5px solid #0066ff;
+  border: 1.5px solid #1a56db;
   border-radius: 8px;
   background: #ffffff;
-  color: #0066ff;
+  color: #1a56db;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -460,7 +460,7 @@
 .answerRadio {
   width: 18px;
   height: 18px;
-  accent-color: #0066ff;
+  accent-color: #1a56db;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -479,14 +479,14 @@
 }
 
 .answerInput:focus {
-  border-color: #0066ff;
+  border-color: #1a56db;
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
 .answerDeleteBtn {
   border: 0;
   background: transparent;
-  color: #0066ff;
+  color: #1a56db;
   padding: 6px;
   border-radius: 6px;
   cursor: pointer;
@@ -507,10 +507,10 @@
   align-self: flex-start;
   margin-top: 6px;
   padding: 6px 14px;
-  border: 1px solid #0066ff;
+  border: 1px solid #1a56db;
   border-radius: 6px;
   background: #ffffff;
-  color: #0066ff;
+  color: #1a56db;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -529,7 +529,7 @@
   padding: 10px 20px;
   border: 0;
   border-radius: 8px;
-  background: #0066ff;
+  background: #1a56db;
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 600;
@@ -538,7 +538,7 @@
 }
 
 .addQuestionBtn:hover {
-  background: #0052cc;
+  background: #1e40af;
 }
 
 .attachedPill {
@@ -551,14 +551,14 @@
   border-radius: 6px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #1e40af;
+  color: #1a56db;
   margin-top: 8px;
 }
 
 .removeAttachedBtn {
   border: 0;
   background: none;
-  color: #ef4444;
+  color: var(--color-danger, #b91c1c);
   cursor: pointer;
   padding: 0 4px;
 }

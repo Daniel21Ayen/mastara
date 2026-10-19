@@ -72,7 +72,7 @@
 
 .rowActive,
 .rowActive:hover {
-  background: #0066ff;
+  background: #1a56db;
   color: #ffffff;
 }
 
@@ -194,7 +194,7 @@
 
 .leafActive,
 .leafActive:hover {
-  background: #0066ff;
+  background: #1a56db;
   color: #ffffff;
   font-weight: 600;
 }

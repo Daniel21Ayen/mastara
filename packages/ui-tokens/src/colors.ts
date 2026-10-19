@@ -4,10 +4,10 @@
  * Add a new colour here only after the design owner agrees.
  */
 export const palette = {
-  primary: '#1451c4',
-  ink: '#0f1b33',
+  primary: '#1a56db',
+  ink: '#0f172a',
   white: '#ffffff',
-  danger: '#b42318',
+  danger: '#b91c1c',
 } as const;
 
 function channel(hex: string, index: 0 | 1 | 2): number {

@@ -318,6 +318,7 @@
   "support.send": "ላክ",
   "support.status.OPEN": "ክፍት",
   "support.status.ANSWERED": "ተመልሷል",
+  "support.status.RESOLVED": "ተፈቷል",
   "support.you": "እርስዎ",
   "support.admin": "አድሚን",
   "support.reply": "አድሚን መልሷል",

@@ -175,7 +175,7 @@ export function ContentManagementScreen({ initialTab = 'materials' }: Props) {
                 </div>
                 <ul className={styles.updatesList}>
                   <li className={styles.updateItem}>
-                    <span className={styles.updateIcon} style={{ color: '#16a34a' }}>
+                    <span className={styles.updateIcon} style={{ color: '#1a56db' }}>
                       ●
                     </span>
                     <div className={styles.updateInfo}>
@@ -184,7 +184,7 @@ export function ContentManagementScreen({ initialTab = 'materials' }: Props) {
                     </div>
                   </li>
                   <li className={styles.updateItem}>
-                    <span className={styles.updateIcon} style={{ color: '#0066ff' }}>
+                    <span className={styles.updateIcon} style={{ color: '#1a56db' }}>
                       ●
                     </span>
                     <div className={styles.updateInfo}>
@@ -193,7 +193,7 @@ export function ContentManagementScreen({ initialTab = 'materials' }: Props) {
                     </div>
                   </li>
                   <li className={styles.updateItem}>
-                    <span className={styles.updateIcon} style={{ color: '#9333ea' }}>
+                    <span className={styles.updateIcon} style={{ color: '#1a56db' }}>
                       ●
                     </span>
                     <div className={styles.updateInfo}>

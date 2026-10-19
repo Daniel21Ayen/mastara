@@ -318,6 +318,7 @@
   "support.send": "Send",
   "support.status.OPEN": "Open",
   "support.status.ANSWERED": "Answered",
+  "support.status.RESOLVED": "Resolved",
   "support.you": "You",
   "support.admin": "Admin",
   "support.reply": "Admin replied",
