@@ -220,23 +220,98 @@ export function ScanWizardScreen() {
 
   const handlePublish = async (status: 'DRAFT' | 'PUBLISHED') => {
     try {
-      await scansApi.createScan({
-        kind: category === 'COC Exam' ? 'COC' : category.includes('Exam') ? 'EXAM' : 'MATERIAL',
-        universityId,
-        programId,
-        courseId,
-        semesterNumber: semester === '1' ? 1 : 2,
-        stream: stream as any,
-        title: computedTitle,
-        examSetId: category.includes('Exam') ? `EXAM-${year}` : undefined,
-        materialKind: category === 'Modules' ? 'MODULE' : 'NOTES',
-        pages: pages.map((p) => ({
-          name: p.name,
-          mime: 'image/png',
-          sizeBytes: p.sizeBytes,
-        })),
-        answers: answerText || attachedAnswerFile ? [{ description: answerText, fileName: attachedAnswerFile?.name }] : [],
-      } as any);
+      const scanPages = (pages.length > 0 ? pages : SAMPLE_PAGES).map((p) => ({
+        name: p.name,
+        mime: 'image/png' as const,
+        sizeBytes: p.sizeBytes,
+      }));
+
+      const parsedYear = parseInt(year, 10) || 2026;
+      const answerFile = attachedAnswerFile
+        ? {
+            name: attachedAnswerFile.name,
+            mime: 'image/png' as const,
+            sizeBytes: attachedAnswerFile.sizeBytes,
+          }
+        : null;
+
+      let payload: any;
+      if (category === 'COC Exam') {
+        payload = {
+          kind: 'COC',
+          pages: scanPages,
+          universityId,
+          programId,
+          year: parsedYear,
+          answers: [
+            {
+              questionId: '1',
+              text: answerText || 'Key',
+              file: answerFile,
+            },
+          ],
+        };
+      } else if (category.includes('Exam')) {
+        payload = {
+          kind: 'EXAM',
+          pages: scanPages,
+          examKind: category === 'Mid Exam' ? 'MID' : category === 'Final Exam' ? 'FINAL' : 'MOCK',
+          examSetId: `EXAM-${parsedYear}`,
+          universityId,
+          programId,
+          semesterNumber: semester === '1' ? 1 : 2,
+          stream,
+          courseId,
+          answers: [
+            {
+              questionId: '1',
+              questionType: 'MULTIPLE_CHOICE',
+              text: answerText || 'A',
+              file: answerFile,
+            },
+          ],
+        };
+      } else if (category.startsWith('Quiz')) {
+        const quizNo = category === 'Quiz 1' ? 1 : category === 'Quiz 2' ? 2 : 3;
+        payload = {
+          kind: 'QUIZ',
+          pages: scanPages,
+          quizNo,
+          examSetId: `QS-10${quizNo}`,
+          universityId,
+          programId,
+          semesterNumber: semester === '1' ? 1 : 2,
+          stream,
+          courseId,
+          topicId: 'T-01',
+          title: computedTitle,
+          description: '',
+          answers: [
+            {
+              questionId: '1',
+              text: answerText || 'A',
+              file: answerFile,
+            },
+          ],
+        };
+      } else {
+        payload = {
+          kind: 'MATERIAL',
+          pages: scanPages,
+          materialKind: category === 'Modules' ? 'MODULE' : category === 'Notes' ? 'NOTE' : 'AMHARIC_NOTE',
+          examSetId: 'MAT-01',
+          universityId,
+          programId,
+          semesterNumber: semester === '1' ? 1 : 2,
+          stream,
+          courseId,
+          topicId: 'T-01',
+          title: computedTitle,
+          description: chapter,
+        };
+      }
+
+      await scansApi.createScan(payload);
     } catch {
       // Mock mode fallback safe
     }

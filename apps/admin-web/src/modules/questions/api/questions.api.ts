@@ -18,6 +18,7 @@ import {
   saveExamSet,
 } from '@/core/mock/data';
 import { simulateLatency } from '@/core/mock/delay';
+import { httpClient } from '@/core/network';
 
 /**
  * An exam set is saved whole: its details and its questions. A new Exam Set ID creates the set.
@@ -77,9 +78,57 @@ const mockQuestionsApi: QuestionsApi = {
   },
 };
 
+export const realQuestionsApi: QuestionsApi = {
+  async listSets(query: ExamSetListQuery): Promise<ExamSetListResult> {
+    const params = new URLSearchParams();
+    params.set('kind', query.kind);
+    if (query.status) params.set('status', query.status);
+    if (query.q && query.q.trim()) params.set('q', query.q.trim());
+    if (query.page) params.set('page', String(query.page));
+
+    const qs = params.toString();
+    const raw = await httpClient.get<ExamSetListResult>(`/assessment/admin/exam-sets?${qs}`);
+    return examSetListResultSchema.parse(raw);
+  },
+
+  async getSet(id: string): Promise<ExamSet> {
+    const raw = await httpClient.get<ExamSet>(`/assessment/admin/exam-sets/${encodeURIComponent(id)}`);
+    return examSetSchema.parse(raw);
+  },
+
+  async findSet(id: string): Promise<ExamSet | null> {
+    try {
+      const raw = await httpClient.get<ExamSet | null>(
+        `/assessment/admin/exam-sets/lookup/${encodeURIComponent(id)}`,
+      );
+      return raw ? examSetSchema.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  async questionOwner(questionId: string): Promise<string | null> {
+    try {
+      const raw = await httpClient.get<{ ownerSetId: string | null }>(
+        `/assessment/admin/exam-sets/question-owner/${encodeURIComponent(questionId)}`,
+      );
+      return raw?.ownerSetId ?? null;
+    } catch {
+      return null;
+    }
+  },
+
+  async saveSet(input: ExamSetInput): Promise<ExamSet> {
+    const payload = examSetInputSchema.parse(input);
+    const raw = await httpClient.post<ExamSet>('/assessment/admin/exam-sets', payload);
+    return examSetSchema.parse(raw);
+  },
+};
+
 function createQuestionsApi(): QuestionsApi {
   if (env.useMocks) return mockQuestionsApi;
-  throw new Error('The real questions API is added in the backend integration phase.');
+  return realQuestionsApi;
 }
 
 export const questionsApi = createQuestionsApi();
+

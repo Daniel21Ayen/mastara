@@ -27,12 +27,16 @@ import {
   AdminQuestionInputDto,
   AdminQuizSettingsInputDto,
   AdminQuestionListQueryDto,
+  AdminExamSetListQueryDto,
+  AdminExamSetInputDto,
 } from "../dto/admin-tests.dto";
 import type {
   AdminQuestion,
   QuizSummary,
   TestsOverview,
   QuestionListResult,
+  ExamSet,
+  ExamSetListResult,
 } from "@mastara/contracts";
 import type { QuizNumber } from "@mastara/domain";
 
@@ -117,4 +121,50 @@ export class AdminTestsController {
   ): Promise<AdminQuestion> {
     return this.adminTestsService.updateQuestion(id, dto, adminId);
   }
+
+  @Get("exam-sets")
+  @ApiOperation({ summary: "List and search exam sets (Mid, Final, Mock, COC)" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Paginated exam sets list" })
+  async listExamSets(
+    @Query() query: AdminExamSetListQueryDto,
+  ): Promise<ExamSetListResult> {
+    return this.adminTestsService.listExamSets(query);
+  }
+
+  @Get("exam-sets/lookup/:id")
+  @ApiOperation({ summary: "Check if exam set ID exists" })
+  @ApiParam({ name: "id", description: "Exam Set ID or UUID" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Exam set details or null" })
+  async findExamSet(@Param("id") id: string): Promise<ExamSet | null> {
+    return this.adminTestsService.findExamSet(id);
+  }
+
+  @Get("exam-sets/question-owner/:questionId")
+  @ApiOperation({ summary: "Find which exam set owns a given question ID" })
+  @ApiParam({ name: "questionId", description: "Question ID" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Owner set ID or null" })
+  async getQuestionOwner(
+    @Param("questionId") questionId: string,
+  ): Promise<{ ownerSetId: string | null }> {
+    return this.adminTestsService.getQuestionOwner(questionId);
+  }
+
+  @Get("exam-sets/:id")
+  @ApiOperation({ summary: "Get exam set details by ID" })
+  @ApiParam({ name: "id", description: "Exam Set ID or UUID" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Exam set details" })
+  async getExamSet(@Param("id") id: string): Promise<ExamSet> {
+    return this.adminTestsService.getExamSet(id);
+  }
+
+  @Post("exam-sets")
+  @ApiOperation({ summary: "Create or replace an exam set with all its questions" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Exam set created or updated" })
+  async saveExamSet(
+    @Body() dto: AdminExamSetInputDto,
+    @CurrentUser("id") adminId: string,
+  ): Promise<ExamSet> {
+    return this.adminTestsService.saveExamSet(dto, adminId);
+  }
 }
+
