@@ -80,26 +80,30 @@ export const downloadStore = {
 
   /** The saved answer for an API call, or `found: false`. A saved `null` (for example "not found") is still a saved answer. */
   async getContent<T>(key: string): Promise<{ found: true; value: T } | { found: false }> {
-    const db = await getDb();
-    const row = await db.getFirstAsync<{ value: string }>(
-      'SELECT value FROM downloaded_content WHERE user_id = ? AND key = ?',
-      [dbUser(), key],
-    );
-    if (!row) return { found: false };
     try {
+      const db = await getDb();
+      const row = await db.getFirstAsync<{ value: string }>(
+        'SELECT value FROM downloaded_content WHERE user_id = ? AND key = ?',
+        [dbUser(), key],
+      );
+      if (!row) return { found: false };
       return { found: true, value: JSON.parse(row.value) as T };
     } catch {
-      return { found: false }; // a damaged copy is treated as not downloaded
+      return { found: false }; // a damaged copy or missing db is treated as not downloaded
     }
   },
 
   async list(): Promise<DownloadedUnit[]> {
-    const db = await getDb();
-    const rows = await db.getAllAsync<UnitRow>(
-      'SELECT unit_id, kind, course_id, title, meta, bytes, downloaded_at FROM downloads WHERE user_id = ? ORDER BY downloaded_at DESC',
-      [dbUser()],
-    );
-    return rows.map(toUnit);
+    try {
+      const db = await getDb();
+      const rows = await db.getAllAsync<UnitRow>(
+        'SELECT unit_id, kind, course_id, title, meta, bytes, downloaded_at FROM downloads WHERE user_id = ? ORDER BY downloaded_at DESC',
+        [dbUser()],
+      );
+      return rows.map(toUnit);
+    } catch {
+      return [];
+    }
   },
 
   /** Downloaded units of one kind (and course), with their list entries, for showing a list offline. */
@@ -109,18 +113,27 @@ export const downloadStore = {
   },
 
   async ids(): Promise<ReadonlySet<string>> {
-    const db = await getDb();
-    const rows = await db.getAllAsync<{ unit_id: string }>('SELECT unit_id FROM downloads WHERE user_id = ?', [dbUser()]);
-    return new Set(rows.map((row) => row.unit_id));
+    try {
+      const db = await getDb();
+      const rows = await db.getAllAsync<{ unit_id: string }>('SELECT unit_id FROM downloads WHERE user_id = ?', [dbUser()]);
+      return new Set(rows.map((row) => row.unit_id));
+    } catch {
+      return new Set();
+    }
   },
 
   async totalBytes(): Promise<number> {
-    const db = await getDb();
-    const row = await db.getFirstAsync<{ total: number | null }>('SELECT SUM(bytes) AS total FROM downloads WHERE user_id = ?', [
-      dbUser(),
-    ]);
-    return row?.total ?? 0;
+    try {
+      const db = await getDb();
+      const row = await db.getFirstAsync<{ total: number | null }>('SELECT SUM(bytes) AS total FROM downloads WHERE user_id = ?', [
+        dbUser(),
+      ]);
+      return row?.total ?? 0;
+    } catch {
+      return 0;
+    }
   },
+
 
   async remove(unitId: string): Promise<void> {
     const db = await getDb();
