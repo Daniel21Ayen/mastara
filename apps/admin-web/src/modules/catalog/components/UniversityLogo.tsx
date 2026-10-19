@@ -14,8 +14,8 @@ interface UniversityLogoProps {
   size?: number;
 }
 
-/** Dark enough for white text (contrast 4.5:1 or more). */
-const BADGE_COLORS = ['#0b6b3a', '#1d4ed8', '#7c2d12', '#6d28d9', '#be123c', '#0f766e'] as const;
+/** Dark enough for white text (contrast 4.5:1 or more), using canonical admin blue and slate tones. */
+const BADGE_COLORS = ['#1a56db', '#1e40af', '#0f172a', '#1e293b', '#334155', '#475569'] as const;
 
 function colorFor(id: string): string {
   let hash = 0;

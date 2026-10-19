@@ -10,3 +10,7 @@ export * from './testsAdmin';
 export * from './scansAdmin';
 export * from './examSetsAdmin';
 export * from './paymentsAdmin';
+export * from './pricingAdmin';
+export * from './notificationsAdmin';
+export * from './supportAdmin';
+

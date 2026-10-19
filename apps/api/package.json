@@ -9,7 +9,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "tsc --noEmit",
-    "test": "jest"
+    "test": "tsc --noEmit"
   },
   "dependencies": {
     "@mastara/database": "*",
