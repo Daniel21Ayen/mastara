@@ -158,7 +158,7 @@ export function ScanWizardScreen() {
   };
 
   const handleAnswerFileChosen = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !files[0]) return;
     const file = files[0];
     setAttachedAnswerFile({
       name: file.name,
@@ -185,7 +185,9 @@ export function ScanWizardScreen() {
     setPages((prev) => {
       const next = [...prev];
       const [moved] = next.splice(draggedIndex, 1);
-      next.splice(targetIndex, 0, moved);
+      if (moved) {
+        next.splice(targetIndex, 0, moved);
+      }
       return next;
     });
     setDraggedIndex(null);

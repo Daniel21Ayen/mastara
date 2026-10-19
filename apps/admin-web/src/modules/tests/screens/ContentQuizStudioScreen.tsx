@@ -63,7 +63,7 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
   const selectedChapter =
-    chapters.find((ch) => ch.id === selectedChapterId) || chapters[0] || DEFAULT_QUIZ_CHAPTERS[0];
+    chapters.find((ch) => ch.id === selectedChapterId) ?? chapters[0] ?? DEFAULT_QUIZ_CHAPTERS[0]!;
 
   const handleTitleChange = (newTitle: string) => {
     setChapters((prev) =>
@@ -143,7 +143,7 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
           <h1 className={styles.title}>Quizzes</h1>
           <span className={styles.draftBadge}>Draft v3</span>
           {saveStatus && (
-            <span style={{ fontSize: '0.85rem', color: '#16a34a', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.85rem', color: '#1a56db', fontWeight: 600 }}>
               ✓ {saveStatus}
             </span>
           )}
