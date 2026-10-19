@@ -13,8 +13,10 @@ import type {
   ScanListResult,
 } from '@mastara/contracts';
 import type { Stream } from '@mastara/domain';
+import { z } from 'zod';
 
 import { env } from '@/core/config/env';
+import { httpClient } from '@/core/network';
 import { createScan, getScan, listScanCourses, listScans, recordAudit } from '@/core/mock/data';
 import { simulateLatency } from '@/core/mock/delay';
 
@@ -65,9 +67,49 @@ const mockScansApi: ScansApi = {
   },
 };
 
+export const realScansApi: ScansApi = {
+  async listScans(query: ScanListQuery): Promise<ScanListResult> {
+    const params = new URLSearchParams();
+    if (query.kind) params.set('kind', query.kind);
+    if (query.q) params.set('q', query.q);
+    if (query.page) params.set('page', String(query.page));
+    const qs = params.toString();
+    const url = `/content/admin/scans${qs ? `?${qs}` : ''}`;
+    const raw = await httpClient.get<ScanListResult>(url);
+    return scanListResultSchema.parse(raw);
+  },
+
+  async getScan(id: string): Promise<AdminScan> {
+    const raw = await httpClient.get<AdminScan>(`/content/admin/scans/${id}`);
+    return adminScanSchema.parse(raw);
+  },
+
+  async listCourses(
+    programId: string,
+    semesterNumber: 1 | 2,
+    stream: Stream,
+  ): Promise<ScanCourseOption[]> {
+    const params = new URLSearchParams({
+      programId,
+      semesterNumber: String(semesterNumber),
+      stream,
+    });
+    const raw = await httpClient.get<ScanCourseOption[]>(
+      `/content/admin/scans/courses?${params.toString()}`,
+    );
+    return z.array(scanCourseOptionSchema).parse(raw);
+  },
+
+  async createScan(input: ScanInput): Promise<AdminScan> {
+    const payload = scanInputSchema.parse(input);
+    const raw = await httpClient.post<AdminScan>('/content/admin/scans', payload);
+    return adminScanSchema.parse(raw);
+  },
+};
+
 function createScansApi(): ScansApi {
   if (env.useMocks) return mockScansApi;
-  throw new Error('The real scans API is added in the backend integration phase.');
+  return realScansApi;
 }
 
 export const scansApi = createScansApi();

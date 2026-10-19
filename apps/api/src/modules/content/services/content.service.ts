@@ -367,9 +367,20 @@ export class ContentService {
     });
   }
 
+  private async resolveCourseId(courseId: string): Promise<string> {
+    const isIdUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(courseId.trim());
+    if (isIdUuid) return courseId.trim();
+    const course = await this.prisma.course.findFirst({
+      where: { code: { equals: courseId.trim(), mode: "insensitive" } },
+      select: { id: true },
+    });
+    return course?.id ?? courseId.trim();
+  }
+
   async getAdminContentSummary(courseId: string): Promise<ContentSummary> {
+    const resolvedId = await this.resolveCourseId(courseId);
     const course = await this.prisma.course.findUnique({
-      where: { id: courseId },
+      where: { id: resolvedId },
       select: { id: true, code: true, title_en: true },
     });
 
@@ -378,7 +389,7 @@ export class ContentService {
     }
 
     const modules = await this.prisma.module.findMany({
-      where: { course_id: courseId },
+      where: { course_id: resolvedId },
       include: {
         topics: {
           include: {
@@ -446,8 +457,9 @@ export class ContentService {
   }
 
   async listAdminModules(courseId: string): Promise<AdminModule[]> {
+    const resolvedId = await this.resolveCourseId(courseId);
     const modules = await this.prisma.module.findMany({
-      where: { course_id: courseId },
+      where: { course_id: resolvedId },
       include: {
         topics: {
           orderBy: { chapter_number: "asc" },
@@ -686,9 +698,10 @@ export class ContentService {
   }
 
   async listAdminNotes(courseId: string): Promise<AdminNote[]> {
+    const resolvedId = await this.resolveCourseId(courseId);
     const topics = await this.prisma.topic.findMany({
       where: {
-        module: { course_id: courseId },
+        module: { course_id: resolvedId },
       },
       include: {
         module: true,

@@ -5,7 +5,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
-import { Role } from "@mastara/database";
+import { Role, ExamKind, PublicationStatus } from "@mastara/database";
 import {
   CatalogStatus,
   AuditAction,
@@ -16,10 +16,15 @@ import {
   QuestionDraft,
   toStudentType,
   TESTS_PAGE_SIZE,
+  SET_PAGE_SIZE,
+  setProblems,
   QUIZ_MINUTES_DEFAULT,
   CONTENT_RECENT_LIMIT,
   ADMIN_ERROR_CODES,
   QuizNumber,
+  ExamSetKind,
+  Stream,
+  QuestionForm,
 } from "@mastara/domain";
 import type {
   AdminQuestion,
@@ -27,11 +32,16 @@ import type {
   TestsOverview,
   TestUpdate,
   QuestionListResult,
+  ExamSet,
+  ExamSetListResult,
+  ExamQuestion,
 } from "@mastara/contracts";
 import {
   AdminQuestionInputDto,
   AdminQuizSettingsInputDto,
   AdminQuestionListQueryDto,
+  AdminExamSetListQueryDto,
+  AdminExamSetInputDto,
 } from "../dto/admin-tests.dto";
 
 const QUIZ_NUMBERS_LIST: readonly QuizNumber[] = [1, 2, 3];
@@ -73,17 +83,18 @@ export class AdminTestsService {
   }
 
   async getOverview(courseId: string): Promise<TestsOverview> {
-    const course = await this.prisma.course.findUnique({
-      where: { id: courseId },
+    const isIdUuid = this.isUuid(courseId.trim());
+    const course = await this.prisma.course.findFirst({
+      where: isIdUuid ? { id: courseId.trim() } : { code: { equals: courseId.trim(), mode: "insensitive" } },
       select: { id: true, code: true, title_en: true },
     });
 
     if (!course) {
-      throw new NotFoundException(`Course not found with ID ${courseId}`);
+      throw new NotFoundException(`Course not found with ID or code ${courseId}`);
     }
 
     const allQuestions = await this.prisma.question.findMany({
-      where: { course_id: courseId },
+      where: { course_id: course.id },
       include: {
         course: true,
         topic: { include: { module: true } },
@@ -498,4 +509,539 @@ export class AdminTestsService {
 
     return this.mapToAdminQuestion(updated, null);
   }
+
+  private isUuid(val: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  }
+
+  private mapToExamSet(exam: any): ExamSet {
+    const setId =
+      exam.title_en?.startsWith("SET-") || exam.title_en?.startsWith("EXAM-")
+        ? exam.title_en
+        : exam.id;
+
+    const questions: ExamQuestion[] = (exam.exam_questions || []).map((eq: any) => {
+      const q = eq.question;
+      const meta = (q?.correct_answers as any) || {};
+      return {
+        id: meta.externalId || q?.id || eq.id,
+        form: meta.form || (q?.type === "SINGLE_CHOICE" ? "MULTIPLE_CHOICE" : (q?.type || "MULTIPLE_CHOICE")),
+        topic: meta.topic || q?.topic?.title_en || "General",
+        prompt: q?.prompt_en || "",
+        options: Array.isArray(q?.options) ? q.options : [],
+        correctOption: meta.correctOption ?? null,
+        trueIsCorrect: meta.trueIsCorrect ?? null,
+        acceptedAnswers: Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [],
+        answerDescription: q?.explanation_en || undefined,
+      };
+    });
+
+    return {
+      id: setId,
+      kind: exam.kind as ExamSetKind,
+      universityId: exam.university_id ?? exam.course?.semester?.program?.university_id ?? "none",
+      universityName: exam.university?.name_en ?? "All Universities",
+      programId: exam.course?.semester?.program_id ?? "none",
+      programName: exam.course?.semester?.program?.name_en ?? "General Program",
+      semesterNumber: (exam.course?.semester?.number ?? 1) as 1 | 2,
+      stream: (exam.course?.stream ?? "NATURAL") as Stream,
+      courseId: exam.course_id ?? null,
+      courseCode: exam.course?.code ?? null,
+      courseTitle: exam.course?.title_en ?? null,
+      year: exam.year ?? 2024,
+      isFree: exam.is_free_trial ?? false,
+      minutes: exam.duration_min ?? 60,
+      status: exam.status as CatalogStatus,
+      questions,
+      updatedAt: exam.updated_at ? exam.updated_at.toISOString() : new Date().toISOString(),
+    };
+  }
+
+  private mapToCocExamSet(cs: any): ExamSet {
+    const setId =
+      cs.title_en?.startsWith("SET-") || cs.title_en?.startsWith("COC-")
+        ? cs.title_en
+        : cs.id;
+
+    const questions: ExamQuestion[] = (cs.coc_set_questions || []).map((csq: any) => {
+      const q = csq.coc_question?.question;
+      const meta = (q?.correct_answers as any) || {};
+      return {
+        id: meta.externalId || q?.id || csq.id,
+        form: meta.form || (q?.type === "SINGLE_CHOICE" ? "MULTIPLE_CHOICE" : (q?.type || "MULTIPLE_CHOICE")),
+        topic: meta.topic || q?.topic?.title_en || "Comprehensive",
+        prompt: q?.prompt_en || "",
+        options: Array.isArray(q?.options) ? q.options : [],
+        correctOption: meta.correctOption ?? null,
+        trueIsCorrect: meta.trueIsCorrect ?? null,
+        acceptedAnswers: Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [],
+        answerDescription: q?.explanation_en || undefined,
+      };
+    });
+
+    return {
+      id: setId,
+      kind: "COC" as ExamSetKind,
+      universityId: "none",
+      universityName: "National Assessment",
+      programId: "none",
+      programName: "Comprehensive Assessment",
+      semesterNumber: 1,
+      stream: "NATURAL",
+      courseId: null,
+      courseCode: null,
+      courseTitle: null,
+      year: cs.year ?? 2024,
+      isFree: false,
+      minutes: cs.duration_min ?? 120,
+      status: cs.status as CatalogStatus,
+      questions,
+      updatedAt: cs.updated_at ? cs.updated_at.toISOString() : new Date().toISOString(),
+    };
+  }
+
+  async listExamSets(query: AdminExamSetListQueryDto): Promise<ExamSetListResult> {
+    const page = query.page && query.page > 0 ? query.page : 1;
+    const pageSize = SET_PAGE_SIZE;
+    const skip = (page - 1) * pageSize;
+
+    if (query.kind === "COC") {
+      const where: any = {};
+      if (query.status) {
+        where.status = query.status;
+      }
+      if (query.q && query.q.trim()) {
+        const q = query.q.trim();
+        where.OR = [
+          { title_en: { contains: q, mode: "insensitive" } },
+          { title_am: { contains: q, mode: "insensitive" } },
+        ];
+      }
+
+      const [total, cocSets] = await Promise.all([
+        this.prisma.cocSet.count({ where }),
+        this.prisma.cocSet.findMany({
+          where,
+          skip,
+          take: pageSize,
+          orderBy: { updated_at: "desc" },
+          include: {
+            coc_set_questions: {
+              include: {
+                coc_question: {
+                  include: {
+                    question: { include: { topic: true } },
+                  },
+                },
+              },
+              orderBy: { sort_order: "asc" },
+            },
+          },
+        }),
+      ]);
+
+      const items = cocSets.map((cs) => this.mapToCocExamSet(cs));
+      return {
+        items,
+        total,
+        page,
+        pageCount: Math.ceil(total / pageSize) || 1,
+      };
+    } else {
+      const where: any = {
+        kind: query.kind as ExamKind,
+      };
+      if (query.status) {
+        where.status = query.status;
+      }
+      if (query.q && query.q.trim()) {
+        const q = query.q.trim();
+        where.OR = [
+          { title_en: { contains: q, mode: "insensitive" } },
+          { course: { code: { contains: q, mode: "insensitive" } } },
+          { course: { title_en: { contains: q, mode: "insensitive" } } },
+        ];
+      }
+
+      const [total, exams] = await Promise.all([
+        this.prisma.exam.count({ where }),
+        this.prisma.exam.findMany({
+          where,
+          skip,
+          take: pageSize,
+          orderBy: { updated_at: "desc" },
+          include: {
+            course: {
+              include: {
+                semester: {
+                  include: {
+                    program: true,
+                  },
+                },
+              },
+            },
+            university: true,
+            exam_questions: {
+              include: {
+                question: { include: { topic: true } },
+              },
+              orderBy: { sort_order: "asc" },
+            },
+          },
+        }),
+      ]);
+
+      const items = exams.map((exam) => this.mapToExamSet(exam));
+      return {
+        items,
+        total,
+        page,
+        pageCount: Math.ceil(total / pageSize) || 1,
+      };
+    }
+  }
+
+  async findExamSet(id: string): Promise<ExamSet | null> {
+    const cleanId = id.trim();
+    const isIdUuid = this.isUuid(cleanId);
+
+    // 1. Check Exam table
+    const examWhere: any = isIdUuid
+      ? { OR: [{ id: cleanId }, { title_en: cleanId }] }
+      : { title_en: cleanId };
+
+    const exam = await this.prisma.exam.findFirst({
+      where: examWhere,
+      include: {
+        course: {
+          include: {
+            semester: {
+              include: {
+                program: true,
+              },
+            },
+          },
+        },
+        university: true,
+        exam_questions: {
+          include: { question: { include: { topic: true } } },
+          orderBy: { sort_order: "asc" },
+        },
+      },
+    });
+    if (exam) return this.mapToExamSet(exam);
+
+    // 2. Check CocSet table
+    const cocWhere: any = isIdUuid
+      ? { OR: [{ id: cleanId }, { title_en: cleanId }] }
+      : { title_en: cleanId };
+
+    const cocSet = await this.prisma.cocSet.findFirst({
+      where: cocWhere,
+      include: {
+        coc_set_questions: {
+          include: {
+            coc_question: {
+              include: { question: { include: { topic: true } } },
+            },
+          },
+          orderBy: { sort_order: "asc" },
+        },
+      },
+    });
+    if (cocSet) return this.mapToCocExamSet(cocSet);
+
+    return null;
+  }
+
+  async getExamSet(id: string): Promise<ExamSet> {
+    const set = await this.findExamSet(id);
+    if (!set) {
+      throw new NotFoundException(`Exam set not found with ID ${id}`);
+    }
+    return set;
+  }
+
+  async getQuestionOwner(questionId: string): Promise<{ ownerSetId: string | null }> {
+    const cleanId = questionId.trim();
+    const isIdUuid = this.isUuid(cleanId);
+
+    const questions = await this.prisma.question.findMany({
+      where: isIdUuid ? { id: cleanId } : {},
+      include: {
+        exam_questions: { include: { exam: true } },
+        coc_question: {
+          include: {
+            coc_set_questions: { include: { coc_set: true } },
+          },
+        },
+      },
+    });
+
+    for (const q of questions) {
+      const meta = (q.correct_answers as any) || {};
+      const matchesId = q.id === cleanId || meta.externalId === cleanId;
+      if (matchesId) {
+        if (q.exam_questions && q.exam_questions.length > 0) {
+          const exam = q.exam_questions[0]?.exam;
+          if (exam) return { ownerSetId: exam.title_en || exam.id };
+        }
+        if (q.coc_question && q.coc_question.coc_set_questions && q.coc_question.coc_set_questions.length > 0) {
+          const cs = q.coc_question.coc_set_questions[0]?.coc_set;
+          if (cs) return { ownerSetId: cs.title_en || cs.id };
+        }
+      }
+    }
+
+    if (!isIdUuid) {
+      const rawMatches = await this.prisma.question.findMany({
+        where: {
+          correct_answers: {
+            path: ["externalId"],
+            equals: cleanId,
+          },
+        },
+        include: {
+          exam_questions: { include: { exam: true } },
+          coc_question: {
+            include: { coc_set_questions: { include: { coc_set: true } } },
+          },
+        },
+      });
+
+      for (const q of rawMatches) {
+        if (q.exam_questions && q.exam_questions.length > 0) {
+          const exam = q.exam_questions[0]?.exam;
+          if (exam) return { ownerSetId: exam.title_en || exam.id };
+        }
+        if (q.coc_question && q.coc_question.coc_set_questions && q.coc_question.coc_set_questions.length > 0) {
+          const cs = q.coc_question.coc_set_questions[0]?.coc_set;
+          if (cs) return { ownerSetId: cs.title_en || cs.id };
+        }
+      }
+    }
+
+    return { ownerSetId: null };
+  }
+
+  private toPrismaQuestionType(form: QuestionForm): "SINGLE_CHOICE" | "TRUE_FALSE" | "SHORT_ANSWER" | "MULTIPLE_CHOICE" {
+    switch (form) {
+      case "MULTIPLE_CHOICE":
+        return "SINGLE_CHOICE";
+      case "TRUE_FALSE":
+        return "TRUE_FALSE";
+      case "SHORT_ANSWER":
+      case "BLANK_SPACE":
+      default:
+        return "SHORT_ANSWER";
+    }
+  }
+
+  async saveExamSet(input: AdminExamSetInputDto, adminId: string): Promise<ExamSet> {
+    const isCoc = input.kind === "COC";
+    const setId = input.id.trim();
+
+    if (input.status === "PUBLISHED") {
+      const problems = setProblems({
+        kind: input.kind,
+        questions: input.questions as any,
+      });
+      if (problems.length > 0) {
+        throw new BadRequestException(
+          `Exam set cannot be published with problems: ${problems.join(", ")}`,
+        );
+      }
+    }
+
+    const existing = await this.findExamSet(setId);
+    if (existing) {
+      if (needsReasonToChange(existing.status, input.status) && !input.reason) {
+        throw new BadRequestException(
+          "A reason is required to take a published exam set back to draft",
+        );
+      }
+    }
+
+    const beforeStatus: CatalogStatus = existing?.status ?? "DRAFT";
+
+    if (isCoc) {
+      let cocSet = await this.prisma.cocSet.findFirst({
+        where: {
+          OR: [{ title_en: setId }, ...(this.isUuid(setId) ? [{ id: setId }] : [])],
+        },
+      });
+
+      if (cocSet) {
+        cocSet = await this.prisma.cocSet.update({
+          where: { id: cocSet.id },
+          data: {
+            title_en: setId,
+            year: input.year ?? 2024,
+            duration_min: input.minutes,
+            status: input.status as PublicationStatus,
+          },
+        });
+        await this.prisma.cocSetQuestion.deleteMany({
+          where: { coc_set_id: cocSet.id },
+        });
+      } else {
+        cocSet = await this.prisma.cocSet.create({
+          data: {
+            ...(this.isUuid(setId) ? { id: setId } : {}),
+            title_en: setId,
+            title_am: setId,
+            year: input.year ?? 2024,
+            duration_min: input.minutes,
+            sample_question_count: Math.min(input.questions.length, 10),
+            status: input.status as PublicationStatus,
+          },
+        });
+      }
+
+      const defaultCourse = await this.prisma.course.findFirst();
+      const courseId = input.courseId || defaultCourse?.id || "00000000-0000-0000-0000-000000000000";
+
+      for (const [idx, qInput] of input.questions.entries()) {
+        const studentType = this.toPrismaQuestionType(qInput.form);
+        const q = await this.prisma.question.create({
+          data: {
+            course_id: courseId,
+            type: studentType as any,
+            prompt_en: qInput.prompt.trim(),
+            options: qInput.options,
+            explanation_en: qInput.answerDescription || null,
+            correct_answers: {
+              externalId: qInput.id,
+              form: qInput.form,
+              topic: qInput.topic,
+              correctOption: qInput.correctOption ?? null,
+              trueIsCorrect: qInput.trueIsCorrect ?? null,
+              acceptedAnswers: qInput.acceptedAnswers ?? [],
+            },
+          },
+        });
+
+        const cocQ = await this.prisma.cocQuestion.create({
+          data: {
+            question_id: q.id,
+            course_id: q.course_id,
+            year: input.year ?? 2024,
+          },
+        });
+
+        await this.prisma.cocSetQuestion.create({
+          data: {
+            coc_set_id: cocSet.id,
+            coc_question_id: cocQ.id,
+            sort_order: idx + 1,
+          },
+        });
+      }
+    } else {
+      if (!input.courseId) {
+        throw new BadRequestException("courseId is required for Mid, Final, or Mock exams");
+      }
+
+      let exam = await this.prisma.exam.findFirst({
+        where: {
+          OR: [{ title_en: setId }, ...(this.isUuid(setId) ? [{ id: setId }] : [])],
+        },
+      });
+
+      const universityId =
+        input.universityId && this.isUuid(input.universityId)
+          ? input.universityId
+          : null;
+
+      if (exam) {
+        exam = await this.prisma.exam.update({
+          where: { id: exam.id },
+          data: {
+            title_en: setId,
+            course_id: input.courseId,
+            university_id: universityId,
+            kind: input.kind as ExamKind,
+            year: input.year ?? 2024,
+            duration_min: input.minutes,
+            is_free_trial: input.isFree,
+            status: input.status as PublicationStatus,
+          },
+        });
+        await this.prisma.examQuestion.deleteMany({
+          where: { exam_id: exam.id },
+        });
+      } else {
+        exam = await this.prisma.exam.create({
+          data: {
+            ...(this.isUuid(setId) ? { id: setId } : {}),
+            title_en: setId,
+            course_id: input.courseId,
+            university_id: universityId,
+            kind: input.kind as ExamKind,
+            year: input.year ?? 2024,
+            duration_min: input.minutes,
+            is_free_trial: input.isFree,
+            status: input.status as PublicationStatus,
+          },
+        });
+      }
+
+      for (const [idx, qInput] of input.questions.entries()) {
+        const studentType = this.toPrismaQuestionType(qInput.form);
+        const q = await this.prisma.question.create({
+          data: {
+            course_id: input.courseId,
+            type: studentType as any,
+            prompt_en: qInput.prompt.trim(),
+            options: qInput.options,
+            explanation_en: qInput.answerDescription || null,
+            correct_answers: {
+              externalId: qInput.id,
+              form: qInput.form,
+              topic: qInput.topic,
+              correctOption: qInput.correctOption ?? null,
+              trueIsCorrect: qInput.trueIsCorrect ?? null,
+              acceptedAnswers: qInput.acceptedAnswers ?? [],
+            },
+          },
+        });
+
+        await this.prisma.examQuestion.create({
+          data: {
+            exam_id: exam.id,
+            question_id: q.id,
+            sort_order: idx + 1,
+            points: 1.0,
+          },
+        });
+      }
+    }
+
+    const change = statusChange(beforeStatus, input.status);
+    const action: AuditAction =
+      change === "PUBLISH"
+        ? "EXAM_SET_PUBLISHED"
+        : change === "UNPUBLISH"
+          ? "EXAM_SET_UNPUBLISHED"
+          : existing
+            ? "EXAM_SET_UPDATED"
+            : "EXAM_SET_CREATED";
+
+    await this.prisma.auditLog.create({
+      data: {
+        actor_id: adminId || "00000000-0000-0000-0000-000000000000",
+        actor_role: Role.ADMIN,
+        action,
+        target_type: "ExamSet",
+        target_id: setId,
+        metadata: {
+          target: `Exam set ${setId} · ${input.questions.length} questions`,
+          reason: input.reason,
+        },
+      },
+    });
+
+    return this.getExamSet(setId);
+  }
 }
+
