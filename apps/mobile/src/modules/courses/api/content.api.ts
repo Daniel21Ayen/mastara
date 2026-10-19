@@ -12,14 +12,15 @@ export interface ContentApi {
 }
 
 export const realContentApi: ContentApi = {
-  async getTopics(courseId, kind) {
-    await simulateLatency(150);
-    const course = courses.find((item) => item.id === courseId);
-    return course ? buildTopics(course).filter((topic) => topic.kind === kind) : [];
+  async getTopics(courseId: string, kind: ContentKind): Promise<Topic[]> {
+    return httpClient.get<Topic[]>(`/content/courses/${courseId}/topics?kind=${kind}`);
   },
-  async getTopic(topicId) {
-    await simulateLatency(100);
-    return findTopic(topicId);
+  async getTopic(topicId: string): Promise<Topic | null> {
+    try {
+      return await httpClient.get<Topic>(`/content/topics/${topicId}`);
+    } catch {
+      return null;
+    }
   },
 };
 

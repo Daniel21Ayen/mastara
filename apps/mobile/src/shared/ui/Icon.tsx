@@ -1,6 +1,7 @@
 // apps/mobile/src/shared/ui/Icon.tsx
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
+import type { ColorValue } from 'react-native';
 
 import { useTheme } from '@/core/theme';
 
@@ -49,7 +50,7 @@ export type IconName = keyof typeof ICONS;
 interface IconProps {
   name: IconName;
   size?: number;
-  color?: string;
+  color?: ColorValue | string;
 }
 
 export function Icon({ name, size = 20, color }: IconProps) {

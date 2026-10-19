@@ -12,19 +12,20 @@ export interface QuizApi {
 }
 
 export const realQuizApi: QuizApi = {
-  async getChapters(courseId, quizNo) {
-    await simulateLatency(150);
-    const course = courses.find((item) => item.id === courseId);
-    return course ? buildChapters(course).filter((chapter) => chapter.quizNo === quizNo) : [];
+  async getChapters(courseId: string, quizNo: QuizNumber): Promise<QuizChapter[]> {
+    return httpClient.get<QuizChapter[]>(
+      `/assessment/quizzes/courses/${courseId}/chapters?quizNo=${quizNo}`,
+    );
   },
-  async getChapter(chapterId) {
-    await simulateLatency(100);
-    return findChapter(chapterId);
+  async getChapter(chapterId: string): Promise<QuizChapter | null> {
+    try {
+      return await httpClient.get<QuizChapter>(`/assessment/quizzes/chapters/${chapterId}`);
+    } catch {
+      return null;
+    }
   },
-  async getQuestions(chapterId) {
-    await simulateLatency(150);
-    const chapter = findChapter(chapterId);
-    return chapter ? buildQuestions(chapter) : [];
+  async getQuestions(chapterId: string): Promise<Question[]> {
+    return httpClient.get<Question[]>(`/assessment/quizzes/chapters/${chapterId}/questions`);
   },
 };
 
