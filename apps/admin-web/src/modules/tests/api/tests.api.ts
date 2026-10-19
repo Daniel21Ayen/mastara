@@ -20,6 +20,7 @@ import { statusChange } from '@mastara/domain';
 import type { AuditAction, CatalogStatus, QuizNumber } from '@mastara/domain';
 
 import { env } from '@/core/config/env';
+import { httpClient } from '@/core/network';
 import {
   courseById,
   createQuestion,
@@ -120,9 +121,64 @@ const mockTestsApi: TestsApi = {
   },
 };
 
+export const realTestsApi: TestsApi = {
+  async getOverview(courseId: string): Promise<TestsOverview> {
+    const raw = await httpClient.get<TestsOverview>(
+      `/assessment/admin/courses/${courseId}/tests-overview`,
+    );
+    return testsOverviewSchema.parse(raw);
+  },
+
+  async updateQuiz(
+    courseId: string,
+    quizNo: QuizNumber,
+    input: QuizSettingsInput,
+  ): Promise<QuizSummary> {
+    const payload = quizSettingsSchema.parse(input);
+    const raw = await httpClient.put<QuizSummary>(
+      `/assessment/admin/courses/${courseId}/quizzes/${quizNo}`,
+      payload,
+    );
+    return quizSummarySchema.parse(raw);
+  },
+
+  async listQuestions(query: QuestionListQuery): Promise<QuestionListResult> {
+    const params = new URLSearchParams();
+    if (query.quizNo) params.set('quizNo', String(query.quizNo));
+    if (query.courseId) params.set('courseId', query.courseId);
+    if (query.form) params.set('form', query.form);
+    if (query.status) params.set('status', query.status);
+    if (query.q && query.q.trim()) params.set('q', query.q.trim());
+    if (query.page) params.set('page', String(query.page));
+
+    const qs = params.toString();
+    const url = qs ? `/assessment/admin/questions?${qs}` : '/assessment/admin/questions';
+    const raw = await httpClient.get<QuestionListResult>(url);
+    return questionListResultSchema.parse(raw);
+  },
+
+  async getQuestion(id: string): Promise<AdminQuestion> {
+    const raw = await httpClient.get<AdminQuestion>(`/assessment/admin/questions/${id}`);
+    return adminQuestionSchema.parse(raw);
+  },
+
+  async createQuestion(input: QuestionInput): Promise<AdminQuestion> {
+    const payload = questionInputSchema.parse(input);
+    const raw = await httpClient.post<AdminQuestion>('/assessment/admin/questions', payload);
+    return adminQuestionSchema.parse(raw);
+  },
+
+  async updateQuestion(id: string, input: QuestionInput): Promise<AdminQuestion> {
+    const payload = questionInputSchema.parse(input);
+    const raw = await httpClient.put<AdminQuestion>(`/assessment/admin/questions/${id}`, payload);
+    return adminQuestionSchema.parse(raw);
+  },
+};
+
 function createTestsApi(): TestsApi {
   if (env.useMocks) return mockTestsApi;
-  throw new Error('The real tests API is added in the backend integration phase.');
+  return realTestsApi;
 }
 
 export const testsApi = createTestsApi();
+
