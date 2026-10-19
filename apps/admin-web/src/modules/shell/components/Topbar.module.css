@@ -1,3 +1,4 @@
+/* apps/admin-web/src/modules/shell/components/Topbar.module.css */
 .topbar {
   display: flex;
   align-items: center;
@@ -5,6 +6,9 @@
   min-height: var(--topbar-height);
   padding: 0 var(--space-xl);
   border-bottom: 1px solid var(--color-border);
+  background-color: #ffffff;
+  position: relative;
+  z-index: 50;
 }
 
 .menuButton {
@@ -28,24 +32,137 @@
   width: 100%;
   min-height: 40px;
   padding: 0 var(--space-md);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
   color: var(--color-text);
   font-size: var(--font-size-body);
+  transition: all 0.15s ease;
+  outline: none;
 }
 
-.account {
+.input:focus {
+  border-color: #1a56db;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
+.rightControls {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 12px;
   margin-left: auto;
 }
 
-.role {
-  font-size: var(--font-size-body);
+/* Notification Button */
+.notifContainer {
+  position: relative;
+}
+
+.notifBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.notifBtn:hover,
+.notifBtnActive {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1a56db;
+}
+
+.notifBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: var(--color-danger, #b91c1c);
+  color: #ffffff;
+  font-size: 10.5px;
   font-weight: 700;
-  color: var(--color-text-muted);
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Admin Profile Button */
+.profileContainer {
+  position: relative;
+}
+
+.profileBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px 5px 6px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.profileBtn:hover,
+.profileBtnActive {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.profileAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--color-primary, #1a56db);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.profileName {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.profileRole {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.2;
+}
+
+.profileChevron {
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.chevronRotated {
+  transform: rotate(180deg);
 }
 
 @media (max-width: 899px) {
@@ -57,5 +174,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .profileRole {
+    display: none;
   }
 }

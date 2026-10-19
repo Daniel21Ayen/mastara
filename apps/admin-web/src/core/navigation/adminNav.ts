@@ -78,9 +78,6 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
   { id: 'payments', labelKey: 'admin.nav.payments', href: '/commerce/payments', icon: 'creditCard' },
   { id: 'pricing', labelKey: 'admin.nav.pricing', href: '/commerce/pricing', icon: 'tag' },
   { id: 'support', labelKey: 'admin.nav.support', href: '/support', icon: 'headset' },
-  { id: 'announcements', labelKey: 'admin.nav.announcements', href: '/announcements', icon: 'megaphone' },
-  { id: 'reports', labelKey: 'admin.nav.reports', href: '/reports', icon: 'barChart' },
-  { id: 'audit', labelKey: 'admin.nav.audit', href: '/audit', icon: 'shield' },
 ];
 
 const startsWith = (pathname: string, base: string): boolean =>
@@ -88,6 +85,10 @@ const startsWith = (pathname: string, base: string): boolean =>
 
 /** The item whose address is the start of `pathname` (so `/students/ST001` highlights Students). */
 export function activeNavId(pathname: string): string | null {
+  if (pathname === '/pricing' || pathname.startsWith('/pricing/')) return 'pricing';
+  if (pathname === '/audit' || pathname.startsWith('/audit/')) return 'audit';
+  if (pathname === '/reports' || pathname.startsWith('/reports/')) return 'reports';
+  if (pathname === '/notifications' || pathname.startsWith('/notifications/')) return 'notifications';
   const match = ADMIN_NAV.find((item) => startsWith(pathname, item.section ?? item.href));
   return match?.id ?? null;
 }
