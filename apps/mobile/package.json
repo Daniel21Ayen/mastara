@@ -11,7 +11,8 @@
     "preandroid": "node scripts/build-katex-assets.mjs",
     "pretypecheck": "node scripts/build-katex-assets.mjs",
     "pretest": "node scripts/build-katex-assets.mjs",
-    "test": "tsx --test \"src/**/*.test.ts\"",
+    "test": "tsx --env-file=.env.local --test \"src/**/*.test.ts\"",
+
     "build:katex": "node scripts/build-katex-assets.mjs",
     "check:size": "node scripts/check-app-size.mjs"
   },

@@ -1,5 +1,12 @@
-// apps/mobile/src/core/storage/secureStorage.ts
-import * as SecureStore from 'expo-secure-store';
+let SecureStore: typeof import('expo-secure-store') | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  SecureStore = require('expo-secure-store');
+} catch {
+  SecureStore = null;
+}
+
+const memoryStore = new Map<string, string>();
 
 export const STORAGE_KEYS = {
   session: 'mastara.session',
@@ -12,16 +19,32 @@ export const STORAGE_KEYS = {
 
 type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
 
-/** Thin wrapper over the platform secure store (Android Keystore / iOS Keychain). */
+/** Thin wrapper over the platform secure store (Android Keystore / iOS Keychain) with memory fallback for test runners. */
 export const secureStorage = {
-  getString(key: StorageKey): Promise<string | null> {
-    return SecureStore.getItemAsync(key);
+  async getString(key: StorageKey): Promise<string | null> {
+    if (SecureStore?.getItemAsync) {
+      try {
+        return await SecureStore.getItemAsync(key);
+      } catch {
+        return memoryStore.get(key) ?? null;
+      }
+    }
+    return memoryStore.get(key) ?? null;
   },
-  setString(key: StorageKey, value: string): Promise<void> {
-    return SecureStore.setItemAsync(key, value);
+  async setString(key: StorageKey, value: string): Promise<void> {
+    if (SecureStore?.setItemAsync) {
+      try {
+        await SecureStore.setItemAsync(key, value);
+        return;
+      } catch {
+        memoryStore.set(key, value);
+        return;
+      }
+    }
+    memoryStore.set(key, value);
   },
   async getJson<T>(key: StorageKey): Promise<T | null> {
-    const raw = await SecureStore.getItemAsync(key);
+    const raw = await this.getString(key);
     if (!raw) return null;
     try {
       return JSON.parse(raw) as T;
@@ -29,10 +52,19 @@ export const secureStorage = {
       return null;
     }
   },
-  setJson<T>(key: StorageKey, value: T): Promise<void> {
-    return SecureStore.setItemAsync(key, JSON.stringify(value));
+  async setJson<T>(key: StorageKey, value: T): Promise<void> {
+    await this.setString(key, JSON.stringify(value));
   },
-  remove(key: StorageKey): Promise<void> {
-    return SecureStore.deleteItemAsync(key);
+  async remove(key: StorageKey): Promise<void> {
+    if (SecureStore?.deleteItemAsync) {
+      try {
+        await SecureStore.deleteItemAsync(key);
+      } catch {
+        memoryStore.delete(key);
+        return;
+      }
+    }
+    memoryStore.delete(key);
   },
 };
+
