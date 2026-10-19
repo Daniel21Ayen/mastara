@@ -3,6 +3,8 @@ import type { Topic } from '@mastara/contracts';
 import type { ContentKind } from '@mastara/domain';
 
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
+import { buildTopics, courses, findTopic } from '@/core/mock/data';
+import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface ContentApi {

@@ -3,6 +3,8 @@ import type { Exam, Question, University } from '@mastara/contracts';
 import type { ExamKind } from '@mastara/domain';
 
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
+import { buildExamQuestions, buildExams, courses, findExam, universityOf } from '@/core/mock/data';
+import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface ExamListing {

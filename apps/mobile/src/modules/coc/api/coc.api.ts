@@ -5,6 +5,7 @@ import { env } from '@/core/config/env';
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
 import { buildCocQuestions, buildCocSets, courseTitles } from '@/core/mock/data';
 import { simulateLatency } from '@/core/mock/delay';
+import { httpClient } from '@/core/network';
 
 export interface CocSession {
   set: CocSet;

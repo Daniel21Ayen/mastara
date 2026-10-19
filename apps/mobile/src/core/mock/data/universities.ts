@@ -7,3 +7,8 @@ export const universities: readonly University[] = [
   { id: 'ju', name: 'Jimma University', shortName: 'Jimma' },
   { id: 'mu', name: 'Mekelle University', shortName: 'Mekelle' },
 ];
+
+export function universityOf(id: string): University | undefined {
+  return universities.find((u) => u.id === id);
+}
+

@@ -3,6 +3,8 @@ import type { Question, QuizChapter } from '@mastara/contracts';
 import type { QuizNumber } from '@mastara/domain';
 
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
+import { buildChapters, buildQuestions, courses, findChapter } from '@/core/mock/data';
+import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface QuizApi {
