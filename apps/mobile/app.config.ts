@@ -13,7 +13,7 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'automatic',
   android: { package: 'com.kewakibt.mastara' },
   ios: { bundleIdentifier: 'com.kewakibt.mastara' },
-  platforms: ['android', 'ios'],
+  platforms: ['android', 'ios', 'web'],
   plugins: [
     'expo-router',
     [

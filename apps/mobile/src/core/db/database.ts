@@ -1,6 +1,7 @@
 // apps/mobile/src/core/db/database.ts
 import * as Crypto from 'expo-crypto';
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 import { env } from '@/core/config/env';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
@@ -34,8 +35,10 @@ const DB_NAME = 'mastara.db';
 async function open(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
   try {
-    if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);
-    await db.execAsync('PRAGMA journal_mode = WAL;');
+    if (Platform.OS !== 'web') {
+      if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);
+      await db.execAsync('PRAGMA journal_mode = WAL;');
+    }
     await migrate(db);
     return db;
   } catch (error) {
