@@ -1,5 +1,10 @@
-// apps/mobile/modules/mastara-clock/index.ts
-import { requireOptionalNativeModule } from 'expo-modules-core';
+let requireOptionalNativeModule: (<T>(name: string) => T | null) | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  requireOptionalNativeModule = require('expo-modules-core').requireOptionalNativeModule;
+} catch {
+  requireOptionalNativeModule = null;
+}
 
 interface MastaraClockNative {
   elapsedRealtimeMs(): number;
@@ -7,7 +12,8 @@ interface MastaraClockNative {
 }
 
 /** Null in Expo Go and in builds made before this module existed. Callers then use the JavaScript clocks. */
-const native = requireOptionalNativeModule<MastaraClockNative>('MastaraClock');
+const native = requireOptionalNativeModule ? requireOptionalNativeModule<MastaraClockNative>('MastaraClock') : null;
+
 
 export const nativeClockAvailable = native !== null;
 

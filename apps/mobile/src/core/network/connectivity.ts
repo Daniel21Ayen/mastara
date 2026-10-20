@@ -1,7 +1,14 @@
-// apps/mobile/src/core/network/connectivity.ts
-import NetInfo from '@react-native-community/netinfo';
-import type { NetInfoState } from '@react-native-community/netinfo';
 import { useSyncExternalStore } from 'react';
+
+let NetInfo: typeof import('@react-native-community/netinfo').default | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mod = require('@react-native-community/netinfo');
+  NetInfo = mod.default ?? mod;
+} catch {
+  NetInfo = null;
+}
+
 
 type Listener = () => void;
 
@@ -11,19 +18,22 @@ const listeners = new Set<Listener>();
 
 const notify = () => listeners.forEach((listener) => listener());
 
-function fromNetInfo(state: NetInfoState): boolean {
+function fromNetInfo(state: { isConnected: boolean | null; isInternetReachable: boolean | null }): boolean {
   return state.isConnected !== false && state.isInternetReachable !== false;
 }
 
-// Start watching as soon as this file is first imported.
-void NetInfo.fetch().then((state) => {
-  deviceOnline = fromNetInfo(state);
-  notify();
-});
-NetInfo.addEventListener((state) => {
-  deviceOnline = fromNetInfo(state);
-  notify();
-});
+// Start watching as soon as this file is first imported (if NetInfo is available in native runtime).
+if (NetInfo) {
+  void NetInfo.fetch().then((state) => {
+    deviceOnline = fromNetInfo(state);
+    notify();
+  });
+  NetInfo.addEventListener((state) => {
+    deviceOnline = fromNetInfo(state);
+    notify();
+  });
+}
+
 
 /** True when the phone can reach the internet (and the demo "simulate offline" switch is off). */
 export function isOnline(): boolean {
