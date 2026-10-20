@@ -1,8 +1,10 @@
 // apps/admin-web/src/modules/content/state/contentManagementData.ts
 
-export interface TestSetItem {
+export interface QuestionBankItem {
   id: string;
-  testSetId: string;
+  questionId: string;
+  question: string;
+  questionType: string;
   quizNo: 1 | 2 | 3;
   chapterNumber: number;
   chapterTitle: string;
@@ -12,12 +14,19 @@ export interface TestSetItem {
   semester: string;
   stream: string;
   program: string;
-  timeAllowed: string;
-  access: string;
   status: 'Active' | 'Inactive';
   verified: boolean;
+  timeAllowed?: string;
+  access?: string;
+  testSetId?: string;
+  options?: string[];
+  correctAnswer?: string;
+  explanation?: string;
   questionCount?: number;
 }
+
+// Backwards compatibility alias
+export type TestSetItem = QuestionBankItem;
 
 export type MaterialSubTab = 'modules' | 'notes' | 'amharic-notes';
 
@@ -37,10 +46,12 @@ export interface MaterialItem {
   content?: string;
 }
 
-export const INITIAL_TEST_SETS: TestSetItem[] = [
+export const INITIAL_TEST_SETS: QuestionBankItem[] = [
   {
-    id: 'ts-1',
-    testSetId: 'TS-GEO-QUIZ1-01',
+    id: 'q-1',
+    questionId: 'Q-101',
+    question: 'What is the primary focus of human geography in analyzing spatial organization and regional development?',
+    questionType: 'Multiple Choice',
     quizNo: 1,
     chapterNumber: 1,
     chapterTitle: 'Chapter 1',
@@ -50,15 +61,25 @@ export const INITIAL_TEST_SETS: TestSetItem[] = [
     semester: 'Sem 2',
     stream: 'Social',
     program: 'BSc Geography',
+    testSetId: 'TS-GEO-QUIZ1-01',
     timeAllowed: '45 minutes',
     access: 'Enrolled Only',
     status: 'Inactive',
     verified: false,
-    questionCount: 15,
+    options: [
+      'A. Physical erosion and geological plate tectonic shifts',
+      'B. Human-environment interaction, spatial distribution, and cultural landscapes',
+      'C. Chemical composition of upper atmospheric layers',
+      'D. Purely quantitative oceanic depth surveying',
+    ],
+    correctAnswer: 'B. Human-environment interaction, spatial distribution, and cultural landscapes',
+    explanation: 'Human geography focuses on the patterns and processes that shape human society, understanding how people interact with their physical environment and create cultural spaces.',
   },
   {
-    id: 'ts-2',
-    testSetId: 'TS-PHY-QUIZ1-01',
+    id: 'q-2',
+    questionId: 'Q-102',
+    question: 'Calculate the net torque required to accelerate a uniform cylindrical rotor from rest to 120 rad/s in 4.0 seconds.',
+    questionType: 'Multiple Choice',
     quizNo: 1,
     chapterNumber: 3,
     chapterTitle: 'Chapter 3',
@@ -68,15 +89,25 @@ export const INITIAL_TEST_SETS: TestSetItem[] = [
     semester: 'Sem 1',
     stream: 'Natural',
     program: 'BSc Physics',
+    testSetId: 'TS-PHY-QUIZ1-01',
     timeAllowed: '60 minutes',
     access: 'Public',
     status: 'Active',
     verified: true,
-    questionCount: 20,
+    options: [
+      'A. τ = I · (30 rad/s²)',
+      'B. τ = I · (120 rad/s²)',
+      'C. τ = 0.5 · I · ω²',
+      'D. τ = 2 · I / Δt',
+    ],
+    correctAnswer: 'A. τ = I · (30 rad/s²)',
+    explanation: 'Angular acceleration α = Δω / Δt = (120 - 0) / 4 = 30 rad/s². Torque τ = I · α = 30 · I.',
   },
   {
-    id: 'ts-3',
-    testSetId: 'TS-ENG-QUIZ1-01',
+    id: 'q-3',
+    questionId: 'Q-103',
+    question: 'Which sentence correctly demonstrates the subjunctive mood for hypothetical academic recommendations?',
+    questionType: 'Multiple Choice',
     quizNo: 1,
     chapterNumber: 2,
     chapterTitle: 'Chapter 2',
@@ -86,15 +117,25 @@ export const INITIAL_TEST_SETS: TestSetItem[] = [
     semester: 'Sem 1',
     stream: 'Common',
     program: 'Software Engineering',
+    testSetId: 'TS-ENG-QUIZ1-01',
     timeAllowed: '30 minutes',
     access: 'Public',
     status: 'Active',
     verified: true,
-    questionCount: 12,
+    options: [
+      'A. It is recommended that each student submits their thesis today.',
+      'B. It is recommended that each student submit their thesis today.',
+      'C. It was recommended that each student has submitted on time.',
+      'D. The recommendation is each student to submit immediately.',
+    ],
+    correctAnswer: 'B. It is recommended that each student submit their thesis today.',
+    explanation: 'Subjunctive clauses following verbs of recommendation or urgency use the base form of the verb without third-person -s.',
   },
   {
-    id: 'ts-4',
-    testSetId: 'TS-GEO-QUIZ2-01',
+    id: 'q-4',
+    questionId: 'Q-201',
+    question: 'Which projection technique preserves relative geometric area while causing significant high-latitude shape distortion?',
+    questionType: 'Multiple Choice',
     quizNo: 2,
     chapterNumber: 2,
     chapterTitle: 'Chapter 2',
@@ -104,15 +145,25 @@ export const INITIAL_TEST_SETS: TestSetItem[] = [
     semester: 'Sem 2',
     stream: 'Social',
     program: 'BSc Geography',
+    testSetId: 'TS-GEO-QUIZ2-01',
     timeAllowed: '45 minutes',
     access: 'Enrolled Only',
     status: 'Active',
     verified: true,
-    questionCount: 18,
+    options: [
+      'A. Mercator projection',
+      'B. Gall-Peters equal-area projection',
+      'C. Robinson compromise projection',
+      'D. Azimuthal equidistant projection',
+    ],
+    correctAnswer: 'B. Gall-Peters equal-area projection',
+    explanation: 'The Gall-Peters projection is an equal-area cylindrical projection that accurately represents relative surface areas across all latitudes.',
   },
   {
-    id: 'ts-5',
-    testSetId: 'TS-PHY-QUIZ2-01',
+    id: 'q-5',
+    questionId: 'Q-202',
+    question: 'State how the Clausius statement of the Second Law of Thermodynamics governs spontaneous heat flow between thermal reservoirs.',
+    questionType: 'Short Answer',
     quizNo: 2,
     chapterNumber: 4,
     chapterTitle: 'Chapter 4',
@@ -122,15 +173,25 @@ export const INITIAL_TEST_SETS: TestSetItem[] = [
     semester: 'Sem 1',
     stream: 'Natural',
     program: 'BSc Physics',
+    testSetId: 'TS-PHY-QUIZ2-01',
     timeAllowed: '60 minutes',
     access: 'Restricted',
     status: 'Inactive',
     verified: false,
-    questionCount: 16,
+    options: [
+      'A. Heat cannot spontaneously pass from a cooler to a hotter body without external work.',
+      'B. Entropy of an isolated system always remains perfectly constant.',
+      'C. Total internal energy of any closed thermodynamic cycle equals zero.',
+      'D. Work is completely convertible to thermal energy with 100% Carnot efficiency.',
+    ],
+    correctAnswer: 'A. Heat cannot spontaneously pass from a cooler to a hotter body without external work.',
+    explanation: 'Clausius stated that it is impossible to construct a device operating on a cycle that produces no effect other than the transfer of heat from a cooler body to a hotter body.',
   },
   {
-    id: 'ts-6',
-    testSetId: 'TS-GEO-QUIZ3-01',
+    id: 'q-6',
+    questionId: 'Q-301',
+    question: 'How does Burgess concentric zone model characterize urban residential segregation outward from the central business district?',
+    questionType: 'Multiple Choice',
     quizNo: 3,
     chapterNumber: 4,
     chapterTitle: 'Chapter 4',
@@ -140,15 +201,25 @@ export const INITIAL_TEST_SETS: TestSetItem[] = [
     semester: 'Sem 2',
     stream: 'Social',
     program: 'BSc Geography',
+    testSetId: 'TS-GEO-QUIZ3-01',
     timeAllowed: '50 minutes',
     access: 'Enrolled Only',
     status: 'Active',
     verified: true,
-    questionCount: 25,
+    options: [
+      'A. Random clustering determined entirely by topography and water bodies',
+      'B. Concentric rings expanding outward from transition zones to commuter zones',
+      'C. Linear corridors strictly following major railway lines and highways',
+      'D. Multiple polynucleated industrial nodes with no central core',
+    ],
+    correctAnswer: 'B. Concentric rings expanding outward from transition zones to commuter zones',
+    explanation: 'The concentric zone model describes urban spatial organization as concentric rings: CBD, Zone of Transition, Working Class Homes, Better Residences, and Commuter Zone.',
   },
   {
-    id: 'ts-7',
-    testSetId: 'TS-PHY-QUIZ3-01',
+    id: 'q-7',
+    questionId: 'Q-302',
+    question: 'What is the de Broglie wavelength of an electron accelerated through a potential difference of 100 Volts?',
+    questionType: 'Multiple Choice',
     quizNo: 3,
     chapterNumber: 5,
     chapterTitle: 'Chapter 5',
@@ -158,11 +229,19 @@ export const INITIAL_TEST_SETS: TestSetItem[] = [
     semester: 'Sem 1',
     stream: 'Natural',
     program: 'BSc Physics',
+    testSetId: 'TS-PHY-QUIZ3-01',
     timeAllowed: '60 minutes',
     access: 'Public',
     status: 'Active',
     verified: true,
-    questionCount: 22,
+    options: [
+      'A. λ ≈ 0.123 nm (1.23 Å)',
+      'B. λ ≈ 1.23 nm (12.3 Å)',
+      'C. λ ≈ 12.3 nm (123 Å)',
+      'D. λ ≈ 0.012 nm (0.12 Å)',
+    ],
+    correctAnswer: 'A. λ ≈ 0.123 nm (1.23 Å)',
+    explanation: 'Using λ = h / p = 1.226 / √V nm, for V = 100 V, λ = 1.226 / 10 ≈ 0.123 nm.',
   },
 ];
 

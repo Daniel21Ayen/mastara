@@ -26,7 +26,7 @@
   background: #ffffff;
   border-radius: 16px;
   width: 100%;
-  max-width: 620px;
+  max-width: 680px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
@@ -103,13 +103,105 @@
 .contentSection {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+}
+
+/* Question Box */
+.questionBox {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.questionMetaHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.questionTypeTag {
+  padding: 3px 8px;
+  background: #e0edff;
+  color: #1a56db;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.questionIdTag {
+  padding: 3px 8px;
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.questionPromptText {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.5;
+}
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionHeading {
+  margin: 0 0 4px 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.optionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+.optionItemCorrect {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+  font-weight: 600;
+}
+
+.optionMarker {
+  font-weight: 700;
+  color: inherit;
+}
+
+.optionText {
+  line-height: 1.4;
+}
+
+.explanationBox {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 12px 16px;
 }
 
 .grid2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 14px;
 }
 
 .metaItem {
@@ -191,7 +283,7 @@
 .notesText {
   margin: 0;
   font-size: 0.85rem;
-  color: #3b82f6;
+  color: #1e3a8a;
   line-height: 1.5;
 }
 

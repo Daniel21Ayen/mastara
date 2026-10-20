@@ -419,6 +419,27 @@
   color: #94a3b8;
 }
 
+/* Question Bank Cell */
+.questionCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 380px;
+}
+
+.questionText {
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+  font-size: 0.875rem;
+}
+
+.questionMetaTag {
+  font-size: 0.75rem;
+  color: #1a56db;
+  font-weight: 600;
+}
+
 /* Module Title with Cube Icon */
 .moduleCell {
   display: flex;

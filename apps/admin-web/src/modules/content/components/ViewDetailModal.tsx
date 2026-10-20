@@ -2,18 +2,18 @@
 'use client';
 
 import { Icon } from '@/shared/ui';
-import type { MaterialItem, TestSetItem } from '../state/contentManagementData';
+import type { MaterialItem, QuestionBankItem } from '../state/contentManagementData';
 import styles from './ViewDetailModal.module.css';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  testSet?: TestSetItem | null;
+  questionItem?: QuestionBankItem | null;
   material?: MaterialItem | null;
 }
 
-export function ViewDetailModal({ isOpen, onClose, testSet, material }: Props) {
-  if (!isOpen || (!testSet && !material)) return null;
+export function ViewDetailModal({ isOpen, onClose, questionItem, material }: Props) {
+  if (!isOpen || (!questionItem && !material)) return null;
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -21,10 +21,14 @@ export function ViewDetailModal({ isOpen, onClose, testSet, material }: Props) {
         <div className={styles.modalHeader}>
           <div className={styles.titleInfo}>
             <span className={styles.categoryBadge}>
-              {testSet ? `Quiz ${testSet.quizNo} · Test Set` : `${material?.type.toUpperCase()} · Material`}
+              {questionItem
+                ? `Quiz ${questionItem.quizNo} · Question Bank (${questionItem.questionId})`
+                : `${material?.type.toUpperCase()} · Material`}
             </span>
             <h2 className={styles.title}>
-              {testSet ? `${testSet.chapterTitle}: ${testSet.chapterSubtitle}` : `${material?.chapterTitle}: ${material?.title}`}
+              {questionItem
+                ? `${questionItem.chapterTitle}: ${questionItem.chapterSubtitle}`
+                : `${material?.chapterTitle}: ${material?.title}`}
             </h2>
           </div>
           <button type="button" className={styles.closeBtn} onClick={onClose}>
@@ -33,52 +37,93 @@ export function ViewDetailModal({ isOpen, onClose, testSet, material }: Props) {
         </div>
 
         <div className={styles.modalBody}>
-          {testSet && (
+          {questionItem && (
             <div className={styles.contentSection}>
+              {/* Question Text Box */}
+              <div className={styles.questionBox}>
+                <div className={styles.questionMetaHeader}>
+                  <span className={styles.questionTypeTag}>{questionItem.questionType}</span>
+                  <span className={styles.questionIdTag}>{questionItem.questionId}</span>
+                </div>
+                <p className={styles.questionPromptText}>{questionItem.question}</p>
+              </div>
+
+              {/* Options if available */}
+              {questionItem.options && questionItem.options.length > 0 && (
+                <div className={styles.optionsList}>
+                  <h4 className={styles.sectionHeading}>Answer Choices</h4>
+                  {questionItem.options.map((opt, i) => {
+                    const isCorrect = opt === questionItem.correctAnswer;
+                    return (
+                      <div
+                        key={i}
+                        className={`${styles.optionItem} ${
+                          isCorrect ? styles.optionItemCorrect : ''
+                        }`}
+                      >
+                        <span className={styles.optionMarker}>
+                          {isCorrect ? '✓' : '○'}
+                        </span>
+                        <span className={styles.optionText}>{opt}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Explanation if available */}
+              {questionItem.explanation && (
+                <div className={styles.explanationBox}>
+                  <h4 className={styles.notesHeading}>Explanation & Solution</h4>
+                  <p className={styles.notesText}>{questionItem.explanation}</p>
+                </div>
+              )}
+
               <div className={styles.grid2}>
                 <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Test Set ID</span>
-                  <span className={styles.metaValueHighlight}>{testSet.testSetId}</span>
-                </div>
-                <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Course Title</span>
-                  <span className={styles.metaValue}>{testSet.courseTitle}</span>
+                  <span className={styles.metaValue}>{questionItem.courseTitle}</span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Program</span>
-                  <span className={styles.metaValue}>{testSet.program}</span>
+                  <span className={styles.metaValue}>{questionItem.program}</span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Semester & Stream</span>
-                  <span className={styles.metaValue}>{testSet.semester} · {testSet.stream}</span>
+                  <span className={styles.metaValue}>
+                    {questionItem.semester} · {questionItem.stream}
+                  </span>
                 </div>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Time Allowed</span>
-                  <span className={styles.metaValue}>{testSet.timeAllowed}</span>
-                </div>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Access Permission</span>
-                  <span className={styles.metaValue}>{testSet.access}</span>
-                </div>
+                {questionItem.testSetId && (
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>Linked Test Set</span>
+                    <span className={styles.metaValueHighlight}>
+                      {questionItem.testSetId}
+                    </span>
+                  </div>
+                )}
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Status</span>
-                  <span className={`${styles.statusBadge} ${testSet.status === 'Active' ? styles.statusActive : styles.statusInactive}`}>
-                    {testSet.status}
+                  <span
+                    className={`${styles.statusBadge} ${
+                      questionItem.status === 'Active'
+                        ? styles.statusActive
+                        : styles.statusInactive
+                    }`}
+                  >
+                    {questionItem.status}
                   </span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Verification</span>
-                  <span className={testSet.verified ? styles.verifiedYes : styles.verifiedNo}>
-                    {testSet.verified ? '✓ Verified by Admin' : 'Pending Verification'}
+                  <span
+                    className={
+                      questionItem.verified ? styles.verifiedYes : styles.verifiedNo
+                    }
+                  >
+                    {questionItem.verified ? '✓ Verified by Admin' : 'Pending Verification'}
                   </span>
                 </div>
-              </div>
-
-              <div className={styles.notesBox}>
-                <h4 className={styles.notesHeading}>Assessment Overview</h4>
-                <p className={styles.notesText}>
-                  This test set covers {testSet.chapterTitle} concepts for {testSet.courseTitle}. Students have {testSet.timeAllowed} to complete the questions once opened.
-                </p>
               </div>
             </div>
           )}
@@ -87,8 +132,10 @@ export function ViewDetailModal({ isOpen, onClose, testSet, material }: Props) {
             <div className={styles.contentSection}>
               <div className={styles.grid2}>
                 <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Material Title</span>
-                  <span className={styles.metaValueHighlight}>{material.title} - {material.subtitle}</span>
+                  <span className={styles.metaLabel}>Module Title</span>
+                  <span className={styles.metaValueHighlight}>
+                    {material.title} - {material.subtitle}
+                  </span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Course</span>
@@ -96,15 +143,25 @@ export function ViewDetailModal({ isOpen, onClose, testSet, material }: Props) {
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Chapter</span>
-                  <span className={styles.metaValue}>{material.chapterTitle} ({material.chapterSubtitle})</span>
+                  <span className={styles.metaValue}>
+                    {material.chapterTitle} ({material.chapterSubtitle})
+                  </span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Semester & Program</span>
-                  <span className={styles.metaValue}>{material.semester} · {material.program}</span>
+                  <span className={styles.metaValue}>
+                    {material.semester} · {material.program}
+                  </span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Status</span>
-                  <span className={`${styles.statusBadge} ${material.status === 'Active' ? styles.statusActive : styles.statusInactive}`}>
+                  <span
+                    className={`${styles.statusBadge} ${
+                      material.status === 'Active'
+                        ? styles.statusActive
+                        : styles.statusInactive
+                    }`}
+                  >
                     {material.status}
                   </span>
                 </div>
@@ -113,7 +170,8 @@ export function ViewDetailModal({ isOpen, onClose, testSet, material }: Props) {
               <div className={styles.notesBox}>
                 <h4 className={styles.notesHeading}>Content Synopsis</h4>
                 <p className={styles.notesText}>
-                  {material.content || 'Study material and curriculum resource for academic courses.'}
+                  {material.content ||
+                    'Study material and curriculum resource for academic courses.'}
                 </p>
               </div>
             </div>

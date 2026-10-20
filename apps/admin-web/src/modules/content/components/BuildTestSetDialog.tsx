@@ -129,7 +129,10 @@ export function BuildTestSetDialog({
     }
 
     const newTestSet: TestSetItem = {
-      id: `ts-${Date.now()}`,
+      id: `q-${Date.now()}`,
+      questionId: `Q-${Date.now().toString().slice(-4)}`,
+      question: `Assessment question for ${course} (${chapter}): Analyze the foundational principles of this topic.`,
+      questionType: 'Multiple Choice',
       testSetId: testSetId.trim(),
       quizNo,
       chapterNumber: Number(chapter.replace(/[^0-9]/g, '')) || 1,
@@ -144,7 +147,7 @@ export function BuildTestSetDialog({
       access,
       status,
       verified: true,
-      questionCount: 0,
+      questionCount: 1,
     };
 
     onBuild(newTestSet);

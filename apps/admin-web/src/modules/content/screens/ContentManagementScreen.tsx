@@ -147,11 +147,12 @@ export function ContentManagementScreen({
       if (testStatus !== 'All statuses' && item.status !== testStatus) return false;
       if (globalQuery) {
         const matchesQuery =
+          item.question.toLowerCase().includes(globalQuery) ||
           item.chapterTitle.toLowerCase().includes(globalQuery) ||
           item.chapterSubtitle.toLowerCase().includes(globalQuery) ||
           item.courseTitle.toLowerCase().includes(globalQuery) ||
           item.program.toLowerCase().includes(globalQuery) ||
-          item.testSetId.toLowerCase().includes(globalQuery);
+          (item.testSetId && item.testSetId.toLowerCase().includes(globalQuery));
         if (!matchesQuery) return false;
       }
       return true;
@@ -376,6 +377,7 @@ export function ContentManagementScreen({
                   <tr>
                     <th className={styles.th}>#</th>
                     <th className={styles.th}>Chapter</th>
+                    <th className={styles.th}>Question</th>
                     <th className={styles.th}>Course Title</th>
                     <th className={styles.th}>Semester</th>
                     <th className={styles.th}>Stream</th>
@@ -387,8 +389,8 @@ export function ContentManagementScreen({
                 <tbody>
                   {filteredTestSets.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className={styles.emptyState}>
-                        No test sets found matching the selected filters.
+                      <td colSpan={9} className={styles.emptyState}>
+                        No questions found matching the selected filters.
                       </td>
                     </tr>
                   ) : (
@@ -399,6 +401,14 @@ export function ContentManagementScreen({
                           <div className={styles.chapterCell}>
                             <span className={styles.chapterTitle}>{row.chapterTitle}</span>
                             <span className={styles.chapterSubtitle}>{row.chapterSubtitle}</span>
+                          </div>
+                        </td>
+                        <td className={styles.td}>
+                          <div className={styles.questionCell}>
+                            <span className={styles.questionText}>{row.question}</span>
+                            <span className={styles.questionMetaTag}>
+                              {row.questionId} · {row.questionType}
+                            </span>
                           </div>
                         </td>
                         <td className={styles.td}>{row.courseTitle}</td>
@@ -636,13 +646,7 @@ export function ContentManagementScreen({
                   <tr>
                     <th className={styles.th}>#</th>
                     <th className={styles.th}>Chapter</th>
-                    <th className={styles.th}>
-                      {materialSubTab === 'modules'
-                        ? 'Module Title'
-                        : materialSubTab === 'notes'
-                        ? 'Note Title'
-                        : 'Amharic Note Title'}
-                    </th>
+                    <th className={styles.th}>Module Title</th>
                     <th className={styles.th}>Course</th>
                     <th className={styles.th}>Semester</th>
                     <th className={styles.th}>Program</th>
@@ -800,7 +804,7 @@ export function ContentManagementScreen({
           setViewTestSet(null);
           setViewMaterial(null);
         }}
-        testSet={viewTestSet}
+        questionItem={viewTestSet}
         material={viewMaterial}
       />
     </div>

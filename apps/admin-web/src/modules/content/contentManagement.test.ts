@@ -20,6 +20,7 @@ describe('Content Management and Test Set Integration', () => {
     assert.equal(row1?.stream, 'Social');
     assert.equal(row1?.program, 'BSc Geography');
     assert.equal(row1?.status, 'Inactive');
+    assert.ok(row1?.question, 'Row 1 question attribute must exist');
 
     // Row 2 from Screenshot 1: Chapter 3 / Advanced Topics, General Physics, Sem 1, Natural, BSc Physics, Active
     const row2 = INITIAL_TEST_SETS.find(
@@ -30,6 +31,7 @@ describe('Content Management and Test Set Integration', () => {
     assert.equal(row2?.stream, 'Natural');
     assert.equal(row2?.program, 'BSc Physics');
     assert.equal(row2?.status, 'Active');
+    assert.ok(row2?.question, 'Row 2 question attribute must exist');
   });
 
   it('contains initial materials matching the Material Management design', () => {
@@ -57,6 +59,9 @@ describe('Content Management and Test Set Integration', () => {
   it('validates all 7 required fields of a built test set: Program, semester, stream, course, test set id, time allowed, access/permission', () => {
     const builtTestSet: TestSetItem = {
       id: 'ts-built-01',
+      questionId: 'Q-999',
+      question: 'Identify the primary syntactic structure in academic prose.',
+      questionType: 'Multiple Choice',
       testSetId: 'TS-QUIZ1-ENG-001',
       quizNo: 1,
       chapterNumber: 1,
