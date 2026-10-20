@@ -541,24 +541,131 @@
   background: #1e40af;
 }
 
-.attachedPill {
+.fieldHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.attachedBadgeTop {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 6px;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
   color: #1a56db;
-  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.attachedPill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1.5px solid #dbeafe;
+  border-radius: 10px;
+  margin-top: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.attachedPillLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.attachedIconWrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1a56db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.attachedIconWrapScanned {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.attachedInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.attachedFileName {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.attachedFileSize {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.attachedPillActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attachedPreviewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1a56db;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.attachedPreviewBtn:hover {
+  background: #eff6ff;
+  border-color: #1a56db;
 }
 
 .removeAttachedBtn {
-  border: 0;
-  background: none;
-  color: var(--color-danger, #b91c1c);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #dc2626;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 5px 10px;
+  transition: all 0.15s ease;
 }
+
+.removeAttachedBtn:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+

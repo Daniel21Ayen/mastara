@@ -132,12 +132,6 @@ export function ViewDetailModal({ isOpen, onClose, questionItem, material }: Pro
             <div className={styles.contentSection}>
               <div className={styles.grid2}>
                 <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Module Title</span>
-                  <span className={styles.metaValueHighlight}>
-                    {material.title} - {material.subtitle}
-                  </span>
-                </div>
-                <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>Course</span>
                   <span className={styles.metaValue}>{material.courseTitle}</span>
                 </div>

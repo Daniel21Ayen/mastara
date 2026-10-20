@@ -646,7 +646,6 @@ export function ContentManagementScreen({
                   <tr>
                     <th className={styles.th}>#</th>
                     <th className={styles.th}>Chapter</th>
-                    <th className={styles.th}>Module Title</th>
                     <th className={styles.th}>Course</th>
                     <th className={styles.th}>Semester</th>
                     <th className={styles.th}>Program</th>
@@ -657,7 +656,7 @@ export function ContentManagementScreen({
                 <tbody>
                   {filteredMaterials.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className={styles.emptyState}>
+                      <td colSpan={7} className={styles.emptyState}>
                         No materials found matching the selected filters.
                       </td>
                     </tr>
@@ -669,26 +668,6 @@ export function ContentManagementScreen({
                           <div className={styles.chapterCell}>
                             <span className={styles.chapterTitle}>{row.chapterTitle}</span>
                             <span className={styles.chapterSubtitle}>{row.chapterSubtitle}</span>
-                          </div>
-                        </td>
-                        <td className={styles.td}>
-                          <div className={styles.moduleCell}>
-                            <div className={styles.moduleIconBox}>
-                              <Icon
-                                name={
-                                  row.type === 'modules'
-                                    ? 'cube'
-                                    : row.type === 'notes'
-                                    ? 'file'
-                                    : 'translate'
-                                }
-                                size={18}
-                              />
-                            </div>
-                            <div className={styles.moduleDetails}>
-                              <span className={styles.moduleTitleText}>{row.title}</span>
-                              <span className={styles.moduleSubtitleText}>{row.subtitle}</span>
-                            </div>
                           </div>
                         </td>
                         <td className={styles.td}>{row.courseTitle}</td>

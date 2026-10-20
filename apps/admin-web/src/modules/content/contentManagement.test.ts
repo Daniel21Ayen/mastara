@@ -95,4 +95,51 @@ describe('Content Management and Test Set Integration', () => {
     assert.equal(builtTestSet.timeAllowed, '45 minutes');
     assert.equal(builtTestSet.access, 'Public');
   });
+
+  it('verifies attaching PDF and scanned PDF directly appends into Chapter content field', () => {
+    let chapterContent = 'Learn common words and phrases for everyday use.';
+    const pdfFile = { name: 'English_Basics_Handout.pdf', sizeKb: 345 };
+    const scannedFile = { name: 'Document_Scan_Grammar.pdf', sizeKb: 1280 };
+
+    // Attaching regular PDF
+    const pdfTag = `[Attached PDF: ${pdfFile.name} (${pdfFile.sizeKb} KB)]`;
+    chapterContent = `${chapterContent}\n\n${pdfTag}`;
+
+    assert.ok(chapterContent.includes('[Attached PDF: English_Basics_Handout.pdf (345 KB)]'));
+    assert.ok(chapterContent.startsWith('Learn common words'));
+
+    // Attaching scanned PDF
+    const scannedTag = `[Attached Scanned PDF: ${scannedFile.name} (${scannedFile.sizeKb} KB)]`;
+    chapterContent = `${chapterContent}\n\n${scannedTag}`;
+
+    assert.ok(chapterContent.includes('[Attached Scanned PDF: Document_Scan_Grammar.pdf (1280 KB)]'));
+
+    // Removing an attachment cleans up the tag from the content
+    const lines = chapterContent.split('\n');
+    const filtered = lines.filter((line) => !line.includes('[Attached PDF:'));
+    const cleanedContent = filtered.join('\n').trim();
+
+    assert.ok(!cleanedContent.includes('[Attached PDF:'));
+    assert.ok(cleanedContent.includes('[Attached Scanned PDF:'));
+  });
+
+  it('validates Material Management columns without Module Title attribute', () => {
+    const materialTableColumns = [
+      '#',
+      'Chapter',
+      'Course',
+      'Semester',
+      'Program',
+      'Status',
+      'Actions',
+    ];
+
+    assert.equal(materialTableColumns.length, 7, 'Material table must have exactly 7 columns');
+    assert.ok(!materialTableColumns.includes('Module Title'), 'Module Title column must be removed');
+    assert.ok(!materialTableColumns.includes('Note Title'), 'Note Title column must be removed');
+    assert.ok(!materialTableColumns.includes('Amharic Note Title'), 'Amharic Note Title column must be removed');
+    assert.ok(materialTableColumns.includes('Chapter'), 'Chapter column must be present');
+    assert.ok(materialTableColumns.includes('Course'), 'Course column must be present');
+  });
 });
+
