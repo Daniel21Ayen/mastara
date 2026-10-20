@@ -3,14 +3,14 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
 import { adminText } from '@/core/i18n';
-import { ContentMaterialStudioScreen } from '@/modules/content';
+import { ContentManagementScreen } from '@/modules/content';
 
 export const metadata: Metadata = { title: adminText('admin.nav.notes') };
 
 export default function Page() {
   return (
     <Suspense>
-      <ContentMaterialStudioScreen initialTab="notes" />
+      <ContentManagementScreen initialTab="materials" initialMaterialSubTab="notes" />
     </Suspense>
   );
 }

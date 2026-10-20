@@ -15,4 +15,6 @@ export { ModulesScreen } from './screens/ModulesScreen';
 export { AmharicNotesScreen, NotesScreen } from './screens/NotesScreen';
 export { ContentManagementScreen } from './screens/ContentManagementScreen';
 export { ContentMaterialStudioScreen } from './screens/ContentMaterialStudioScreen';
+export { BuildTestSetDialog } from './components/BuildTestSetDialog';
+export { ViewDetailModal } from './components/ViewDetailModal';
 export { useContentCourse } from './state/ContentCourseContext';
