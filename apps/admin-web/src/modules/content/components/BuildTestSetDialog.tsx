@@ -67,6 +67,21 @@ const COURSE_OPTIONS: Record<string, string[]> = {
   ],
 };
 
+const CHAPTER_OPTIONS = [
+  'Chapter 1',
+  'Chapter 2',
+  'Chapter 3',
+  'Chapter 4',
+  'Chapter 5',
+  'Chapter 6',
+  'Chapter 7',
+  'Chapter 8',
+  'Chapter 9',
+  'Chapter 10',
+  'Chapter 11',
+  'Chapter 12',
+];
+
 const ACCESS_CHOICES = [
   { id: 'Enrolled Only', title: 'Enrolled / Premium Only', desc: 'Active subscription or course enrollment' },
   { id: 'Public', title: 'Public (All Students)', desc: 'Open to registered and guest students' },
@@ -92,8 +107,7 @@ export function BuildTestSetDialog({
   const [timeAllowed, setTimeAllowed] = useState('45 minutes');
   const [access, setAccess] = useState('Enrolled Only');
   const [quizNo, setQuizNo] = useState<1 | 2 | 3>(defaultQuizNo);
-  const [chapter, setChapter] = useState('Chapter 1');
-  const [chapterSubtitle, setChapterSubtitle] = useState('Introduction');
+  const [chapter, setChapter] = useState(CHAPTER_OPTIONS[0] || 'Chapter 1');
   const [status, setStatus] = useState<'Active' | 'Inactive'>('Active');
   const [error, setError] = useState<string | null>(null);
 
@@ -137,7 +151,7 @@ export function BuildTestSetDialog({
       quizNo,
       chapterNumber: Number(chapter.replace(/[^0-9]/g, '')) || 1,
       chapterTitle: chapter,
-      chapterSubtitle: chapterSubtitle || 'Foundations',
+      chapterSubtitle: '',
       courseTitle: course,
       courseCode: course.split(' ')[0] || 'COURSE',
       semester,
@@ -278,30 +292,20 @@ export function BuildTestSetDialog({
 
             <div className={styles.fieldGroup}>
               <label className={styles.fieldLabel} htmlFor="build-chapter">
-                Chapter
+                Chapter <span className={styles.requiredAsterisk}>*</span>
               </label>
-              <input
+              <select
                 id="build-chapter"
-                type="text"
-                className={styles.input}
+                className={styles.select}
                 value={chapter}
                 onChange={(e) => setChapter(e.target.value)}
-                placeholder="Chapter 1"
-              />
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="build-chapter-sub">
-                Chapter Subtitle
-              </label>
-              <input
-                id="build-chapter-sub"
-                type="text"
-                className={styles.input}
-                value={chapterSubtitle}
-                onChange={(e) => setChapterSubtitle(e.target.value)}
-                placeholder="Introduction & Basics"
-              />
+              >
+                {CHAPTER_OPTIONS.map((ch) => (
+                  <option key={ch} value={ch}>
+                    {ch}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className={styles.fieldGroup}>

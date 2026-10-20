@@ -669,6 +669,7 @@
   "admin.questions.col.stream": "Stream",
   "admin.questions.col.year": "Year",
   "admin.questions.col.questionIds": "Question Number",
+  "admin.questions.col.question": "Question",
   "admin.questions.col.status": "Status",
   "admin.questions.col.actions": "Actions",
   "admin.questions.mixed": "Mixed courses",

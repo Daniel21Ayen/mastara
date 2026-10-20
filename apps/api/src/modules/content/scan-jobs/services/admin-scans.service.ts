@@ -10,7 +10,9 @@ import type {
   ScanInput,
   ScanListResult,
 } from "@mastara/contracts";
-import { ScanListQueryDto } from "../dto/admin-scans.dto";
+import { StorageService } from "../../../../infrastructure/storage/storage.service";
+import { QueueService } from "../../../../infrastructure/queue/queue.service";
+import { ScanListQueryDto, UploadFileItemDto } from "../dto/admin-scans.dto";
 
 const isUuid = (val: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
@@ -27,7 +29,56 @@ export class AdminScansService {
   private readonly logger = new Logger(AdminScansService.name);
   private initialSeeded = false;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+    private readonly queue: QueueService,
+  ) {}
+
+  async getUploadUrls(
+    files: UploadFileItemDto[],
+  ): Promise<Array<{ name: string; key: string; uploadUrl: string; publicUrl: string }>> {
+    const timestamp = Date.now();
+    const results = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file) continue;
+      const sanitized = (file.name || `page-${i + 1}.jpg`).replace(/[^a-zA-Z0-9.-]/g, "_");
+      const key = `scans/staging/${timestamp}-${i + 1}-${sanitized}`;
+      const urls = await this.storage.getUploadUrl(key, file.mime || "image/jpeg");
+      results.push({
+        name: file.name,
+        key: urls.key,
+        uploadUrl: urls.uploadUrl,
+        publicUrl: urls.publicUrl,
+      });
+    }
+    return results;
+  }
+
+  async getScanStatus(id: string) {
+    const scan = await this.prisma.scanJob.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        error_message: true,
+        output_asset_id: true,
+        updated_at: true,
+      },
+    });
+    if (!scan) throw new NotFoundException(`Scan job with id '${id}' not found`);
+    return scan;
+  }
+
+  async saveLocalUpload(key: string, buffer: Buffer): Promise<void> {
+    await this.storage.uploadBuffer(key, buffer, "application/octet-stream");
+  }
+
+  async getLocalDownload(key: string): Promise<Buffer> {
+    return this.storage.downloadBuffer(key);
+  }
 
   async onModuleInit() {
     await this.ensureInitialSeed();
@@ -198,11 +249,10 @@ export class AdminScansService {
         await this.prisma.scanJob.create({
           data: {
             title: item.title,
-            course_id: item.courseId,
+            course_id: item.courseId || course.id,
             topic_id: item.topicId,
             status: ScanJobStatus.SUCCEEDED,
             created_by: adminId,
-            metadata: item.metadata,
             pages: {
               create: item.pages.map((p, idx) => ({
                 page_no: idx + 1,
@@ -639,20 +689,27 @@ export class AdminScansService {
       resolvedAdminId = adminStudent?.id || "00000000-0000-0000-0000-000000000000";
     }
 
+    // Resolve courseId (required non-null by Prisma schema)
+    let effectiveCourseId = targetCourseId;
+    if (!effectiveCourseId) {
+      const anyCourse = await this.prisma.course.findFirst({ select: { id: true } });
+      effectiveCourseId = anyCourse?.id || "00000000-0000-0000-0000-000000000000";
+    }
+
     // Save ScanJob + ScanPages
     const newScanJob = await this.prisma.scanJob.create({
       data: {
         title: computedTitle,
-        course_id: targetCourseId,
+        course_id: effectiveCourseId,
         topic_id: targetTopicId,
-        status: ScanJobStatus.SUCCEEDED,
+        status: ScanJobStatus.PROCESSING,
         created_by: resolvedAdminId,
-        metadata,
         pages: {
           create: input.pages.map((p, idx) => ({
             page_no: idx + 1,
-            image_key: p.name,
-            crop_data: { mime: p.mime, sizeBytes: p.sizeBytes },
+            image_key: (p as any).key || p.name,
+            rotation_deg: (p as any).rotationDeg ?? 0,
+            crop_data: { mime: p.mime, sizeBytes: p.sizeBytes, ...(p as any).cropData },
           })),
         },
       },
@@ -674,6 +731,27 @@ export class AdminScansService {
         },
       },
     });
+
+    // Enqueue PDF conversion and OCR to BullMQ worker pipeline
+    try {
+      await this.queue.addScanPdfJob({
+        jobId: newScanJob.id,
+        title: computedTitle,
+        kind: input.kind,
+        pages: input.pages.map((p, idx) => ({
+          pageNo: idx + 1,
+          imageKey: (p as any).key || p.name,
+          rotationDeg: (p as any).rotationDeg ?? 0,
+          cropData: (p as any).cropData ?? null,
+          name: p.name,
+          mime: p.mime,
+        })),
+        metadata,
+        generateOcr: true,
+      });
+    } catch (queueErr: any) {
+      this.logger.warn(`Could not dispatch to BullMQ: ${queueErr.message}`);
+    }
 
     const formatted = this.formatScanRecord(newScanJob);
 

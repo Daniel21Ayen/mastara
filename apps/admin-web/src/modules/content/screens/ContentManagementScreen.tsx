@@ -400,7 +400,9 @@ export function ContentManagementScreen({
                         <td className={styles.td}>
                           <div className={styles.chapterCell}>
                             <span className={styles.chapterTitle}>{row.chapterTitle}</span>
-                            <span className={styles.chapterSubtitle}>{row.chapterSubtitle}</span>
+                            {row.chapterSubtitle ? (
+                              <span className={styles.chapterSubtitle}>{row.chapterSubtitle}</span>
+                            ) : null}
                           </div>
                         </td>
                         <td className={styles.td}>

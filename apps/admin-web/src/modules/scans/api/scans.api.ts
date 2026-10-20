@@ -20,6 +20,22 @@ import { httpClient } from '@/core/network';
 import { createScan, getScan, listScanCourses, listScans, recordAudit } from '@/core/mock/data';
 import { simulateLatency } from '@/core/mock/delay';
 
+export interface PresignedUrlItem {
+  name: string;
+  key: string;
+  uploadUrl: string;
+  publicUrl?: string;
+}
+
+export interface ScanJobStatusResult {
+  id: string;
+  title: string;
+  status: 'DRAFT' | 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED';
+  error_message?: string | null;
+  output_asset_id?: string | null;
+  metadata?: any;
+}
+
 /**
  * A scan joins its pages into one PDF and carries the details that say where it belongs. Adding one is
  * recorded in the audit log. Courses are offered only for a matching program, semester and stream.
@@ -33,6 +49,9 @@ export interface ScansApi {
     stream: Stream,
   ): Promise<ScanCourseOption[]>;
   createScan(input: ScanInput): Promise<AdminScan>;
+  getPresignedUploadUrls(files: Array<{ name: string; mime: string; sizeBytes: number }>): Promise<PresignedUrlItem[]>;
+  uploadFileToPresignedUrl(uploadUrl: string, fileData: Blob | ArrayBuffer, mime: string): Promise<void>;
+  checkJobStatus(id: string): Promise<ScanJobStatusResult>;
 }
 
 const KIND_TEXT = { COC: 'COC', EXAM: 'Exam', MATERIAL: 'Material', QUIZ: 'Quiz' } as const;
@@ -64,6 +83,31 @@ const mockScansApi: ScansApi = {
       target: `${KIND_TEXT[scan.kind]} scan ${scan.id} · ${scan.courseCode ?? scan.universityShortName}`,
     });
     return adminScanSchema.parse(scan);
+  },
+
+  async getPresignedUploadUrls(files) {
+    await simulateLatency(80);
+    const ts = Date.now();
+    return files.map((f, i) => ({
+      name: f.name,
+      key: `scans/staging/${ts}-${i}-${f.name}`,
+      uploadUrl: `mock-presigned-upload-url-for-${encodeURIComponent(f.name)}`,
+      publicUrl: `https://storage.mastara.demo/scans/${f.name}`,
+    }));
+  },
+
+  async uploadFileToPresignedUrl() {
+    await simulateLatency(100);
+  },
+
+  async checkJobStatus(id) {
+    await simulateLatency(50);
+    return {
+      id,
+      title: 'Scanned document',
+      status: 'SUCCEEDED',
+      output_asset_id: `asset-${id}`,
+    };
   },
 };
 
@@ -104,6 +148,35 @@ export const realScansApi: ScansApi = {
     const payload = scanInputSchema.parse(input);
     const raw = await httpClient.post<AdminScan>('/content/admin/scans', payload);
     return adminScanSchema.parse(raw);
+  },
+
+  async getPresignedUploadUrls(files: Array<{ name: string; mime: string; sizeBytes: number }>): Promise<PresignedUrlItem[]> {
+    const res = await httpClient.post<{ urls: PresignedUrlItem[] }>(
+      '/content/admin/scans/upload-urls',
+      { files },
+    );
+    return res.urls;
+  },
+
+  async uploadFileToPresignedUrl(uploadUrl: string, fileData: Blob | ArrayBuffer, mime: string): Promise<void> {
+    const isMock = uploadUrl.startsWith('mock-');
+    if (isMock) {
+      await simulateLatency(50);
+      return;
+    }
+
+    // Direct PUT to S3 / MinIO presigned URL or local storage endpoint
+    await fetch(uploadUrl, {
+      method: uploadUrl.includes('storage-upload') ? 'PUT' : 'PUT',
+      headers: {
+        'Content-Type': mime || 'application/octet-stream',
+      },
+      body: fileData as BodyInit,
+    });
+  },
+
+  async checkJobStatus(id: string): Promise<ScanJobStatusResult> {
+    return httpClient.get<ScanJobStatusResult>(`/content/admin/scans/${id}/status`);
   },
 };
 
