@@ -1,12 +1,6 @@
-let SecureStore: typeof import('expo-secure-store') | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  SecureStore = require('expo-secure-store');
-} catch {
-  SecureStore = null;
-}
-
-const memoryStore = new Map<string, string>();
+// apps/mobile/src/core/storage/secureStorage.ts
+import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 export const STORAGE_KEYS = {
   session: 'mastara.session',
@@ -19,29 +13,27 @@ export const STORAGE_KEYS = {
 
 type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
 
-/** Thin wrapper over the platform secure store (Android Keystore / iOS Keychain) with memory fallback for test runners. */
+function getWebStorage(): Storage | null {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return window.localStorage;
+  }
+  return null;
+}
+
+/** Thin wrapper over the platform secure store (Android Keystore / iOS Keychain), with localStorage fallback on web. */
 export const secureStorage = {
-  async getString(key: StorageKey): Promise<string | null> {
-    if (SecureStore?.getItemAsync) {
-      try {
-        return await SecureStore.getItemAsync(key);
-      } catch {
-        return memoryStore.get(key) ?? null;
-      }
+  getString(key: StorageKey): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return Promise.resolve(getWebStorage()?.getItem(key) ?? null);
     }
-    return memoryStore.get(key) ?? null;
+    return SecureStore.getItemAsync(key);
   },
-  async setString(key: StorageKey, value: string): Promise<void> {
-    if (SecureStore?.setItemAsync) {
-      try {
-        await SecureStore.setItemAsync(key, value);
-        return;
-      } catch {
-        memoryStore.set(key, value);
-        return;
-      }
+  setString(key: StorageKey, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      getWebStorage()?.setItem(key, value);
+      return Promise.resolve();
     }
-    memoryStore.set(key, value);
+    return SecureStore.setItemAsync(key, value);
   },
   async getJson<T>(key: StorageKey): Promise<T | null> {
     const raw = await this.getString(key);
@@ -52,19 +44,15 @@ export const secureStorage = {
       return null;
     }
   },
-  async setJson<T>(key: StorageKey, value: T): Promise<void> {
-    await this.setString(key, JSON.stringify(value));
+  setJson<T>(key: StorageKey, value: T): Promise<void> {
+    return this.setString(key, JSON.stringify(value));
   },
-  async remove(key: StorageKey): Promise<void> {
-    if (SecureStore?.deleteItemAsync) {
-      try {
-        await SecureStore.deleteItemAsync(key);
-      } catch {
-        memoryStore.delete(key);
-        return;
-      }
+  remove(key: StorageKey): Promise<void> {
+    if (Platform.OS === 'web') {
+      getWebStorage()?.removeItem(key);
+      return Promise.resolve();
     }
-    memoryStore.delete(key);
+    return SecureStore.deleteItemAsync(key);
   },
 };
 

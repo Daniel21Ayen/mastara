@@ -11,6 +11,8 @@
   },
   "scripts": {
     "dev:mobile": "npm run start --workspace @mastara/mobile",
+    "dev:mobile:web": "npm run web --workspace @mastara/mobile",
+    "dev:mobile:tunnel": "npm run start:tunnel --workspace @mastara/mobile",
     "dev:api": "npm run dev --workspace=@mastara/api",
     "typecheck": "turbo run typecheck",
     "lint": "eslint .",

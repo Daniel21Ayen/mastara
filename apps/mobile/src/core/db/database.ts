@@ -1,17 +1,7 @@
-import type * as Crypto from 'expo-crypto';
-import type * as SQLite from 'expo-sqlite';
-
-let cryptoModule: typeof Crypto | null = null;
-let sqliteModule: typeof SQLite | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  cryptoModule = require('expo-crypto');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  sqliteModule = require('expo-sqlite');
-} catch {
-  cryptoModule = null;
-  sqliteModule = null;
-}
+// apps/mobile/src/core/db/database.ts
+import * as Crypto from 'expo-crypto';
+import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 import { env } from '@/core/config/env';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
@@ -50,8 +40,10 @@ async function open(): Promise<SQLite.SQLiteDatabase> {
   }
   const db = await sqliteModule.openDatabaseAsync(DB_NAME);
   try {
-    if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);
-    await db.execAsync('PRAGMA journal_mode = WAL;');
+    if (Platform.OS !== 'web') {
+      if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);
+      await db.execAsync('PRAGMA journal_mode = WAL;');
+    }
     await migrate(db);
     return db;
   } catch (error) {
