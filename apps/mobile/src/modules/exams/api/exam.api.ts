@@ -25,23 +25,15 @@ export interface ExamApi {
 }
 
 export const realExamApi: ExamApi = {
-  async getExams(courseId, kind) {
-    await simulateLatency(150);
-    const course = courses.find((item) => item.id === courseId);
-    if (!course) return [];
-
-    return buildExams(course)
-      .filter((exam) => exam.kind === kind)
-      .flatMap((exam) => {
-        const university = universityOf(exam.universityId);
-        return university ? [{ exam, university }] : [];
-      });
+  async getExams(courseId: string, kind: ExamKind): Promise<ExamListing[]> {
+    return httpClient.get<ExamListing[]>(`/assessment/exams/courses/${courseId}?kind=${kind}`);
   },
-  async getSession(examId) {
-    await simulateLatency(150);
-    const exam = findExam(examId);
-    const university = exam ? universityOf(exam.universityId) : undefined;
-    return exam && university ? { exam, university, questions: buildExamQuestions(exam) } : null;
+  async getSession(examId: string): Promise<ExamSessionData | null> {
+    try {
+      return await httpClient.get<ExamSessionData>(`/assessment/exams/${examId}/session`);
+    } catch {
+      return null;
+    }
   },
 };
 

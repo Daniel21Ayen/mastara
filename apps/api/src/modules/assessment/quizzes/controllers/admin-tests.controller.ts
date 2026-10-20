@@ -1,0 +1,170 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  HttpStatus,
+  ParseIntPipe,
+} from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from "@nestjs/swagger";
+import { Role } from "@mastara/database";
+import { RolesGuard } from "../../../../common/guards/roles.guard";
+import { Roles } from "../../../../common/decorators/roles.decorator";
+import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
+import { AdminTestsService } from "../services/admin-tests.service";
+
+import {
+  AdminQuestionInputDto,
+  AdminQuizSettingsInputDto,
+  AdminQuestionListQueryDto,
+  AdminExamSetListQueryDto,
+  AdminExamSetInputDto,
+} from "../dto/admin-tests.dto";
+import type {
+  AdminQuestion,
+  QuizSummary,
+  TestsOverview,
+  QuestionListResult,
+  ExamSet,
+  ExamSetListResult,
+} from "@mastara/contracts";
+import type { QuizNumber } from "@mastara/domain";
+
+@ApiTags("Admin Tests Management")
+@ApiBearerAuth()
+@UseGuards(RolesGuard)
+@Roles(Role.ADMIN)
+@Controller("assessment/admin")
+export class AdminTestsController {
+  constructor(private readonly adminTestsService: AdminTestsService) {}
+
+  @Get("courses/:courseId/tests-overview")
+  @ApiOperation({
+    summary: "Get tests overview (quizzes 1, 2, 3 and recent question edits) for a course",
+  })
+  @ApiParam({ name: "courseId", description: "UUID of the course" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Tests overview" })
+  async getOverview(
+    @Param("courseId") courseId: string,
+  ): Promise<TestsOverview> {
+    return this.adminTestsService.getOverview(courseId);
+  }
+
+  @Put("courses/:courseId/quizzes/:quizNo")
+  @ApiOperation({
+    summary: "Update quiz settings (duration minutes, publication status)",
+  })
+  @ApiParam({ name: "courseId", description: "UUID of the course" })
+  @ApiParam({ name: "quizNo", description: "Quiz number (1, 2, or 3)" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Updated quiz summary" })
+  async updateQuiz(
+    @Param("courseId") courseId: string,
+    @Param("quizNo", ParseIntPipe) quizNo: number,
+    @Body() dto: AdminQuizSettingsInputDto,
+    @CurrentUser("id") adminId: string,
+  ): Promise<QuizSummary> {
+    return this.adminTestsService.updateQuiz(
+      courseId,
+      quizNo as QuizNumber,
+      dto,
+      adminId,
+    );
+  }
+
+  @Get("questions")
+  @ApiOperation({ summary: "List and search questions in the question bank" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Paginated questions list" })
+  async listQuestions(
+    @Query() query: AdminQuestionListQueryDto,
+  ): Promise<QuestionListResult> {
+    return this.adminTestsService.listQuestions(query);
+  }
+
+  @Get("questions/:id")
+  @ApiOperation({ summary: "Get question details by ID" })
+  @ApiParam({ name: "id", description: "UUID of the question" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Question details" })
+  async getQuestion(@Param("id") id: string): Promise<AdminQuestion> {
+    return this.adminTestsService.getQuestion(id);
+  }
+
+  @Post("questions")
+  @ApiOperation({ summary: "Create a new question in the question bank" })
+  @ApiResponse({ status: HttpStatus.CREATED, description: "Question created" })
+  async createQuestion(
+    @Body() dto: AdminQuestionInputDto,
+    @CurrentUser("id") adminId: string,
+  ): Promise<AdminQuestion> {
+    return this.adminTestsService.createQuestion(dto, adminId);
+  }
+
+  @Put("questions/:id")
+  @ApiOperation({
+    summary: "Update an existing question in the question bank",
+  })
+  @ApiParam({ name: "id", description: "UUID of the question" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Question updated" })
+  async updateQuestion(
+    @Param("id") id: string,
+    @Body() dto: AdminQuestionInputDto,
+    @CurrentUser("id") adminId: string,
+  ): Promise<AdminQuestion> {
+    return this.adminTestsService.updateQuestion(id, dto, adminId);
+  }
+
+  @Get("exam-sets")
+  @ApiOperation({ summary: "List and search exam sets (Mid, Final, Mock, COC)" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Paginated exam sets list" })
+  async listExamSets(
+    @Query() query: AdminExamSetListQueryDto,
+  ): Promise<ExamSetListResult> {
+    return this.adminTestsService.listExamSets(query);
+  }
+
+  @Get("exam-sets/lookup/:id")
+  @ApiOperation({ summary: "Check if exam set ID exists" })
+  @ApiParam({ name: "id", description: "Exam Set ID or UUID" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Exam set details or null" })
+  async findExamSet(@Param("id") id: string): Promise<ExamSet | null> {
+    return this.adminTestsService.findExamSet(id);
+  }
+
+  @Get("exam-sets/question-owner/:questionId")
+  @ApiOperation({ summary: "Find which exam set owns a given question ID" })
+  @ApiParam({ name: "questionId", description: "Question ID" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Owner set ID or null" })
+  async getQuestionOwner(
+    @Param("questionId") questionId: string,
+  ): Promise<{ ownerSetId: string | null }> {
+    return this.adminTestsService.getQuestionOwner(questionId);
+  }
+
+  @Get("exam-sets/:id")
+  @ApiOperation({ summary: "Get exam set details by ID" })
+  @ApiParam({ name: "id", description: "Exam Set ID or UUID" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Exam set details" })
+  async getExamSet(@Param("id") id: string): Promise<ExamSet> {
+    return this.adminTestsService.getExamSet(id);
+  }
+
+  @Post("exam-sets")
+  @ApiOperation({ summary: "Create or replace an exam set with all its questions" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Exam set created or updated" })
+  async saveExamSet(
+    @Body() dto: AdminExamSetInputDto,
+    @CurrentUser("id") adminId: string,
+  ): Promise<ExamSet> {
+    return this.adminTestsService.saveExamSet(dto, adminId);
+  }
+}
+

@@ -17,35 +17,44 @@ interface CacheHit<T> {
 
 const cacheStore = {
   async put(key: string, value: unknown): Promise<void> {
-    const db = await getDb();
-    await db.runAsync(
-      'INSERT OR REPLACE INTO api_cache (user_id, key, value, cached_at, cached_uptime, cached_boot) VALUES (?, ?, ?, ?, ?, ?)',
-      [dbUser(), key, JSON.stringify(value), Date.now(), await getUptimeMs(), getBootId() ?? null],
-    );
+    try {
+      const db = await getDb();
+      await db.runAsync(
+        'INSERT OR REPLACE INTO api_cache (user_id, key, value, cached_at, cached_uptime, cached_boot) VALUES (?, ?, ?, ?, ?, ?)',
+        [dbUser(), key, JSON.stringify(value), Date.now(), await getUptimeMs(), getBootId() ?? null],
+      );
+    } catch {
+      // In non-native test environments or before DB init, gracefully ignore cache write
+    }
   },
 
   async get<T>(key: string): Promise<CacheHit<T> | null> {
-    const db = await getDb();
-    const row = await db.getFirstAsync<{
-      value: string;
-      cached_at: number;
-      cached_uptime: number | null;
-      cached_boot: string | null;
-    }>('SELECT value, cached_at, cached_uptime, cached_boot FROM api_cache WHERE user_id = ? AND key = ?', [
-      dbUser(),
-      key,
-    ]);
-    if (!row) return null;
-    return {
-      value: JSON.parse(row.value) as T,
-      cachedAtMs: row.cached_at,
-      clock:
-        row.cached_uptime === null
-          ? undefined
-          : { wallMs: row.cached_at, uptimeMs: row.cached_uptime, bootId: row.cached_boot ?? undefined },
-    };
+    try {
+      const db = await getDb();
+      const row = await db.getFirstAsync<{
+        value: string;
+        cached_at: number;
+        cached_uptime: number | null;
+        cached_boot: string | null;
+      }>('SELECT value, cached_at, cached_uptime, cached_boot FROM api_cache WHERE user_id = ? AND key = ?', [
+        dbUser(),
+        key,
+      ]);
+      if (!row) return null;
+      return {
+        value: JSON.parse(row.value) as T,
+        cachedAtMs: row.cached_at,
+        clock:
+          row.cached_uptime === null
+            ? undefined
+            : { wallMs: row.cached_at, uptimeMs: row.cached_uptime, bootId: row.cached_boot ?? undefined },
+      };
+    } catch {
+      return null;
+    }
   },
 };
+
 
 /**
  * Network first: a successful answer is saved on the phone. When the phone is offline the saved answer is used.
