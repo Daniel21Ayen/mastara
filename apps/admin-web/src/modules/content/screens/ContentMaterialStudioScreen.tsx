@@ -99,7 +99,7 @@ export function ContentMaterialStudioScreen({ initialTab = 'modules' }: Props) {
     const newCh: ChapterData = {
       id: `ch-${Date.now()}`,
       name: `Chapter ${nextNum}`,
-      title: `Chapter ${nextNum} - New Topic`,
+      title: `Chapter ${nextNum} - New Chapter`,
       content: '',
       attachedPdf: null,
     };

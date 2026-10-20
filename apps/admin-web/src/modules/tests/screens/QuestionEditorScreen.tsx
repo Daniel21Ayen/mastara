@@ -48,7 +48,7 @@ import { useQuestion } from '../hooks/useTests';
 
 import styles from '../components/Editor.module.css';
 
-type Field = 'topicId' | 'title' | 'prompt' | 'options' | 'correct' | 'answers' | 'reason';
+type Field = 'topicId' | 'title' | 'prompt' | 'options' | 'correct' | 'answers' | 'reason' | 'explanation';
 
 const PROBLEM_FIELD: Record<QuestionProblem, Field> = {
   prompt: 'prompt',
@@ -316,6 +316,20 @@ function EditorBody({ courseId, courseTitle, quizNo, question }: BodyProps) {
                 error={errors.correct}
               />
             ) : null}
+            {state.form === 'MULTIPLE_CHOICE' || state.form === 'TRUE_FALSE' ? (
+              <div>
+                <TextArea
+                  label="Answer explanation"
+                  rows={3}
+                  placeholder="Explain why this answer is correct..."
+                  value={state.explanation || ''}
+                  onChange={(event) => patch({ explanation: event.target.value }, 'explanation')}
+                />
+                <p className={styles.hint}>
+                  This explanation will be shown to students after they answer the question.
+                </p>
+              </div>
+            ) : null}
             {state.form === 'SHORT_ANSWER' || state.form === 'BLANK_SPACE' ? (
               <AnswerList
                 answers={state.acceptedAnswers}
@@ -373,6 +387,8 @@ function EditorBody({ courseId, courseTitle, quizNo, question }: BodyProps) {
       ) : null}
       {addingTopic && modules.data ? (
         <TopicFormDialog
+          chapterMode
+          courseId={courseId}
           modules={modules.data}
           onSaved={(message) => {
             setNotice(message);

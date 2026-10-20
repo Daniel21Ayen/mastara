@@ -405,7 +405,9 @@ export function ContentManagementScreen({
                         </td>
                         <td className={styles.td}>
                           <div className={styles.questionCell}>
-                            <span className={styles.questionText}>{row.question}</span>
+                            <span className={styles.questionText} title={row.question}>
+                              {row.question}
+                            </span>
                             <span className={styles.questionMetaTag}>
                               {row.questionId} · {row.questionType}
                             </span>

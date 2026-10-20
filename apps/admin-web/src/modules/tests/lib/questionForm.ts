@@ -14,6 +14,7 @@ export interface QuestionFormState {
   correctOption: number | null;
   trueIsCorrect: boolean | null;
   acceptedAnswers: string[];
+  explanation?: string;
 }
 
 export const emptyForm = (
@@ -29,6 +30,7 @@ export const emptyForm = (
   correctOption: null,
   trueIsCorrect: null,
   acceptedAnswers: [''],
+  explanation: '',
 });
 
 export const formFromQuestion = (question: AdminQuestion): QuestionFormState => ({
@@ -44,6 +46,7 @@ export const formFromQuestion = (question: AdminQuestion): QuestionFormState => 
   correctOption: question.correctOption,
   trueIsCorrect: question.trueIsCorrect,
   acceptedAnswers: question.acceptedAnswers.length > 0 ? [...question.acceptedAnswers] : [''],
+  explanation: question.explanation ?? '',
 });
 
 export const toInput = (

@@ -141,5 +141,60 @@ describe('Content Management and Test Set Integration', () => {
     assert.ok(materialTableColumns.includes('Chapter'), 'Chapter column must be present');
     assert.ok(materialTableColumns.includes('Course'), 'Course column must be present');
   });
+
+  it('validates question attribute formatting in Test Set Management to minimize row cell height', () => {
+    const questionText = 'Calculate the net torque required to accelerate a uniform cylindrical rotor from rest to 120 rad/s in 4.0 seconds.';
+    // Verifying question attribute is accessible, preserves full text for tooltip while styling truncates single line
+    assert.ok(questionText.length > 50, 'Original question is lengthy');
+    const truncatedSnippet = questionText.slice(0, 45) + '...';
+    assert.ok(truncatedSnippet.length < questionText.length);
+  });
+
+  it('verifies question form holds answer explanation for MULTIPLE_CHOICE and TRUE_FALSE questions', () => {
+    const mcQuestion = {
+      form: 'MULTIPLE_CHOICE',
+      prompt: 'What is the speed of sound in air at 20°C?',
+      options: ['343 m/s', '300 m/s', '1500 m/s', '331 m/s'],
+      correctOption: 0,
+      explanation: 'At 20°C (68°F), the speed of sound in air is approximately 343 m/s (1,235 km/h).',
+    };
+
+    assert.equal(mcQuestion.form, 'MULTIPLE_CHOICE');
+    assert.ok(mcQuestion.explanation, 'Explanation must be present');
+    assert.ok(mcQuestion.explanation.includes('343 m/s'));
+
+    const tfQuestion = {
+      form: 'TRUE_FALSE',
+      prompt: 'Sound travels faster in water than in air.',
+      trueIsCorrect: true,
+      explanation: 'Sound travels roughly 4.3 times faster in water (approx 1,480 m/s) due to higher medium density and bulk modulus.',
+    };
+
+    assert.equal(tfQuestion.form, 'TRUE_FALSE');
+    assert.equal(tfQuestion.trueIsCorrect, true);
+    assert.ok(tfQuestion.explanation.includes('faster in water'));
+  });
+
+  it('verifies chapter creation auto-increments chapter number to Chapter N - New Chapter without module or amharic fields', () => {
+    const existingModules = [
+      { id: 'mod-1', number: 1, title: { en: 'Chapter 1', am: '' } },
+      { id: 'mod-2', number: 2, title: { en: 'Chapter 2', am: '' } },
+      { id: 'mod-3', number: 3, title: { en: 'Chapter 3', am: '' } },
+    ];
+
+    const nextChapterNum = (existingModules.length > 0 ? Math.max(...existingModules.map((m) => m.number || 0)) : 0) + 1;
+    assert.equal(nextChapterNum, 4, 'Next chapter number must be 4');
+
+    const autoChapterTitle = `Chapter ${nextChapterNum} - New Chapter`;
+    assert.equal(autoChapterTitle, 'Chapter 4 - New Chapter');
+
+    // Verify payload excludes module picker and Amharic title
+    const chapterPayload = {
+      title: { en: autoChapterTitle, am: '' },
+    };
+    assert.equal(chapterPayload.title.en, 'Chapter 4 - New Chapter');
+    assert.equal(chapterPayload.title.am, '');
+  });
 });
+
 

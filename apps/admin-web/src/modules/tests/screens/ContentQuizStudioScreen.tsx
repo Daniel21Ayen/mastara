@@ -76,7 +76,7 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
     const newCh: ChapterQuizItem = {
       id: `ch-${Date.now()}`,
       name: `Chapter ${nextNum}`,
-      title: `Chapter ${nextNum} - Review Topic`,
+      title: `Chapter ${nextNum} - New Chapter`,
     };
     setChapters((prev) => [...prev, newCh]);
     setSelectedChapterId(newCh.id);
@@ -384,10 +384,10 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
               </button>
             </div>
 
-            {/* Description (Explanation) */}
+            {/* Answer explanation */}
             <div className={styles.formGroup}>
               <label className={styles.fieldLabel} htmlFor="quiz-explanation">
-                Description (Explanation)
+                Answer explanation
               </label>
               <textarea
                 id="quiz-explanation"
