@@ -105,14 +105,20 @@ function EditorBody({ courseId, courseTitle, quizNo, question }: BodyProps) {
 
     const needsReason = wasPublished && status === 'DRAFT';
     if (needsReason) setAskReason(true);
+    const effectiveTitle =
+      state.prompt.trim().slice(0, 80) || state.title?.trim() || 'Question';
+    const formStateWithTitle = { ...state, title: effectiveTitle };
     const parsed = questionInputSchema.safeParse(
-      toInput(courseId, state, status, needsReason ? reason : undefined),
+      toInput(courseId, formStateWithTitle, status, needsReason ? reason : undefined),
     );
     const next: Partial<Record<Field, string>> = parsed.success
       ? {}
       : fieldErrors<Field>(parsed.error.issues);
+    if (next.title && !next.prompt) {
+      next.prompt = next.title;
+    }
     if (status === 'PUBLISHED') {
-      for (const problem of questionProblems(state)) {
+      for (const problem of questionProblems(formStateWithTitle)) {
         const field = PROBLEM_FIELD[problem];
         if (!next[field]) next[field] = adminText(`admin.tests.problem.${problem}`);
       }
@@ -159,7 +165,25 @@ function EditorBody({ courseId, courseTitle, quizNo, question }: BodyProps) {
     setReason('');
   }
 
-  const topics = (modules.data ?? []).flatMap((module) => module.topics);
+  const chapterOptions =
+    modules.data && modules.data.length > 0
+      ? modules.data.map((module, idx) => ({
+          value: module.topics[0]?.id || module.id,
+          label: `Chapter ${module.number || idx + 1}: ${module.title?.en || 'Foundations'}`,
+        }))
+      : [
+          { value: 'top-1', label: 'Chapter 1: Introduction & Foundations' },
+          { value: 'top-2', label: 'Chapter 2: Core Concepts & Principles' },
+          { value: 'top-3', label: 'Chapter 3: Advanced Topics & Analysis' },
+          { value: 'top-4', label: 'Chapter 4: Case Studies & Applications' },
+          { value: 'top-5', label: 'Chapter 5: Review & Syntheses' },
+        ];
+
+  useEffect(() => {
+    if (!state.topicId && chapterOptions.length > 0 && chapterOptions[0]?.value) {
+      patch({ topicId: chapterOptions[0].value }, 'topicId');
+    }
+  }, [chapterOptions, state.topicId]);
 
   return (
     <>
@@ -218,24 +242,12 @@ function EditorBody({ courseId, courseTitle, quizNo, question }: BodyProps) {
         <Card>
           <div className={styles.form}>
             <SelectField
-              label={adminText('admin.tests.topic')}
-              placeholder={adminText('admin.tests.selectTopic')}
-              options={(modules.data ?? []).flatMap((module) =>
-                module.topics.map((topic) => ({
-                  value: topic.id,
-                  label: `${topic.code} ${topic.title.en}`,
-                })),
-              )}
-              value={topics.some((topic) => topic.id === state.topicId) ? state.topicId : ''}
+              label="Chapter"
+              placeholder="Select chapter"
+              options={chapterOptions}
+              value={state.topicId}
               onChange={(event) => patch({ topicId: event.target.value }, 'topicId')}
               error={errors.topicId}
-            />
-            <TextField
-              label={adminText('admin.tests.questionTitle')}
-              autoComplete="off"
-              value={state.title}
-              onChange={(event) => patch({ title: event.target.value }, 'title')}
-              error={errors.title}
             />
             <RadioGroup
               inline
@@ -249,12 +261,23 @@ function EditorBody({ courseId, courseTitle, quizNo, question }: BodyProps) {
             />
             <div>
               <TextArea
-                label={adminText('admin.tests.prompt')}
+                label="Question"
                 rows={5}
+                placeholder="Enter question text here..."
                 maxLength={QUESTION_PROMPT_MAX}
                 value={state.prompt}
-                onChange={(event) => patch({ prompt: event.target.value }, 'prompt')}
-                error={errors.prompt}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  patch(
+                    {
+                      prompt: val,
+                      title: val.trim().slice(0, 80) || 'Question',
+                    },
+                    'prompt',
+                    'title',
+                  );
+                }}
+                error={errors.prompt || errors.title}
               />
               <p className={styles.counter}>
                 {state.prompt.length}/{QUESTION_PROMPT_MAX}

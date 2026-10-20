@@ -51,4 +51,7 @@ export const toInput = (
   state: QuestionFormState,
   status: QuestionInput['status'],
   reason?: string,
-): QuestionInput => ({ courseId, ...state, status, reason });
+): QuestionInput => {
+  const title = (state.title?.trim() || state.prompt?.trim() || 'Question').slice(0, 100);
+  return { ...state, title, courseId, status, reason };
+};

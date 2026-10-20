@@ -2,12 +2,9 @@
 'use client';
 
 import type { AdminModule } from '@mastara/contracts';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
-import { adminText } from '@/core/i18n';
-import { matchesSearch } from '@/modules/content';
-import { Button, Card, CardTitle, Icon, TextField } from '@/shared/ui';
-
+import { Card, CardTitle, Icon, TextField } from '@/shared/ui';
 import styles from './TopicTree.module.css';
 
 interface TopicTreeProps {
@@ -18,66 +15,101 @@ interface TopicTreeProps {
   onNewTopic: () => void;
 }
 
-/** "Courses & Topics": the chosen course's modules and topics; clicking a topic assigns the question to it. */
+interface ChapterItem {
+  id: string;
+  topicId: string;
+  name: string;
+  subtitle: string;
+}
+
+const DEFAULT_CHAPTERS: ChapterItem[] = [
+  { id: 'ch-1', topicId: 'top-1', name: 'Chapter 1', subtitle: 'Introduction & Foundations' },
+  { id: 'ch-2', topicId: 'top-2', name: 'Chapter 2', subtitle: 'Core Concepts & Principles' },
+  { id: 'ch-3', topicId: 'top-3', name: 'Chapter 3', subtitle: 'Advanced Topics & Analysis' },
+  { id: 'ch-4', topicId: 'top-4', name: 'Chapter 4', subtitle: 'Case Studies & Applications' },
+  { id: 'ch-5', topicId: 'top-5', name: 'Chapter 5', subtitle: 'Review & Syntheses' },
+];
+
+/** "Chapters": Shows only Chapter 1, Chapter 2, Chapter 3... without module/topic hierarchy. */
 export function TopicTree({ courseTitle, modules, topicId, onPick, onNewTopic }: TopicTreeProps) {
   const [q, setQ] = useState('');
-  const groups = modules
-    .map((module) => ({
-      module,
-      topics: module.topics.filter((topic) =>
-        matchesSearch(q, topic.title.en, topic.code, module.title.en),
-      ),
-    }))
-    .filter((group) => group.topics.length > 0);
+
+  // Map modules directly into clean Chapter 1, Chapter 2, Chapter 3 list
+  const chapters = useMemo<ChapterItem[]>(() => {
+    if (!modules || modules.length === 0) return DEFAULT_CHAPTERS;
+    return modules.map((module, idx) => {
+      const chapterNum = module.number || idx + 1;
+      const firstTopicId = module.topics[0]?.id || module.id;
+      return {
+        id: module.id,
+        topicId: firstTopicId,
+        name: `Chapter ${chapterNum}`,
+        subtitle: module.title?.en || `Chapter ${chapterNum} Content`,
+      };
+    });
+  }, [modules]);
+
+  const filteredChapters = chapters.filter(
+    (ch) =>
+      !q.trim() ||
+      ch.name.toLowerCase().includes(q.toLowerCase()) ||
+      ch.subtitle.toLowerCase().includes(q.toLowerCase()),
+  );
 
   return (
     <Card>
-      <CardTitle>{adminText('admin.tests.tree.title')}</CardTitle>
+      <CardTitle>Chapters</CardTitle>
       <p className={styles.course}>
         <Icon name="book" size={18} />
         {courseTitle}
       </p>
+
       <TextField
-        label={adminText('admin.tests.tree.search')}
-        placeholder={adminText('admin.tests.tree.search')}
+        label="Search chapters"
+        placeholder="Filter chapters..."
         autoComplete="off"
         value={q}
         onChange={(event) => setQ(event.target.value)}
       />
-      {groups.length === 0 ? (
-        <p className={styles.empty}>{adminText('admin.tests.tree.empty')}</p>
+
+      <span className={styles.chaptersHeading}>Chapters</span>
+
+      {filteredChapters.length === 0 ? (
+        <p className={styles.empty}>No chapters match the search.</p>
       ) : (
-        <ul className={styles.modules}>
-          {groups.map(({ module, topics }) => (
-            <li key={module.id}>
-              <p className={styles.module}>
-                {adminText('admin.content.moduleLabel', {
-                  n: module.number,
-                  title: module.title.en,
-                })}
-              </p>
-              <ul className={styles.topics}>
-                {topics.map((topic) => (
-                  <li key={topic.id}>
-                    <button
-                      type="button"
-                      className={`${styles.topic} ${topic.id === topicId ? styles.current : ''}`}
-                      aria-pressed={topic.id === topicId}
-                      onClick={() => onPick(topic.id)}
-                    >
-                      {topic.code} {topic.title.en}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
+        <ul className={styles.chapterList}>
+          {filteredChapters.map((ch) => {
+            const isSelected =
+              topicId === ch.topicId ||
+              (modules.find((m) => m.id === ch.id)?.topics.some((t) => t.id === topicId) ?? false);
+            return (
+              <li key={ch.id}>
+                <button
+                  type="button"
+                  className={`${styles.chapterItem} ${
+                    isSelected ? styles.chapterItemActive : ''
+                  }`}
+                  aria-pressed={isSelected}
+                  onClick={() => onPick(ch.topicId)}
+                >
+                  <span className={styles.chapterIcon}>
+                    <Icon name="file" size={16} />
+                  </span>
+                  <span className={styles.chapterText}>
+                    <span className={styles.chapterName}>{ch.name}</span>
+                    <span className={styles.chapterSubtitle}>{ch.subtitle}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
-      <Button variant="outline" onClick={onNewTopic}>
-        <Icon name="plus" size={18} />
-        {adminText('admin.tests.tree.newTopic')}
-      </Button>
+
+      <button type="button" className={styles.addChapterBtn} onClick={onNewTopic}>
+        <Icon name="plus" size={16} />
+        + Add New Chapter
+      </button>
     </Card>
   );
 }
