@@ -9,6 +9,7 @@ export const STORAGE_KEYS = {
   language: 'mastara.language',
   theme: 'mastara.theme',
   dbKey: 'mastara.dbKey',
+  pendingRemoteSync: 'mastara.pendingRemoteSync',
 } as const;
 
 type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

@@ -7,7 +7,7 @@ import { View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
 import { createStyles, useTheme } from '@/core/theme';
-import { CoursePicker } from '@/modules/course-list';
+import { CoursePicker, coursesApi } from '@/modules/course-list';
 import { useForm } from '@/shared/hooks';
 import { AppButton, AppText, Screen, ScreenHeader } from '@/shared/ui';
 
@@ -63,12 +63,27 @@ export function ProfileSetupScreen() {
     );
   }
 
+  async function handleContinue() {
+    if (!form.validate()) return;
+    try {
+      if (courseIds.length === 0) {
+        const available = await coursesApi.getCourses(values.semesterId, values.stream);
+        if (available && available.length > 0) {
+          setCourseIds(available.map((c) => c.id));
+        }
+      }
+    } catch {
+      // ignore
+    }
+    setStep('courses');
+  }
+
   return (
     <Screen scroll>
       <ScreenHeader title={t('profile.title')} subtitle={t('profile.subtitle')} />
       {/* Courses depend on the scope, so any change starts the course list again. */}
       <AcademicFields form={form} onChange={() => setCourseIds([])} />
-      <AppButton label={t('common.continue')} onPress={() => form.validate() && setStep('courses')} />
+      <AppButton label={t('common.continue')} onPress={() => void handleContinue()} />
     </Screen>
   );
 }

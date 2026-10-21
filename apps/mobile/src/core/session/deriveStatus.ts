@@ -6,7 +6,6 @@ export type DeviceState = 'unknown' | 'bound' | 'locked';
 export type SessionStatus =
   | 'loading'
   | 'signedOut'
-  | 'needsDevice'
   | 'deviceLocked'
   | 'needsProfile'
   | 'ready';
@@ -23,7 +22,7 @@ export function deriveStatus(facts: SessionFacts): SessionStatus {
   if (!facts.hydrated) return 'loading';
   if (!facts.user) return 'signedOut';
   if (facts.device === 'locked') return 'deviceLocked';
-  if (facts.device !== 'bound') return 'needsDevice';
+  // Skip device registration screen; students go straight to complete their profile
   if (!facts.profile) return 'needsProfile';
   return 'ready';
 }

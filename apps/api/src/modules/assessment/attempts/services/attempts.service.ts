@@ -618,7 +618,7 @@ export class AttemptsService {
 
       reviewItems.push({
         questionId: q.id,
-        courseId: q.course_id,
+        courseId: q.course_id ?? '',
         type: q.type,
         prompt: {
           en: q.prompt_en,

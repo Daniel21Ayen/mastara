@@ -2,13 +2,27 @@
 import type { MyCourse } from '@mastara/contracts';
 import { offlineAccess } from '@mastara/domain';
 
+import { env } from '@/core/config/env';
 import { readThrough } from '@/core/db';
+import { accessFor, courses, mockProgressFor } from '@/core/mock/data';
+import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface MyCoursesApi {
   /** The student's courses (in list order) with access state and progress. */
   getMyCourses(courseIds: readonly string[]): Promise<MyCourse[]>;
 }
+
+const mockMyCoursesApi: MyCoursesApi = {
+  async getMyCourses(courseIds) {
+    await simulateLatency(150);
+
+    return courseIds.flatMap((id) => {
+      const course = courses.find((item) => item.id === id);
+      return course ? [{ course, ...accessFor(id), ...mockProgressFor(id) }] : [];
+    });
+  },
+};
 
 export const realMyCoursesApi: MyCoursesApi = {
   async getMyCourses(courseIds) {
@@ -24,6 +38,8 @@ export const realMyCoursesApi: MyCoursesApi = {
   },
 };
 
+const network = env.useMocks ? mockMyCoursesApi : realMyCoursesApi;
+
 /**
  * Online: fresh data, saved on the phone. Offline: the saved data, but paid access is only trusted for a limited
  * grace period and until its exact saved expiry, judged with a clock a date change cannot move back (see
@@ -33,7 +49,7 @@ export const myCoursesApi: MyCoursesApi = {
   getMyCourses: (courseIds) =>
     readThrough(
       `my-courses.${courseIds.join(',')}`,
-      () => realMyCoursesApi.getMyCourses(courseIds),
+      () => network.getMyCourses(courseIds),
       (saved, cachedAtMs, nowMs) =>
         saved.map(({ daysLeft, expiresAt, ...rest }) => ({
           ...rest,

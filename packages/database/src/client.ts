@@ -1,6 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import * as dotenv from "dotenv";
+import * as path from "path";
+
+dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
 
 declare global {
   // eslint-disable-next-line no-var
@@ -10,7 +16,7 @@ declare global {
 export function createPrismaClient(): PrismaClient {
   const connectionString =
     process.env.DATABASE_URL ||
-    "postgresql://mastara:mastara_secure_pass_2026@localhost:5433/mastara?schema=public";
+    "postgresql://mastara:da2112@127.0.0.1:5433/mastara?schema=public";
 
   const pool = new Pool({
     connectionString,

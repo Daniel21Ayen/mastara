@@ -7,10 +7,16 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
+import { env } from '@/core/config/env';
+import { getDeviceId, getDeviceName } from '@/core/device/device';
 import { useI18n } from '@/core/i18n';
-import { isApiError } from '@/core/network';
+import { isApiError, isOnline } from '@/core/network';
 import { useSession } from '@/core/session';
+import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
 import { useTheme } from '@/core/theme';
+import { realAuthApi } from '@/modules/auth/api/auth.api';
+import { realDeviceApi } from '@/modules/device-lock';
+import { realProfileApi } from '@/modules/profile';
 import { AppButton, AppText, Screen, SegmentedControl, TextField, TopBar } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
@@ -27,7 +33,7 @@ export function CheckoutScreen() {
   const theme = useTheme();
   const { t, te } = useI18n();
   const router = useRouter();
-  const { user, profile } = useSession();
+  const { user, profile, updateUser } = useSession();
   const { draft, setDraft } = useOrderDraft();
   const pricing = usePricing();
   const accounts = useAccounts();
@@ -68,8 +74,53 @@ export function CheckoutScreen() {
     setSubmitting(true);
     setSubmitError(undefined);
     try {
+      if (!env.useMocks && !isOnline()) {
+        setSubmitError('error.offline');
+        setSubmitting(false);
+        return;
+      }
+
+      let activeUserId = user.id;
+
+      // Lazy remote registration: if student was registered offline,
+      // register their user account, bind their phone device ID, and sync profile now that they are purchasing.
+      const pendingSync = await secureStorage.getJson<{ name: string; identifier: string; password: string }>(
+        STORAGE_KEYS.pendingRemoteSync,
+      );
+
+      if (!env.useMocks && pendingSync) {
+        let authRes;
+        try {
+          authRes = await realAuthApi.register(pendingSync);
+        } catch {
+          authRes = await realAuthApi.login({
+            identifier: pendingSync.identifier,
+            password: pendingSync.password,
+          });
+        }
+
+        activeUserId = authRes.user.id;
+        updateUser(authRes.user);
+
+        // Bind phone hardware to database
+        const deviceId = await getDeviceId();
+        const deviceName = getDeviceName();
+        await realDeviceApi.registerDevice({
+          userId: authRes.user.id,
+          deviceId,
+          deviceName,
+        });
+
+        // Sync academic profile to database
+        if (profile) {
+          await realProfileApi.saveProfile(authRes.user.id, profile);
+        }
+
+        await secureStorage.remove(STORAGE_KEYS.pendingRemoteSync);
+      }
+
       await storeApi.createOrder(
-        user.id,
+        activeUserId,
         {
           type: draft.type,
           stream: draft.stream,

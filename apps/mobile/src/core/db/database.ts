@@ -12,8 +12,8 @@ async function databaseKey(): Promise<string> {
   const existing = await secureStorage.getString(STORAGE_KEYS.dbKey);
   if (existing) return existing;
 
-  const uuid1 = cryptoModule?.randomUUID ? cryptoModule.randomUUID() : Math.random().toString(36).slice(2);
-  const uuid2 = cryptoModule?.randomUUID ? cryptoModule.randomUUID() : Math.random().toString(36).slice(2);
+  const uuid1 = Crypto?.randomUUID ? Crypto.randomUUID() : Math.random().toString(36).slice(2);
+  const uuid2 = Crypto?.randomUUID ? Crypto.randomUUID() : Math.random().toString(36).slice(2);
   const created = `${uuid1}${uuid2}`.replace(/-/g, '');
   await secureStorage.setString(STORAGE_KEYS.dbKey, created);
   return created;
@@ -35,10 +35,10 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
 const DB_NAME = 'mastara.db';
 
 async function open(): Promise<SQLite.SQLiteDatabase> {
-  if (!sqliteModule?.openDatabaseAsync) {
+  if (!SQLite?.openDatabaseAsync) {
     throw new Error('SQLite is not available in this environment');
   }
-  const db = await sqliteModule.openDatabaseAsync(DB_NAME);
+  const db = await SQLite.openDatabaseAsync(DB_NAME);
   try {
     if (Platform.OS !== 'web') {
       if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);
@@ -77,8 +77,8 @@ export async function resetDatabase(): Promise<void> {
     await current?.closeAsync().catch(() => undefined);
   }
   opening = null;
-  if (sqliteModule?.deleteDatabaseAsync) {
-    await sqliteModule.deleteDatabaseAsync(DB_NAME);
+  if (SQLite?.deleteDatabaseAsync) {
+    await SQLite.deleteDatabaseAsync(DB_NAME);
   }
 }
 
