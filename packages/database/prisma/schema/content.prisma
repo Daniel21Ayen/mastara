@@ -64,15 +64,26 @@ model Topic {
   @@map("topics")
 }
 
+enum ContentKind {
+  MODULE
+  NOTE
+  AMHARIC_NOTE
+}
+
 model Content {
   id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   topic_id      String            @db.Uuid
+  kind          ContentKind       @default(NOTE)
   version       Int               @default(1)
   status        PublicationStatus @default(DRAFT)
-  title_en      String
-  title_am      String
-  body_en       String            @db.Text
-  body_am       String            @db.Text
+  title         String            @default("")
+  description   String?           @db.Text
+  body          String?           @db.Text
+  asset_key     String?
+  title_en      String?
+  title_am      String?
+  body_en       String?           @db.Text
+  body_am       String?           @db.Text
   is_free_trial Boolean           @default(false)
   published_at  DateTime?         @db.Timestamptz(6)
   created_at    DateTime          @default(now()) @db.Timestamptz(6)
@@ -80,8 +91,9 @@ model Content {
 
   topic         Topic             @relation(fields: [topic_id], references: [id], onDelete: Cascade)
 
-  @@unique([topic_id, version])
+  @@unique([topic_id, kind, version])
   @@index([topic_id, status])
+  @@index([kind, status])
   @@map("contents")
 }
 

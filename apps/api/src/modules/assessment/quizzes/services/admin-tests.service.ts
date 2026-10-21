@@ -501,7 +501,7 @@ export class AdminTestsService {
         target_type: "Question",
         target_id: updated.id,
         metadata: {
-          target: `Question ${updated.id} · Quiz ${input.quizNo} · ${question.course.code}`,
+          target: `Question ${updated.id} · Quiz ${input.quizNo} · ${question.course?.code ?? ''}`,
           reason: input.reason,
         },
       },
@@ -924,7 +924,7 @@ export class AdminTestsService {
         const cocQ = await this.prisma.cocQuestion.create({
           data: {
             question_id: q.id,
-            course_id: q.course_id,
+            course_id: q.course_id ?? courseId,
             year: input.year ?? 2024,
           },
         });
