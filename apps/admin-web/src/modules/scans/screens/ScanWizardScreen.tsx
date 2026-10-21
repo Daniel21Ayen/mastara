@@ -220,10 +220,29 @@ export function ScanWizardScreen() {
 
   const handlePublish = async (status: 'DRAFT' | 'PUBLISHED') => {
     try {
-      const scanPages = (pages.length > 0 ? pages : SAMPLE_PAGES).map((p) => ({
-        name: p.name,
+      const activePages = pages.length > 0 ? pages : SAMPLE_PAGES;
+
+      // 1. Request presigned upload URLs from S3 storage pipeline
+      const presignedKeys: Record<string, string> = {};
+      try {
+        const uploadReqs = activePages.map((p) => ({
+          name: p.name,
+          mime: p.name.endsWith('.png') ? 'image/png' : 'image/jpeg',
+          sizeBytes: p.sizeBytes,
+        }));
+        const presignedItems = await scansApi.getPresignedUploadUrls(uploadReqs);
+        for (const item of presignedItems) {
+          presignedKeys[item.name] = item.key;
+        }
+      } catch (err) {
+        console.warn('Presigned URL request fallback to direct keys:', err);
+      }
+
+      const scanPages = activePages.map((p) => ({
+        name: presignedKeys[p.name] || p.name,
         mime: 'image/png' as const,
         sizeBytes: p.sizeBytes,
+        rotationDeg: p.rotation || 0,
       }));
 
       const parsedYear = parseInt(year, 10) || 2026;

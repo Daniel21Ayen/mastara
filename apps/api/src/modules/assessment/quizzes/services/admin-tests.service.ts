@@ -205,12 +205,12 @@ export class AdminTestsService {
     await this.prisma.systemSetting.upsert({
       where: { key: `quiz:${courseId}:${quizNo}` },
       update: {
-        value: { minutes: input.minutes, status: input.status },
+        value: { minutes: input.minutes ?? 0, status: input.status },
         updated_by: adminId,
       },
       create: {
         key: `quiz:${courseId}:${quizNo}`,
-        value: { minutes: input.minutes, status: input.status },
+        value: { minutes: input.minutes ?? 0, status: input.status },
         updated_by: adminId,
       },
     });
@@ -241,7 +241,7 @@ export class AdminTestsService {
       quizNo,
       questionCount: inQuiz.length,
       publishedQuestionCount,
-      minutes: input.minutes,
+      minutes: input.minutes ?? 0,
       status: input.status,
     };
   }
@@ -501,7 +501,7 @@ export class AdminTestsService {
         target_type: "Question",
         target_id: updated.id,
         metadata: {
-          target: `Question ${updated.id} · Quiz ${input.quizNo} · ${question.course.code}`,
+          target: `Question ${updated.id} · Quiz ${input.quizNo} · ${question.course?.code ?? ''}`,
           reason: input.reason,
         },
       },
@@ -924,7 +924,7 @@ export class AdminTestsService {
         const cocQ = await this.prisma.cocQuestion.create({
           data: {
             question_id: q.id,
-            course_id: q.course_id,
+            course_id: q.course_id ?? courseId,
             year: input.year ?? 2024,
           },
         });

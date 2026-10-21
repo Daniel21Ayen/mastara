@@ -30,6 +30,9 @@ model University {
   programs    Program[]
   exams       Exam[]
   students    Student[]
+  courses     Course[]
+  questions   Question[]
+  exam_sets   ExamSet[]
 
   @@index([status, sort_order])
   @@map("universities")
@@ -50,6 +53,8 @@ model Program {
   university    University        @relation(fields: [university_id], references: [id], onDelete: Cascade)
   semesters     Semester[]
   students      Student[]
+  questions     Question[]
+  exam_sets     ExamSet[]
 
   @@unique([university_id, code])
   @@index([university_id, status, sort_order])
@@ -71,6 +76,8 @@ model Semester {
   program    Program           @relation(fields: [program_id], references: [id], onDelete: Cascade)
   courses    Course[]
   students   Student[]
+  questions  Question[]
+  exam_sets  ExamSet[]
 
   @@unique([program_id, code])
   @@index([program_id, status, sort_order])
@@ -80,12 +87,16 @@ model Semester {
 model Course {
   id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   semester_id        String            @db.Uuid
+  university_id      String?           @db.Uuid
   code               String
   title_en           String
   title_am           String
   description_en     String?           @db.Text
   description_am     String?           @db.Text
   stream             Stream
+  icon               String            @default("book")
+  color              String            @default("#1a56db")
+  free_trial_items   Int               @default(3)
   is_promotional     Boolean           @default(false)
   trial_expiry_days  Int?
   status             PublicationStatus @default(DRAFT)
@@ -95,6 +106,7 @@ model Course {
 
   // Relations
   semester           Semester          @relation(fields: [semester_id], references: [id], onDelete: Cascade)
+  university         University?       @relation(fields: [university_id], references: [id], onDelete: SetNull)
   modules            Module[]
   exams              Exam[]
   student_courses    StudentCourse[]
@@ -104,9 +116,11 @@ model Course {
   coc_questions      CocQuestion[]
   quiz_chapters      QuizChapter[]
   scan_jobs          ScanJob[]
+  exam_sets          ExamSet[]
 
   @@unique([semester_id, code])
   @@index([semester_id, stream, status])
+  @@index([university_id])
   @@index([is_promotional])
   @@map("courses")
 }
