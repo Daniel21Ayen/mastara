@@ -192,6 +192,7 @@
   "admin.nav.quiz1": "Quiz 1",
   "admin.nav.quiz2": "Quiz 2",
   "admin.nav.quiz3": "Quiz 3",
+  "admin.nav.unifiedAssessments": "Assessments Hub",
   "admin.audit.action.COURSE_CREATED": "Course created",
   "admin.audit.action.COURSE_UPDATED": "Course updated",
   "admin.audit.action.COURSE_PUBLISHED": "Course published",

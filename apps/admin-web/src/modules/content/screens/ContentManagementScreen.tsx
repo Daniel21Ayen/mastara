@@ -16,6 +16,7 @@ import {
 } from '../state/contentManagementData';
 import { BuildTestSetDialog } from '../components/BuildTestSetDialog';
 import { ViewDetailModal } from '../components/ViewDetailModal';
+import { StudentPreviewModal } from '@/shared/preview';
 import styles from '../components/ContentManagement.module.css';
 
 interface Props {
@@ -49,6 +50,7 @@ export function ContentManagementScreen({
   const [viewTestSet, setViewTestSet] = useState<TestSetItem | null>(null);
   const [viewMaterial, setViewMaterial] = useState<MaterialItem | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isStudentPreviewOpen, setIsStudentPreviewOpen] = useState(false);
 
   // Notifications
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -243,6 +245,16 @@ export function ContentManagementScreen({
           <div className={styles.testSetHeader}>
             <h1 className={styles.testSetTitle}>Test Set Management</h1>
             <div className={styles.testSetHeaderActions}>
+              <button
+                type="button"
+                className={styles.buildTestSetBtn}
+                style={{ background: '#ffffff', color: '#334155', border: '1px solid #cbd5e1' }}
+                onClick={() => setIsStudentPreviewOpen(true)}
+                title="Preview as Student"
+              >
+                <Icon name="eye" size={18} />
+                Preview as Student
+              </button>
               <Link
                 href={`/content/tests/${quizSlug(quizNo)}/new`}
                 className={styles.newQuestionBtn}
@@ -789,6 +801,23 @@ export function ContentManagementScreen({
         }}
         questionItem={viewTestSet}
         material={viewMaterial}
+      />
+
+      {/* Student Preview Modal */}
+      <StudentPreviewModal
+        isOpen={isStudentPreviewOpen}
+        onClose={() => setIsStudentPreviewOpen(false)}
+        title={`Quiz ${quizNo} - Student Preview`}
+        subtitle="Test Set Assessment Mode"
+        category="Enrolled Course"
+        mode="assessment"
+        content="Review test set questions in read-only simulation mode. Stripped teacher rubrics and answers."
+        questions={filteredTestSets.slice(0, 5).map((ts) => ({
+          id: ts.id,
+          prompt: ts.question,
+          type: ts.questionType,
+          options: ts.options || ['Option A', 'Option B', 'Option C', 'Option D'],
+        }))}
       />
     </div>
   );

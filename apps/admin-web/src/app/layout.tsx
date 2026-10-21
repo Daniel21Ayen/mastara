@@ -1,6 +1,7 @@
 // apps/admin-web/src/app/layout.tsx
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/700.css';
+import 'katex/dist/katex.min.css';
 import './globals.css';
 
 import type { Metadata } from 'next';
