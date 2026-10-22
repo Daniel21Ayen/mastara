@@ -90,7 +90,7 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
     'A book is a written work, often made of pages, that gives information or tells a story.',
   );
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const selectedChapter =
     activeChapters.find((ch) => ch.id === selectedChapterId) ?? activeChapters[0] ?? DEFAULT_QUIZ_CHAPTERS[0]!;
@@ -416,6 +416,11 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
                 placeholder="What is the correct meaning of the word 'book'?"
                 rows={3}
               />
+              <MathInputHelper
+                value={questionPrompt}
+                onChange={setQuestionPrompt}
+                placeholderHelp="Formulas: Inline $E = mc^2$, Display block $$\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$"
+              />
             </div>
 
             {/* Answers List */}
@@ -472,6 +477,11 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
                 placeholder="A book is a written work, often made of pages, that gives information or tells a story."
                 rows={3}
               />
+              <MathInputHelper
+                value={explanation}
+                onChange={setExplanation}
+                placeholderHelp="LaTeX math symbols supported in student explanation"
+              />
             </div>
 
             <button
@@ -486,12 +496,18 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
         </div>
       )}
 
-      {previewOpen ? (
-        <QuestionPreviewDialog
-          question={currentFormState}
-          onClose={() => setPreviewOpen(false)}
-        />
-      ) : null}
+      {/* Student Preview Modal with desktop/mobile frames, stripped correct answers */}
+      <StudentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title={selectedChapter.title || 'Quiz Preview'}
+        subtitle={`Quiz ${quizNo} • ${questionType}`}
+        category={course?.title || 'Course'}
+        mode="question"
+        prompt={questionPrompt}
+        questionType={questionType}
+        options={options.map((opt) => opt.text.trim() || `${opt.letter}. Option text`)}
+      />
     </div>
   );
 }

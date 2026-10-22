@@ -16,11 +16,10 @@ import {
   reasonRequired,
   StatusFields,
 } from '@/shared/forms';
-import { TextField } from '@/shared/ui';
 
 import { testsApi } from '../api/tests.api';
 
-type Field = 'minutes' | 'status' | 'reason';
+type Field = 'status' | 'reason';
 
 interface QuizSettingsDialogProps {
   courseId: string;
@@ -29,9 +28,8 @@ interface QuizSettingsDialogProps {
   onClose: () => void;
 }
 
-/** Time allowed and whether students see the quiz. Taking a live quiz away needs a reason. */
+/** Access is bound to Course Entitlement. Taking a live quiz away needs a reason. */
 export function QuizSettingsDialog({ courseId, quiz, onSaved, onClose }: QuizSettingsDialogProps) {
-  const [minutes, setMinutes] = useState(String(quiz.minutes));
   const [status, setStatus] = useState<CatalogStatus>(quiz.status);
   const [reason, setReason] = useState('');
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
@@ -45,8 +43,8 @@ export function QuizSettingsDialog({ courseId, quiz, onSaved, onClose }: QuizSet
 
     const needsReason = reasonRequired(quiz.status, status);
     const parsed = quizSettingsSchema.safeParse({
-      minutes: minutes.trim() === '' ? Number.NaN : Number(minutes),
       status,
+      minutes: 0,
       reason: needsReason ? reason : undefined,
     });
     const next: Partial<Record<Field, string>> = parsed.success
@@ -83,18 +81,20 @@ export function QuizSettingsDialog({ courseId, quiz, onSaved, onClose }: QuizSet
       onSubmit={submit}
       onClose={onClose}
     >
-      <TextField
-        label={adminText('admin.tests.settings.minutes')}
-        inputMode="numeric"
-        autoComplete="off"
-        value={minutes}
-        onChange={(event) => {
-          setMinutes(event.target.value);
-          setErrors((current) => ({ ...current, minutes: undefined }));
+      <div
+        style={{
+          background: '#f0fdf4',
+          border: '1px solid #bbf7d0',
+          borderRadius: '8px',
+          padding: '0.85rem 1rem',
+          color: '#166534',
+          fontSize: '0.825rem',
+          lineHeight: '1.45',
+          marginBottom: '1rem',
         }}
-        error={errors.minutes}
-        autoFocus
-      />
+      >
+        <strong>Course Entitlement Model:</strong> Quizzes are untimed self-check assessments bound directly to course enrollment. Students inherit access upon course purchase/enrollment.
+      </div>
       <StatusFields
         value={status}
         saved={quiz.status}

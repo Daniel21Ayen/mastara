@@ -27,7 +27,9 @@ export function ViewDetailModal({ isOpen, onClose, questionItem, material }: Pro
             </span>
             <h2 className={styles.title}>
               {questionItem
-                ? `${questionItem.chapterTitle}: ${questionItem.chapterSubtitle}`
+                ? questionItem.chapterSubtitle
+                  ? `${questionItem.chapterTitle}: ${questionItem.chapterSubtitle}`
+                  : questionItem.chapterTitle
                 : `${material?.chapterTitle}: ${material?.title}`}
             </h2>
           </div>

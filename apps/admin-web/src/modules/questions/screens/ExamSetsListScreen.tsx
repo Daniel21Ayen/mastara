@@ -65,6 +65,41 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
       render: (row) => row.questions[0]?.id ?? row.id,
     },
     {
+      key: 'question',
+      header: adminText('admin.questions.col.question'),
+      render: (row) => {
+        const first = row.questions[0];
+        const promptText = first?.prompt ?? '—';
+        return (
+          <div className={styles.questionCell}>
+            <span
+              className={styles.questionText}
+              title={promptText}
+              onClick={() => first && setPreview(first)}
+              role={first ? 'button' : undefined}
+              tabIndex={first ? 0 : undefined}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && first) {
+                  e.preventDefault();
+                  setPreview(first);
+                }
+              }}
+            >
+              {promptText}
+            </span>
+            {row.questions.length > 1 ? (
+              <span
+                className={styles.questionMeta}
+                title={`${row.questions.length} questions in this set`}
+              >
+                +{row.questions.length - 1}
+              </span>
+            ) : null}
+          </div>
+        );
+      },
+    },
+    {
       key: 'university',
       header: adminText('admin.questions.col.university'),
       render: (row) => row.universityName,
