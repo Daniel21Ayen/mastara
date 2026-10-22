@@ -1,12 +1,29 @@
 // apps/mobile/src/core/db/database.ts
-import * as Crypto from 'expo-crypto';
-import * as SQLite from 'expo-sqlite';
-import { Platform } from 'react-native';
+import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { env } from '@/core/config/env';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
 
 import { MIGRATIONS } from './migrations';
+
+const isNative =
+  typeof navigator !== 'undefined' &&
+  (navigator as any).product === 'ReactNative';
+
+let SQLite: typeof import('expo-sqlite') | null = null;
+let Crypto: typeof import('expo-crypto') | null = null;
+
+if (isNative) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    SQLite = require('expo-sqlite');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Crypto = require('expo-crypto');
+  } catch {
+    SQLite = null;
+    Crypto = null;
+  }
+}
 
 async function databaseKey(): Promise<string> {
   const existing = await secureStorage.getString(STORAGE_KEYS.dbKey);
@@ -19,7 +36,7 @@ async function databaseKey(): Promise<string> {
   return created;
 }
 
-async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
+async function migrate(db: SQLiteDatabase): Promise<void> {
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const current = row?.user_version ?? 0;
 
@@ -34,13 +51,13 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
 
 const DB_NAME = 'mastara.db';
 
-async function open(): Promise<SQLite.SQLiteDatabase> {
+async function open(): Promise<SQLiteDatabase> {
   if (!SQLite?.openDatabaseAsync) {
     throw new Error('SQLite is not available in this environment');
   }
   const db = await SQLite.openDatabaseAsync(DB_NAME);
   try {
-    if (Platform.OS !== 'web') {
+    if (isNative) {
       if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);
       await db.execAsync('PRAGMA journal_mode = WAL;');
     }
@@ -52,13 +69,13 @@ async function open(): Promise<SQLite.SQLiteDatabase> {
   }
 }
 
-let opening: Promise<SQLite.SQLiteDatabase> | null = null;
+let opening: Promise<SQLiteDatabase> | null = null;
 
 /**
  * The one shared database connection, opened and upgraded on first use.
  * A failed open is NOT remembered: the next call tries again (before, one failure broke the app until it restarted).
  */
-export function getDb(): Promise<SQLite.SQLiteDatabase> {
+export function getDb(): Promise<SQLiteDatabase> {
   opening ??= open().catch((error: unknown) => {
     opening = null;
     throw error;

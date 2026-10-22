@@ -11,6 +11,7 @@ import {
   AttemptCategory,
   AttemptState,
   EntitlementStatus,
+  NotificationType,
   PublicationStatus,
   QuestionType,
 } from "@mastara/database";
@@ -27,6 +28,7 @@ import {
   SubmitAttemptDto,
   GetAttemptsQueryDto,
 } from "../dto";
+import { PushService } from "../../../../infrastructure/push/push.service";
 import {
   mapQuestionToContract,
   QuestionResponse,
@@ -101,7 +103,10 @@ export class AttemptsService {
   private readonly logger = new Logger(AttemptsService.name);
   private readonly GRACE_PERIOD_MS = 60 * 1000; // 60 seconds network leeway
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pushService: PushService,
+  ) {}
 
   /**
    * Start a new assessment attempt with server-side deadline calculation and entitlement checks.
@@ -316,10 +321,10 @@ export class AttemptsService {
       where: { id: attemptId },
       include: {
         exam: {
-          select: { id: true, passing_score: true, course_id: true },
+          select: { id: true, title_en: true, passing_score: true, course_id: true },
         },
         coc_set: {
-          select: { id: true },
+          select: { id: true, title_en: true },
         },
       },
     });
@@ -539,6 +544,47 @@ export class AttemptsService {
     this.logger.log(
       `Attempt ${attemptId} graded: ${examScore.correct}/${total} (${percentage}%) [isPassed: ${isPassed}, isTampered: ${isTampered}]`,
     );
+
+    const examTitle = attempt.exam?.title_en || attempt.coc_set?.title_en || "Exam";
+
+    // 1. Persist in-app notification in DB
+    try {
+      await this.prisma.notification.create({
+        data: {
+          student_id: studentId,
+          type: NotificationType.EXAM_RESULT,
+          title_en: "Exam Result Available",
+          title_am: "የፈተና ውጤት ዝግጁ ነው",
+          message_en: `You scored ${percentage}% (${examScore.correct}/${total}) on ${examTitle}.`,
+          message_am: `በ${examTitle} ${percentage}% (${examScore.correct}/${total}) አግኝተዋል።`,
+          data: {
+            attemptId,
+            score: percentage,
+            correctCount: examScore.correct,
+            totalQuestions: total,
+            isPassed,
+            examTitle,
+          },
+        },
+      });
+    } catch (notifErr: any) {
+      this.logger.warn(`Failed to create exam result notification: ${notifErr.message}`);
+    }
+
+    // 2. Dispatch push notification to student device
+    void this.pushService.sendToStudent(studentId, {
+      title: isPassed ? "Exam Passed! 🎓" : "Exam Result Available",
+      body: `You scored ${percentage}% (${examScore.correct}/${total}) on ${examTitle}. Tap to review answers.`,
+      data: {
+        type: "EXAM_RESULT",
+        attemptId,
+        score: percentage,
+        correctCount: examScore.correct,
+        totalQuestions: total,
+        isPassed,
+      },
+      channelId: "assessments",
+    });
 
     return {
       attemptId: attempt.id,

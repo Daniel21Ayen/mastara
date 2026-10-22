@@ -43,6 +43,9 @@ const ICONS = {
   download: 'cloud-download-outline',
   downloaded: 'checkmark-circle',
   trash: 'trash',
+  sync: 'sync-outline',
+  wifi: 'wifi-outline',
+  wifiOff: 'cloud-offline-outline',
 } as const satisfies Record<string, IoniconName>;
 
 export type IconName = keyof typeof ICONS;

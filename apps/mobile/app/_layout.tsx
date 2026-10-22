@@ -14,6 +14,7 @@ import { SessionProvider, useRouteGuard, useSession } from '@/core/session';
 import { SyncProvider } from '@/core/sync';
 import { createStyles, fontAssets, ThemeProvider, useTheme } from '@/core/theme';
 import { DatabaseErrorScreen, SplashScreen } from '@/modules/boot';
+import { PaymentApprovalProvider } from '@/modules/store';
 import { OfflineBanner } from '@/shared/ui';
 
 void SplashScreenNative.preventAutoHideAsync();
@@ -57,7 +58,9 @@ export default function RootLayout() {
       >
         <SessionProvider>
           <SyncProvider>
-            <AppShell />
+            <PaymentApprovalProvider>
+              <AppShell />
+            </PaymentApprovalProvider>
           </SyncProvider>
         </SessionProvider>
       </DatabaseProvider>

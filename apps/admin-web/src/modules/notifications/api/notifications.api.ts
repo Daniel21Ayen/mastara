@@ -12,25 +12,32 @@ import {
   type BroadcastPriority,
   type StudentBroadcast,
 } from '@/core/mock/data';
+import { env } from '@/core/config/env';
+import { httpClient } from '@/core/network';
 
 export async function fetchAdminNotifications(): Promise<AdminNotification[]> {
-  return getNotifications();
+  if (env.useMocks) return getNotifications();
+  return httpClient.get<AdminNotification[]>('/notifications/admin/notifications');
 }
 
 export async function markAsRead(id: string): Promise<AdminNotification[]> {
-  return markNotificationRead(id);
+  if (env.useMocks) return markNotificationRead(id);
+  return httpClient.patch<AdminNotification[]>(`/notifications/admin/notifications/${encodeURIComponent(id)}/read`);
 }
 
 export async function markAllAsRead(): Promise<AdminNotification[]> {
-  return markAllNotificationsRead();
+  if (env.useMocks) return markAllNotificationsRead();
+  return httpClient.post<AdminNotification[]>('/notifications/admin/notifications/read-all');
 }
 
 export async function removeNotification(id: string): Promise<AdminNotification[]> {
-  return clearNotification(id);
+  if (env.useMocks) return clearNotification(id);
+  return httpClient.delete<AdminNotification[]>(`/notifications/admin/notifications/${encodeURIComponent(id)}`);
 }
 
 export async function fetchBroadcasts(): Promise<StudentBroadcast[]> {
-  return getStudentBroadcasts();
+  if (env.useMocks) return getStudentBroadcasts();
+  return httpClient.get<StudentBroadcast[]>('/notifications/admin/broadcasts');
 }
 
 export async function sendBroadcast(input: {
@@ -40,15 +47,19 @@ export async function sendBroadcast(input: {
   priority: BroadcastPriority;
   actionUrl?: string;
 }): Promise<StudentBroadcast> {
-  const broadcast = createStudentBroadcast(input);
+  if (env.useMocks) {
+    const broadcast = createStudentBroadcast(input);
 
-  // Audited sensitive action
-  recordAudit({
-    actor: 'ADMIN',
-    action: 'ANNOUNCEMENT_SENT' as any,
-    target: `Broadcast: "${broadcast.title}"`,
-    reason: `Target: ${broadcast.audience} (${broadcast.recipientCount} students)`,
-  });
+    // Audited sensitive action
+    recordAudit({
+      actor: 'ADMIN',
+      action: 'ANNOUNCEMENT_SENT' as any,
+      target: `Broadcast: "${broadcast.title}"`,
+      reason: `Target: ${broadcast.audience} (${broadcast.recipientCount} students)`,
+    });
 
-  return broadcast;
+    return broadcast;
+  }
+
+  return httpClient.post<StudentBroadcast>('/notifications/admin/broadcast', input);
 }

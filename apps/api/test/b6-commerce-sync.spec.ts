@@ -1,9 +1,10 @@
 import "reflect-metadata";
 import { Test, TestingModule } from "@nestjs/testing";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { DatabaseModule } from "../src/infrastructure/database/database.module";
 import { PrismaService } from "../src/infrastructure/database/prisma.service";
 import { AuditModule } from "../src/modules/platform/audit/audit.module";
+import { AuditService } from "../src/modules/platform/audit/services/audit.service";
 import { CommerceModule } from "../src/modules/commerce/commerce.module";
 import { SyncModule } from "../src/modules/sync/sync.module";
 import { EngagementModule } from "../src/modules/engagement/engagement.module";
@@ -66,13 +67,15 @@ async function runB6Tests() {
   }).compile();
 
   const prisma = moduleFixture.get<PrismaService>(PrismaService);
-  const pricingService = moduleFixture.get<PricingService>(PricingService);
+  const configService = moduleFixture.get<ConfigService>(ConfigService);
+  const auditService = new AuditService(prisma);
+  const pricingService = new PricingService(prisma, configService);
   const ordersService = new OrdersService(prisma, pricingService);
-  const proofsService = moduleFixture.get<PaymentProofsService>(PaymentProofsService);
-  const entitlementsService = moduleFixture.get<EntitlementsService>(EntitlementsService);
-  const outboxService = moduleFixture.get<OutboxService>(OutboxService);
-  const notificationsService = moduleFixture.get<NotificationsService>(NotificationsService);
-  const ticketsService = moduleFixture.get<SupportTicketsService>(SupportTicketsService);
+  const proofsService = new PaymentProofsService(prisma, auditService);
+  const entitlementsService = new EntitlementsService(prisma);
+  const outboxService = new OutboxService(prisma);
+  const notificationsService = new NotificationsService(prisma);
+  const ticketsService = new SupportTicketsService(prisma, auditService);
 
   const ts = Date.now();
 

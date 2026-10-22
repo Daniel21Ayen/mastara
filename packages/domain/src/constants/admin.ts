@@ -54,6 +54,20 @@ export const AUDIT_ACTIONS = [
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
+/** Critical actions that require admin attention (used to restrict DB logging and filter attention panels). */
+export const ATTENTION_AUDIT_ACTIONS = [
+  'PAYMENT_REJECTED',
+  'DEVICE_REVOKED',
+  'STUDENT_SUSPENDED',
+  'ACCESS_EXTENDED',
+  'PRICE_CHANGED',
+] as const;
+export type AttentionAuditAction = (typeof ATTENTION_AUDIT_ACTIONS)[number];
+
+export function isAttentionAuditAction(action: string): boolean {
+  return (ATTENTION_AUDIT_ACTIONS as readonly string[]).includes(action);
+}
+
 /** Days shown in the dashboard "new students" chart. */
 export const DASHBOARD_TREND_DAYS = 7;
 

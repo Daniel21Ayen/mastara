@@ -25,3 +25,5 @@ export * from './TextField';
 export * from './ThemeSwitch';
 export * from './TopBar';
 export * from './UnderlineTabs';
+export * from './ConnectivityPill';
+

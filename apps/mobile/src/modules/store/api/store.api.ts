@@ -40,6 +40,15 @@ export interface StoreApi {
 }
 
 function mapOrder(res: any): Order {
+  let status: Order['status'] = 'PENDING';
+  if (res.status === 'APPROVED') {
+    status = 'APPROVED';
+  } else if (res.status === 'REJECTED' || res.status === 'CANCELLED') {
+    status = 'REJECTED';
+  } else {
+    status = 'PENDING';
+  }
+
   return {
     id: res.id,
     type: res.type,
@@ -48,7 +57,7 @@ function mapOrder(res: any): Order {
     method: res.method ?? 'CBE_MOBILE',
     reference: res.reference ?? '',
     amount: res.quotedAmount ?? res.amount ?? 0,
-    status: res.status,
+    status,
     rejectReason: res.rejectReason,
     createdAt: typeof res.createdAt === 'string' ? res.createdAt : new Date(res.createdAt).toISOString(),
     durationDays: res.durationDays ?? 120,

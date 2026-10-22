@@ -1,11 +1,12 @@
 // apps/mobile/src/core/sync/outbox.ts
 import type { OutboxOp } from '@mastara/contracts';
-import { selectDueOps, uuidv7 } from '@mastara/domain';
+import { selectDueOps } from '@mastara/domain';
 import type { OutboxType } from '@mastara/domain';
-import * as Crypto from 'expo-crypto';
 
 import { getDb } from '@/core/db/database';
 import { dbUser } from '@/core/db/userScope';
+
+import { newId } from './ids';
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -25,7 +26,7 @@ export const outbox = {
   /** Saves a change locally (one small write) and returns at once. The sync worker uploads it later. */
   async enqueue(type: OutboxType, payload: Record<string, unknown>): Promise<string> {
     const now = Date.now();
-    const id = uuidv7(now, Crypto.getRandomBytes(10));
+    const id = newId();
     const db = await getDb();
     await db.runAsync(
       'INSERT INTO outbox (id, user_id, type, payload, created_at) VALUES (?, ?, ?, ?, ?)',
@@ -52,6 +53,16 @@ export const outbox = {
       [dbUser()],
     );
     return row?.n ?? 0;
+  },
+
+  /** Checks if a specific exam sitting is currently waiting in the outbox to be synced. */
+  async isSittingPending(sittingId: string): Promise<boolean> {
+    const db = await getDb();
+    const row = await db.getFirstAsync<{ n: number }>(
+      'SELECT COUNT(*) AS n FROM outbox WHERE user_id = ? AND type = ? AND payload LIKE ? AND applied_at IS NULL AND rejected_at IS NULL',
+      [dbUser(), 'EXAM_SUBMITTED', `%"sittingId":"${sittingId}"%`],
+    );
+    return (row?.n ?? 0) > 0;
   },
 
   /** Oldest first, only those whose retry wait has passed. Order is kept within each type (see `selectDueOps`). */

@@ -1,22 +1,18 @@
 // apps/admin-web/src/modules/shell/components/AdminProfileModal.tsx
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { AdminUser, AuditEntry } from '@mastara/contracts';
 import type { AuditAction } from '@mastara/domain';
+import { ATTENTION_AUDIT_ACTIONS } from '@mastara/domain';
 import { Icon } from '@/shared/ui';
 import { listAudit } from '@/core/mock/data';
 import { agoText } from '@/core/format';
+import { fetchAttentionAuditLogs } from '@/modules/audit/api/audit.api';
 import styles from './AdminProfileModal.module.css';
 
 /** Actions that require admin attention — shown in the profile audit panel. */
-const ATTENTION_ACTIONS = new Set<AuditAction>([
-  'PAYMENT_REJECTED',
-  'DEVICE_REVOKED',
-  'STUDENT_SUSPENDED',
-  'ACCESS_EXTENDED',
-  'PRICE_CHANGED',
-]);
+const ATTENTION_ACTIONS = new Set<AuditAction>(ATTENTION_AUDIT_ACTIONS);
 
 /** Colour chip per severity. */
 function AttentionChip({ action }: { action: AuditAction }) {
@@ -31,10 +27,25 @@ function AttentionChip({ action }: { action: AuditAction }) {
 
 /** Inline audit panel – only "needs attention" entries, newest first, max 8. */
 function AuditAttentionPanel() {
-  const entries = useMemo<AuditEntry[]>(() => {
+  const [entries, setEntries] = useState<AuditEntry[]>(() => {
     return listAudit()
       .filter((e) => ATTENTION_ACTIONS.has(e.action as AuditAction))
       .slice(0, 8);
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    fetchAttentionAuditLogs(8)
+      .then((data) => {
+        if (mounted && data) {
+          setEntries(data);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const now = new Date();

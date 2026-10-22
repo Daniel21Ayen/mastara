@@ -25,7 +25,12 @@ import {
   ExamSetKind,
   Stream,
   QuestionForm,
+  parseBulkQuestions,
+  BulkImportRowError,
+  exportExamSetToCsv,
+  exportExamSetToPrintableHtml,
 } from "@mastara/domain";
+
 import type {
   AdminQuestion,
   QuizSummary,
@@ -35,6 +40,7 @@ import type {
   ExamSet,
   ExamSetListResult,
   ExamQuestion,
+  BulkQuestionImportResult,
 } from "@mastara/contracts";
 import {
   AdminQuestionInputDto,
@@ -42,7 +48,15 @@ import {
   AdminQuestionListQueryDto,
   AdminExamSetListQueryDto,
   AdminExamSetInputDto,
-} from "../dto/admin-tests.dto";
+  AdminBulkQuestionImportDto,
+} from "../dto";
+import {
+  validateUploadedFile,
+  MAX_BULK_IMPORT_BYTES,
+  BULK_IMPORT_ALLOWED_MIME_TYPES,
+  DISALLOWED_EXTENSIONS,
+} from "../../../../infrastructure/storage/storage-validation";
+
 
 const QUIZ_NUMBERS_LIST: readonly QuizNumber[] = [1, 2, 3];
 
@@ -514,27 +528,82 @@ export class AdminTestsService {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
   }
 
+  private mapQuestionToExamQuestion(q: any, fallbackId: string, defaultTopic: string): ExamQuestion {
+    const rawAnswers = q?.correct_answers;
+    const isMetaObj = rawAnswers && typeof rawAnswers === "object" && !Array.isArray(rawAnswers);
+    const meta = isMetaObj ? rawAnswers : {};
+
+    const rawOptions = Array.isArray(q?.options) ? q.options : [];
+    const options: string[] = rawOptions.map((opt: any) => {
+      if (typeof opt === "string") return opt;
+      if (opt && typeof opt === "object") {
+        if (typeof opt.label === "string") return opt.label;
+        if (opt.label && typeof opt.label === "object") {
+          return opt.label.en || opt.label.am || "";
+        }
+        if (typeof opt.label_en === "string") return opt.label_en;
+        if (typeof opt.label_am === "string") return opt.label_am;
+        if (typeof opt.text === "string") return opt.text;
+        if (typeof opt.text_en === "string") return opt.text_en;
+      }
+      return String(opt ?? "");
+    });
+
+    const form = meta.form || (q?.type === "SINGLE_CHOICE" ? "MULTIPLE_CHOICE" : (q?.type || "MULTIPLE_CHOICE"));
+    let correctOption: number | null = meta.correctOption ?? null;
+    let trueIsCorrect: boolean | null = meta.trueIsCorrect ?? null;
+    let acceptedAnswers: string[] = Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [];
+
+    if (Array.isArray(rawAnswers)) {
+      if (form === "TRUE_FALSE") {
+        trueIsCorrect = rawAnswers.some((a) => a === "true" || a === true);
+      } else if (form === "MULTIPLE_CHOICE") {
+        const correctKey = rawAnswers[0];
+        if (typeof correctKey === "number") {
+          correctOption = correctKey;
+        } else if (typeof correctKey === "string") {
+          const matchIdx = rawOptions.findIndex((opt: any) =>
+            typeof opt === "object" ? opt.id === correctKey : opt === correctKey
+          );
+          if (matchIdx !== -1) {
+            correctOption = matchIdx;
+          } else {
+            const letterMap: Record<string, number> = {
+              A: 0, B: 1, C: 2, D: 3, E: 4, F: 5,
+              opt_a: 0, opt_b: 1, opt_c: 2, opt_d: 3,
+            };
+            if (correctKey in letterMap) {
+              correctOption = letterMap[correctKey] ?? null;
+            }
+          }
+        }
+      } else {
+        acceptedAnswers = rawAnswers.map(String);
+      }
+    }
+
+    return {
+      id: meta.externalId || q?.id || fallbackId,
+      form,
+      topic: meta.topic || q?.topic?.title_en || defaultTopic,
+      prompt: q?.prompt_en || "",
+      options,
+      correctOption,
+      trueIsCorrect,
+      acceptedAnswers,
+      answerDescription: q?.explanation_en || undefined,
+    };
+  }
+
   private mapToExamSet(exam: any): ExamSet {
     const setId =
       exam.title_en?.startsWith("SET-") || exam.title_en?.startsWith("EXAM-")
         ? exam.title_en
         : exam.id;
 
-    const questions: ExamQuestion[] = (exam.exam_questions || []).map((eq: any) => {
-      const q = eq.question;
-      const meta = (q?.correct_answers as any) || {};
-      return {
-        id: meta.externalId || q?.id || eq.id,
-        form: meta.form || (q?.type === "SINGLE_CHOICE" ? "MULTIPLE_CHOICE" : (q?.type || "MULTIPLE_CHOICE")),
-        topic: meta.topic || q?.topic?.title_en || "General",
-        prompt: q?.prompt_en || "",
-        options: Array.isArray(q?.options) ? q.options : [],
-        correctOption: meta.correctOption ?? null,
-        trueIsCorrect: meta.trueIsCorrect ?? null,
-        acceptedAnswers: Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [],
-        answerDescription: q?.explanation_en || undefined,
-      };
-    });
+    const questions: ExamQuestion[] = (exam.exam_questions || []).map((eq: any) =>
+      this.mapQuestionToExamQuestion(eq.question, eq.id, "General")
+    );
 
     return {
       id: setId,
@@ -563,21 +632,9 @@ export class AdminTestsService {
         ? cs.title_en
         : cs.id;
 
-    const questions: ExamQuestion[] = (cs.coc_set_questions || []).map((csq: any) => {
-      const q = csq.coc_question?.question;
-      const meta = (q?.correct_answers as any) || {};
-      return {
-        id: meta.externalId || q?.id || csq.id,
-        form: meta.form || (q?.type === "SINGLE_CHOICE" ? "MULTIPLE_CHOICE" : (q?.type || "MULTIPLE_CHOICE")),
-        topic: meta.topic || q?.topic?.title_en || "Comprehensive",
-        prompt: q?.prompt_en || "",
-        options: Array.isArray(q?.options) ? q.options : [],
-        correctOption: meta.correctOption ?? null,
-        trueIsCorrect: meta.trueIsCorrect ?? null,
-        acceptedAnswers: Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [],
-        answerDescription: q?.explanation_en || undefined,
-      };
-    });
+    const questions: ExamQuestion[] = (cs.coc_set_questions || []).map((csq: any) =>
+      this.mapQuestionToExamQuestion(csq.coc_question?.question, csq.id, "Comprehensive")
+    );
 
     return {
       id: setId,
@@ -1043,5 +1100,171 @@ export class AdminTestsService {
 
     return this.getExamSet(setId);
   }
+
+  /**
+   * Parses, validates, and optionally persists bulk questions from CSV or JSON.
+   * Performs cross-checks for duplicate IDs, formula validation, and dry-run reporting.
+   */
+  async bulkImportQuestions(
+    dto: AdminBulkQuestionImportDto,
+    adminId: string,
+    file?: Express.Multer.File,
+  ): Promise<BulkQuestionImportResult> {
+    let rawContent = dto.content || "";
+    if (file) {
+      const validated = validateUploadedFile(file, {
+        maxBytes: MAX_BULK_IMPORT_BYTES,
+        allowedMimes: BULK_IMPORT_ALLOWED_MIME_TYPES,
+        disallowedExtensions: DISALLOWED_EXTENSIONS,
+      });
+      rawContent = validated.buffer.toString("utf-8");
+    }
+
+    if (!rawContent || !rawContent.trim()) {
+      throw new BadRequestException({
+        errorCode: "VALIDATION_FAILED",
+        message:
+          "No content provided to import. Either attach a CSV/JSON file or specify content body.",
+      });
+    }
+
+    // 1. Parse and validate questions using domain parser
+    const parseResult = parseBulkQuestions(rawContent);
+
+    // 2. Cross-check existing question IDs against the database to detect collisions
+    const existingCheckErrors: BulkImportRowError[] = [];
+    for (const q of parseResult.questions) {
+      const owner = await this.getQuestionOwner(q.id);
+      if (owner.ownerSetId) {
+        existingCheckErrors.push({
+          row: 0,
+          questionId: q.id,
+          field: "id",
+          message: `Question ID '${q.id}' is already owned by Exam Set '${owner.ownerSetId}'.`,
+        });
+      }
+    }
+
+    const allErrors = [...parseResult.errors, ...existingCheckErrors];
+    const errorRowsCount = new Set(
+      allErrors.map((e) => e.questionId || String(e.row)),
+    ).size;
+
+    // If dry run, or if there are errors, return the validation report without committing
+    if (dto.dryRun || allErrors.length > 0) {
+      return {
+        totalRows: parseResult.totalRows,
+        validRows: parseResult.questions.length - existingCheckErrors.length,
+        errorRows: errorRowsCount,
+        errors: allErrors,
+        preview: parseResult.questions as any,
+        appliedCount: 0,
+        targetExamSetId: dto.targetExamSetId,
+      };
+    }
+
+    // 3. Commit / apply changes
+    let appliedCount = 0;
+    if (dto.targetExamSetId) {
+      const examSet = await this.findExamSet(dto.targetExamSetId);
+      if (!examSet) {
+        throw new NotFoundException(
+          `Target Exam Set '${dto.targetExamSetId}' not found.`,
+        );
+      }
+
+      // Append new questions to existing exam set
+      const updatedQuestions = [...examSet.questions, ...parseResult.questions];
+      await this.saveExamSet(
+        {
+          ...examSet,
+          questions: updatedQuestions as any,
+          reason: `Bulk imported ${parseResult.questions.length} questions into set ${dto.targetExamSetId}`,
+        },
+        adminId,
+      );
+      appliedCount = parseResult.questions.length;
+    } else if (dto.courseId) {
+      // Standalone question insertion for course
+      for (const qInput of parseResult.questions) {
+        const studentType = this.toPrismaQuestionType(qInput.form);
+        await this.prisma.question.create({
+          data: {
+            course_id: dto.courseId,
+            type: studentType as any,
+            prompt_en: qInput.prompt.trim(),
+            options: qInput.options,
+            explanation_en: qInput.answerDescription || null,
+            correct_answers: {
+              externalId: qInput.id,
+              form: qInput.form,
+              topic: qInput.topic,
+              correctOption: qInput.correctOption ?? null,
+              trueIsCorrect: qInput.trueIsCorrect ?? null,
+              acceptedAnswers: qInput.acceptedAnswers ?? [],
+            },
+          },
+        });
+        appliedCount++;
+      }
+
+      await this.prisma.auditLog.create({
+        data: {
+          actor_id: adminId || "00000000-0000-0000-0000-000000000000",
+          actor_role: Role.ADMIN,
+          action: "QUESTION_CREATED",
+          target_type: "Course",
+          target_id: dto.courseId,
+          metadata: {
+            target: `Bulk imported ${appliedCount} standalone questions for course ${dto.courseId}`,
+          },
+        },
+      });
+    }
+
+    return {
+      totalRows: parseResult.totalRows,
+      validRows: parseResult.questions.length,
+      errorRows: 0,
+      errors: [],
+      preview: parseResult.questions as any,
+      appliedCount,
+      targetExamSetId: dto.targetExamSetId,
+    };
+  }
+
+  /**
+   * Generates a downloadable CSV spreadsheet or printable HTML/PDF exam sheet for an Exam Set.
+   */
+  async exportExamSet(
+    id: string,
+    format: "csv" | "pdf" | "html" = "csv",
+    includeAnswers: boolean = true,
+    autoprint: boolean = false,
+  ): Promise<{ contentType: string; filename: string; content: string }> {
+    const examSet = await this.getExamSet(id);
+
+    if (format === "csv") {
+      const csv = exportExamSetToCsv(examSet);
+      return {
+        contentType: "text/csv; charset=utf-8",
+        filename: `${examSet.id}.csv`,
+        content: csv,
+      };
+    }
+
+    // Default to printable HTML/PDF
+    const html = exportExamSetToPrintableHtml(examSet, {
+      includeAnswers,
+      autoprint,
+    });
+    return {
+      contentType: "text/html; charset=utf-8",
+      filename: `${examSet.id}-exam-sheet.html`,
+      content: html,
+    };
+  }
 }
+
+
 

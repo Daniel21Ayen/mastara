@@ -181,3 +181,46 @@ test('Mobile Integration: Support Tickets & Notifications Flow', async () => {
   const notifications = await notificationsApi.getNotifications('test-user', []);
   assert.ok(Array.isArray(notifications));
 });
+
+test('Mobile Integration: Offline Exam Outbox Sync API Flow', async () => {
+  const rand = Math.floor(Math.random() * 900000 + 100000);
+  const authRes = await authApi.register({
+    identifier: `+251933${rand}`,
+    password: 'Password@123',
+    name: 'Sync Student',
+  });
+
+  const { syncApi } = await import('../core/sync/syncApi');
+  const now = new Date().toISOString();
+
+  const ops = [
+    {
+      id: `op-exam-sync-${Date.now()}`,
+      type: 'EXAM_SUBMITTED' as const,
+      payload: {
+        sittingId: `test-sit-${Date.now()}`,
+        examId: 'test-exam-1',
+        title: 'Computer Science (Mid)',
+        answers: { Q1: { kind: 'choice', optionIds: ['opt-a'] } },
+        reason: 'manual',
+        durationMs: 3600000,
+        elapsedMs: 1800000,
+        startedAt: now,
+        submittedAt: now,
+        provisional: { correct: 4, total: 5 },
+      },
+      createdAt: now,
+    },
+  ];
+
+  const results = await syncApi.pushBatch(authRes.user.id, ops);
+  assert.ok(Array.isArray(results), 'Sync batch should return results array');
+  assert.strictEqual(results.length, 1);
+  assert.strictEqual(results[0]!.id, ops[0]!.id);
+  assert.strictEqual(results[0]!.status, 'accepted');
+
+  // Verify idempotency on second upload
+  const secondResults = await syncApi.pushBatch(authRes.user.id, ops);
+  assert.strictEqual(secondResults[0]!.status, 'already_applied');
+});
+

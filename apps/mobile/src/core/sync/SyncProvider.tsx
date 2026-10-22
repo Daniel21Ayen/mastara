@@ -1,13 +1,25 @@
-// apps/mobile/src/core/sync/SyncProvider.tsx
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { AppState } from 'react-native';
 
 import { useOnline } from '@/core/network';
 import { useSession } from '@/core/session';
 
 import { outbox } from './outbox';
 import { flushOutbox } from './syncWorker';
+
+const isNative =
+  typeof navigator !== 'undefined' &&
+  (navigator as any).product === 'ReactNative';
+
+let AppState: typeof import('react-native').AppState | null = null;
+if (isNative) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    AppState = require('react-native').AppState;
+  } catch {
+    AppState = null;
+  }
+}
 
 const INTERVAL_MS = 30_000;
 const DEBOUNCE_MS = 500;
@@ -66,10 +78,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     if (!user || !online) return;
     void syncNow();
     const interval = setInterval(() => void syncNow(), INTERVAL_MS);
-    const subscription = AppState.addEventListener('change', (state) => state === 'active' && void syncNow());
+    const subscription = AppState ? AppState.addEventListener('change', (state) => state === 'active' && void syncNow()) : null;
     return () => {
       clearInterval(interval);
-      subscription.remove();
+      subscription?.remove();
     };
   }, [user, online, syncNow]);
 

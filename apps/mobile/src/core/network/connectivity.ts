@@ -1,12 +1,18 @@
 import { useSyncExternalStore } from 'react';
 
+const isNative =
+  typeof navigator !== 'undefined' &&
+  (navigator as any).product === 'ReactNative';
+
 let NetInfo: typeof import('@react-native-community/netinfo').default | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mod = require('@react-native-community/netinfo');
-  NetInfo = mod.default ?? mod;
-} catch {
-  NetInfo = null;
+if (isNative) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('@react-native-community/netinfo');
+    NetInfo = mod.default ?? mod;
+  } catch {
+    NetInfo = null;
+  }
 }
 
 

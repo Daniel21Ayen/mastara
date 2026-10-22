@@ -18,7 +18,8 @@ import {
 import type { CatalogStatus, ExamSetKind, QuestionProblem, Stream } from '@mastara/domain';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
 
 import { adminText, errorText } from '@/core/i18n';
 import { catalogApi } from '@/modules/catalog/api/catalog.api';
@@ -41,6 +42,7 @@ import {
 } from '@/shared/ui';
 
 import { questionsApi } from '../api/questions.api';
+import { BulkImportDialog } from '../components/BulkImportDialog';
 import { yearText } from '../components/SetFields';
 import type { SetErrors } from '../components/SetFields';
 import { SetTabs } from '../components/SetTabs';
@@ -90,6 +92,34 @@ function FormBody({ kind, set }: BodyProps) {
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [previewing, setPreviewing] = useState<ExamQuestionInput | null>(null);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
+
+  const handleBulkImport = (newQuestions: ExamQuestionInput[], mode: 'append' | 'replace') => {
+    if (mode === 'replace') {
+      setStaged(newQuestions);
+    } else {
+      setStaged((prev) => [...prev, ...newQuestions]);
+    }
+    setErrors((prev) => ({ ...prev, questions: undefined }));
+  };
+
+  useEffect(() => {
+    if (!set && typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('mastara_staged_import');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setStaged(parsed);
+            sessionStorage.removeItem('mastara_staged_import');
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
+  }, [set]);
+
 
   const wasPublished = set?.status === 'PUBLISHED';
   const topicNeeded = needsTopic(kind);
@@ -269,11 +299,34 @@ function FormBody({ kind, set }: BodyProps) {
       <PageHeader
         title={adminText('admin.questions.form.heading')}
         actions={
-          <Button variant="outline" onClick={() => setPreviewing(current)} disabled={isBlankQuestion(current)}>
-            <Icon name="eye" size={18} />
-            {adminText('admin.content.reviewAsStudent')}
-          </Button>
+          <>
+            {set?.id ? (
+              <>
+                <Button
+                  variant="outline"
+                  title="Download CSV"
+                  onClick={() => void questionsApi.downloadSet(set.id, 'csv')}
+                >
+                  <Icon name="download" size={18} />
+                  Export CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  title="Print Exam Paper / Save PDF"
+                  onClick={() => void questionsApi.downloadSet(set.id, 'html', { autoprint: true })}
+                >
+                  <Icon name="printer" size={18} />
+                  Print / PDF
+                </Button>
+              </>
+            ) : null}
+            <Button variant="outline" onClick={() => setPreviewing(current)} disabled={isBlankQuestion(current)}>
+              <Icon name="eye" size={18} />
+              {adminText('admin.content.reviewAsStudent')}
+            </Button>
+          </>
         }
+
       />
       <SetTabs current={kind} />
 
@@ -538,10 +591,16 @@ function FormBody({ kind, set }: BodyProps) {
 
             {/* Row 7: Actions Bar */}
             <div className={styles.footerBar}>
-              <Button variant="outline" disabled={busy} onClick={() => void stageCurrent()}>
-                <Icon name="plus" size={18} />
-                {adminText(editing === null ? 'admin.questions.form.addQuestion' : 'admin.questions.form.updateQuestion')}
-              </Button>
+              <div className={styles.footerLeft}>
+                <Button variant="outline" disabled={busy} onClick={() => void stageCurrent()}>
+                  <Icon name="plus" size={18} />
+                  {adminText(editing === null ? 'admin.questions.form.addQuestion' : 'admin.questions.form.updateQuestion')}
+                </Button>
+                <Button variant="outline" disabled={busy} onClick={() => setBulkImportOpen(true)}>
+                  <Icon name="upload" size={18} />
+                  {adminText('admin.questions.form.bulkImport')}
+                </Button>
+              </div>
               <div className={styles.footerRight}>
                 <Button variant="outline" disabled={busy} onClick={reset}>
                   {adminText('admin.questions.form.reset')}
@@ -559,7 +618,13 @@ function FormBody({ kind, set }: BodyProps) {
 
         {staged.length > 0 || errors.questions ? (
           <Card>
-            <CardTitle>{adminText('admin.questions.form.inSet', { n: staged.length })}</CardTitle>
+            <div className={styles.cardHeaderFlex}>
+              <CardTitle>{adminText('admin.questions.form.inSet', { n: staged.length })}</CardTitle>
+              <Button variant="outline" onClick={() => setBulkImportOpen(true)}>
+                <Icon name="upload" size={16} />
+                {adminText('admin.questions.form.bulkImport')}
+              </Button>
+            </div>
             {errors.questions ? (
               <p className={styles.error} role="alert">
                 {errors.questions}
@@ -621,6 +686,14 @@ function FormBody({ kind, set }: BodyProps) {
       {previewing ? (
         <QuestionPreviewDialog question={previewOf(previewing)} onClose={() => setPreviewing(null)} />
       ) : null}
+
+      <BulkImportDialog
+        isOpen={bulkImportOpen}
+        onClose={() => setBulkImportOpen(false)}
+        onImport={handleBulkImport}
+        currentCount={staged.length}
+        defaultTopic={selectedMidFinalCourse?.title || 'General'}
+      />
     </>
   );
 }

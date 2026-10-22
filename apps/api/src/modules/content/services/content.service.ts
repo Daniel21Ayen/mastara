@@ -20,6 +20,7 @@ import {
   CONTENT_RECENT_LIMIT,
   ADMIN_ERROR_CODES,
 } from "@mastara/domain";
+import { AuditService } from "../../platform/audit/services/audit.service";
 import type {
   ContentCourse,
   ContentSummary,
@@ -49,6 +50,7 @@ export interface TopicListItemResponse {
   number: number;
   title: BilingualTextResponse;
   summary: BilingualTextResponse;
+  body: BilingualTextResponse;
   isFree: boolean;
   isCompleted: boolean;
   scrollPosition: number;
@@ -93,7 +95,10 @@ function editAction(
 export class ContentService {
   private readonly logger = new Logger(ContentService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   // ============================================================================
   // Mobile / Student Content Delivery Methods
@@ -139,6 +144,13 @@ export class ContentService {
       include: {
         topics: {
           orderBy: { chapter_number: "asc" },
+          include: {
+            contents: {
+              where: { status: PublicationStatus.PUBLISHED },
+              orderBy: { version: "desc" },
+              take: 1,
+            },
+          },
         },
       },
     });
@@ -170,6 +182,7 @@ export class ContentService {
       for (const topic of mod.topics) {
         const progress = progressMap.get(topic.id);
         const isFree = topic.is_free_trial || mod.is_free_trial;
+        const latestContent = topic.contents?.[0];
 
         result.push({
           id: topic.id,
@@ -184,6 +197,10 @@ export class ContentService {
           summary: {
             en: mod.description_en || topic.title_en,
             am: mod.description_am || topic.title_am,
+          },
+          body: {
+            en: latestContent?.body_en || "",
+            am: latestContent?.body_am || "",
           },
           isFree,
           isCompleted: progress ? progress.isCompleted : false,
@@ -526,17 +543,15 @@ export class ContentService {
       },
     });
 
-    await this.prisma.auditLog.create({
-      data: {
-        actor_id: adminId || "00000000-0000-0000-0000-000000000000",
-        actor_role: Role.ADMIN,
-        action: "MODULE_CREATED",
-        target_type: "Module",
-        target_id: module.id,
-        metadata: {
-          target: `Module ${sortOrder} · ${course.code}`,
-          reason: input.reason,
-        },
+    await this.auditService.log({
+      actorId: adminId || "00000000-0000-0000-0000-000000000000",
+      actorRole: Role.ADMIN,
+      action: "MODULE_CREATED",
+      targetType: "Module",
+      targetId: module.id,
+      metadata: {
+        target: `Module ${sortOrder} · ${course.code}`,
+        reason: input.reason,
       },
     });
 
@@ -600,17 +615,15 @@ export class ContentService {
     });
 
     const action = editAction(beforeStatus, input.status, "MODULE_UPDATED");
-    await this.prisma.auditLog.create({
-      data: {
-        actor_id: adminId || "00000000-0000-0000-0000-000000000000",
-        actor_role: Role.ADMIN,
-        action,
-        target_type: "Module",
-        target_id: updated.id,
-        metadata: {
-          target: `Module ${updated.sort_order} · ${module.course.code}`,
-          reason: input.reason,
-        },
+    await this.auditService.log({
+      actorId: adminId || "00000000-0000-0000-0000-000000000000",
+      actorRole: Role.ADMIN,
+      action,
+      targetType: "Module",
+      targetId: updated.id,
+      metadata: {
+        target: `Module ${updated.sort_order} · ${module.course.code}`,
+        reason: input.reason,
       },
     });
 
@@ -675,16 +688,14 @@ export class ContentService {
       },
     });
 
-    await this.prisma.auditLog.create({
-      data: {
-        actor_id: adminId || "00000000-0000-0000-0000-000000000000",
-        actor_role: Role.ADMIN,
-        action: "TOPIC_ADDED",
-        target_type: "Topic",
-        target_id: topic.id,
-        metadata: {
-          target: `Topic ${parentModule.sort_order}.${chapterNumber} · ${parentModule.course.code}`,
-        },
+    await this.auditService.log({
+      actorId: adminId || "00000000-0000-0000-0000-000000000000",
+      actorRole: Role.ADMIN,
+      action: "TOPIC_ADDED",
+      targetType: "Topic",
+      targetId: topic.id,
+      metadata: {
+        target: `Topic ${parentModule.sort_order}.${chapterNumber} · ${parentModule.course.code}`,
       },
     });
 
@@ -789,19 +800,17 @@ export class ContentService {
     });
 
     const isPublished = input.status === "PUBLISHED";
-    await this.prisma.auditLog.create({
-      data: {
-        actor_id: adminId || "00000000-0000-0000-0000-000000000000",
-        actor_role: Role.ADMIN,
-        action: isPublished ? "CONTENT_PUBLISHED" : "NOTE_CREATED",
-        target_type: "Note",
-        target_id: topic.id,
-        metadata: {
-          target: isPublished
-            ? `Note · ${input.title.en} · v${version}`
-            : `Note · ${input.title.en}`,
-          reason: input.reason,
-        },
+    await this.auditService.log({
+      actorId: adminId || "00000000-0000-0000-0000-000000000000",
+      actorRole: Role.ADMIN,
+      action: isPublished ? "CONTENT_PUBLISHED" : "NOTE_CREATED",
+      targetType: "Note",
+      targetId: topic.id,
+      metadata: {
+        target: isPublished
+          ? `Note · ${input.title.en} · v${version}`
+          : `Note · ${input.title.en}`,
+        reason: input.reason,
       },
     });
 
@@ -902,20 +911,18 @@ export class ContentService {
         ? "CONTENT_PUBLISHED"
         : editAction(beforeStatus, input.status, "NOTE_UPDATED");
 
-    await this.prisma.auditLog.create({
-      data: {
-        actor_id: adminId || "00000000-0000-0000-0000-000000000000",
-        actor_role: Role.ADMIN,
-        action,
-        target_type: "Note",
-        target_id: topic.id,
-        metadata: {
-          target:
-            input.status === "PUBLISHED"
-              ? `Note · ${input.title.en} · v${newVersion}`
-              : `Note · ${input.title.en}`,
-          reason: input.reason,
-        },
+    await this.auditService.log({
+      actorId: adminId || "00000000-0000-0000-0000-000000000000",
+      actorRole: Role.ADMIN,
+      action,
+      targetType: "Note",
+      targetId: topic.id,
+      metadata: {
+        target:
+          input.status === "PUBLISHED"
+            ? `Note · ${input.title.en} · v${newVersion}`
+            : `Note · ${input.title.en}`,
+        reason: input.reason,
       },
     });
 
@@ -993,19 +1000,17 @@ export class ContentService {
     }
 
     const action = currentStatus === "PUBLISHED" ? "CONTENT_PUBLISHED" : "NOTE_UPDATED";
-    await this.prisma.auditLog.create({
-      data: {
-        actor_id: adminId || "00000000-0000-0000-0000-000000000000",
-        actor_role: Role.ADMIN,
-        action,
-        target_type: "Note",
-        target_id: topic.id,
-        metadata: {
-          target:
-            currentStatus === "PUBLISHED"
-              ? `Amharic note · ${finalContent.title_en} · v${newVersion}`
-              : `Amharic note · ${finalContent.title_en}`,
-        },
+    await this.auditService.log({
+      actorId: adminId || "00000000-0000-0000-0000-000000000000",
+      actorRole: Role.ADMIN,
+      action,
+      targetType: "Note",
+      targetId: topic.id,
+      metadata: {
+        target:
+          currentStatus === "PUBLISHED"
+            ? `Amharic note · ${finalContent.title_en} · v${newVersion}`
+            : `Amharic note · ${finalContent.title_en}`,
       },
     });
 

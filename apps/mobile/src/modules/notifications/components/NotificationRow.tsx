@@ -22,6 +22,7 @@ const ICON: Record<NotificationKind, IconName> = {
   PAYMENT_APPROVED: 'check',
   PAYMENT_REJECTED: 'close',
   ACCESS_EXPIRING: 'clock',
+  EXAM_RESULT: 'exam',
 };
 
 const ACCENT: Record<NotificationKind, AccentName> = {
@@ -30,6 +31,7 @@ const ACCENT: Record<NotificationKind, AccentName> = {
   PAYMENT_APPROVED: 'emerald',
   PAYMENT_REJECTED: 'danger',
   ACCESS_EXPIRING: 'fuchsia',
+  EXAM_RESULT: 'violet',
 };
 
 export function NotificationRow({ item, onPress }: NotificationRowProps) {

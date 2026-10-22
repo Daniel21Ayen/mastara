@@ -1,7 +1,7 @@
 // apps/admin-web/src/modules/content/screens/ContentManagementScreen.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { quizSlug } from '@mastara/domain';
@@ -16,6 +16,7 @@ import {
 } from '../state/contentManagementData';
 import { BuildTestSetDialog } from '../components/BuildTestSetDialog';
 import { ViewDetailModal } from '../components/ViewDetailModal';
+import { contentApi } from '../api/content.api';
 import styles from '../components/ContentManagement.module.css';
 
 interface Props {
@@ -43,6 +44,99 @@ export function ContentManagementScreen({
   // Lists Data State
   const [testSets, setTestSets] = useState<TestSetItem[]>(INITIAL_TEST_SETS);
   const [materials, setMaterials] = useState<MaterialItem[]>(INITIAL_MATERIALS);
+
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadLiveMaterials() {
+      try {
+        const courses = await contentApi.listCourses();
+        if (isCancelled || courses.length === 0) return;
+
+        const liveItems: MaterialItem[] = [];
+
+        for (const course of courses) {
+          try {
+            const [modules, notes] = await Promise.all([
+              contentApi.listModules(course.id).catch(() => []),
+              contentApi.listNotes(course.id).catch(() => []),
+            ]);
+
+            for (const mod of modules) {
+              liveItems.push({
+                id: mod.id,
+                type: 'modules',
+                chapterNumber: mod.number,
+                chapterTitle: `Chapter ${mod.number}`,
+                chapterSubtitle: mod.title.en,
+                title: mod.title.en,
+                subtitle: mod.title.am || `Module ${mod.number}`,
+                courseTitle: course.title,
+                courseCode: course.code,
+                semester: 'Semester 1',
+                program: 'Remedial',
+                status: mod.status === 'PUBLISHED' ? 'Active' : 'Inactive',
+                content: `Module ${mod.number}: ${mod.topics.length} topics, ${mod.notes.length} notes`,
+              });
+            }
+
+            for (const note of notes) {
+              liveItems.push({
+                id: note.id,
+                type: 'notes',
+                chapterNumber: note.moduleNumber || 1,
+                chapterTitle: `Chapter ${note.moduleNumber || 1}`,
+                chapterSubtitle: note.title.en,
+                title: note.title.en,
+                subtitle: note.title.am || '',
+                courseTitle: course.title,
+                courseCode: course.code,
+                semester: 'Semester 1',
+                program: 'Remedial',
+                status: note.status === 'PUBLISHED' ? 'Active' : 'Inactive',
+                content: note.body.en,
+              });
+
+              if (note.title.am || note.body.am) {
+                liveItems.push({
+                  id: `${note.id}-am`,
+                  type: 'amharic-notes',
+                  chapterNumber: note.moduleNumber || 1,
+                  chapterTitle: `Chapter ${note.moduleNumber || 1}`,
+                  chapterSubtitle: note.title.am || note.title.en,
+                  title: note.title.am || note.title.en,
+                  subtitle: note.title.en,
+                  courseTitle: course.title,
+                  courseCode: course.code,
+                  semester: 'Semester 1',
+                  program: 'Remedial',
+                  status: note.status === 'PUBLISHED' ? 'Active' : 'Inactive',
+                  content: note.body.am || note.body.en,
+                });
+              }
+            }
+          } catch {
+            // ignore course fetching errors
+          }
+        }
+
+        if (!isCancelled && liveItems.length > 0) {
+          setMaterials((prev) => {
+            const liveIds = new Set(liveItems.map((item) => item.id));
+            const remaining = prev.filter((item) => !liveIds.has(item.id));
+            return [...liveItems, ...remaining];
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch live materials for content management:', err);
+      }
+    }
+
+    loadLiveMaterials();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   // Modals
   const [isBuildDialogOpen, setIsBuildDialogOpen] = useState(false);

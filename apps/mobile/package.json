@@ -16,7 +16,6 @@
     "pretypecheck": "node scripts/build-katex-assets.mjs",
     "pretest": "node scripts/build-katex-assets.mjs",
     "test": "tsx --env-file=.env.local --test \"src/**/*.test.ts\"",
-
     "build:katex": "node scripts/build-katex-assets.mjs",
     "check:size": "node scripts/check-app-size.mjs"
   },
@@ -41,6 +40,7 @@
     "expo-image-picker": "~57.0.20",
     "expo-linking": "~57.0.13",
     "expo-modules-core": "~57.0.23",
+    "expo-notifications": "~57.0.23",
     "expo-router": "~57.0.28",
     "expo-screen-capture": "~57.0.4",
     "expo-secure-store": "~57.0.4",

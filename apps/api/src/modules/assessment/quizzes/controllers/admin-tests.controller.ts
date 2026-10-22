@@ -6,17 +6,25 @@ import {
   Param,
   Body,
   Query,
+  Res,
   UseGuards,
   HttpStatus,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import type { Response } from "express";
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
+  ApiConsumes,
 } from "@nestjs/swagger";
+
 import { Role } from "@mastara/database";
 import { RolesGuard } from "../../../../common/guards/roles.guard";
 import { Roles } from "../../../../common/decorators/roles.decorator";
@@ -29,7 +37,8 @@ import {
   AdminQuestionListQueryDto,
   AdminExamSetListQueryDto,
   AdminExamSetInputDto,
-} from "../dto/admin-tests.dto";
+  AdminBulkQuestionImportDto,
+} from "../dto";
 import type {
   AdminQuestion,
   QuizSummary,
@@ -37,7 +46,9 @@ import type {
   QuestionListResult,
   ExamSet,
   ExamSetListResult,
+  BulkQuestionImportResult,
 } from "@mastara/contracts";
+
 import type { QuizNumber } from "@mastara/domain";
 
 @ApiTags("Admin Tests Management")
@@ -157,6 +168,66 @@ export class AdminTestsController {
     return this.adminTestsService.getExamSet(id);
   }
 
+  @Get("exam-sets/:id/export")
+  @ApiOperation({
+    summary:
+      "Export exam set as downloadable CSV spreadsheet or printable HTML/PDF paper",
+  })
+  @ApiParam({ name: "id", description: "Exam Set ID (e.g. EXAM-SET-1041)" })
+  @ApiQuery({
+    name: "format",
+    enum: ["csv", "pdf", "html"],
+    required: false,
+    description: "Export format (default: csv)",
+  })
+  @ApiQuery({
+    name: "includeAnswers",
+    type: Boolean,
+    required: false,
+    description:
+      "Include teacher's answer key & solutions in output (default: true)",
+  })
+  @ApiQuery({
+    name: "autoprint",
+    type: Boolean,
+    required: false,
+    description:
+      "Automatically trigger window.print() on load (for HTML/PDF format)",
+  })
+  async exportExamSet(
+    @Param("id") id: string,
+    @Res() res: Response,
+    @Query("format") format: "csv" | "pdf" | "html" = "csv",
+    @Query("includeAnswers") includeAnswers?: string,
+    @Query("autoprint") autoprint?: string,
+  ): Promise<void> {
+    const withAnswers =
+      includeAnswers === undefined || includeAnswers === "true";
+    const auto = autoprint === "true";
+    const result = await this.adminTestsService.exportExamSet(
+      id,
+      format,
+      withAnswers,
+      auto,
+    );
+
+    res.setHeader("Content-Type", result.contentType);
+    if (format === "csv") {
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${result.filename}"`,
+      );
+    } else {
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="${result.filename}"`,
+      );
+    }
+
+    res.send(result.content);
+  }
+
+
   @Post("exam-sets")
   @ApiOperation({ summary: "Create or replace an exam set with all its questions" })
   @ApiResponse({ status: HttpStatus.OK, description: "Exam set created or updated" })
@@ -166,5 +237,25 @@ export class AdminTestsController {
   ): Promise<ExamSet> {
     return this.adminTestsService.saveExamSet(dto, adminId);
   }
+
+  @Post("questions/bulk-import")
+  @ApiOperation({
+    summary: "Bulk import questions from CSV or JSON file upload or raw content",
+  })
+  @ApiConsumes("multipart/form-data", "application/json")
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Dry-run validation results or confirmed imported questions count",
+  })
+  @UseInterceptors(FileInterceptor("file"))
+  async bulkImportQuestions(
+    @Body() dto: AdminBulkQuestionImportDto,
+    @CurrentUser("id") adminId: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<BulkQuestionImportResult> {
+    return this.adminTestsService.bulkImportQuestions(dto, adminId, file);
+  }
 }
+
+
 

@@ -8,3 +8,4 @@ export * from './catalog';
 export * from './students';
 export * from './adminExamSets';
 export * from './adminPayments';
+export * from './adminBulkImport';

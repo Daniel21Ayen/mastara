@@ -20,7 +20,7 @@ export function ActivityList({
       {entries.map((entry) => (
         <li key={entry.id} className={styles.item}>
           <span>
-            {adminText(`admin.audit.action.${entry.action}`)} · {entry.target}
+            {adminText(`admin.audit.action.${entry.action}` as any)} · {entry.target}
           </span>
           <time className={styles.time} dateTime={entry.at}>
             {agoText(entry.at, now)}

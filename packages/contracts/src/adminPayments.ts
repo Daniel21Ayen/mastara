@@ -39,6 +39,14 @@ export const adminPaymentSchema = z.object({
   durationDays: z.number().int(),
   /** The earlier payment that used the same reference, or null when the reference is unique. */
   duplicateOf: z.string().nullable(),
+  /** Storage key of the uploaded receipt screenshot. */
+  imageKey: z.string().nullable().optional(),
+  /** Accessible download/streaming URL for the receipt image. */
+  imageUrl: z.string().nullable().optional(),
+  /** MIME type of the uploaded receipt (e.g. image/jpeg, image/png). */
+  imageMime: z.string().nullable().optional(),
+  /** Size of receipt image in bytes. */
+  imageSizeBytes: z.number().int().nullable().optional(),
 });
 
 export const paymentCountsSchema = z.object({

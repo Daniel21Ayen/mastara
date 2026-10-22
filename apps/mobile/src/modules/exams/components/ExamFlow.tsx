@@ -151,6 +151,7 @@ export function ExamFlow({ examId, title, subtitle, questions, minutes, courseTi
       {phase === 'result' && score ? (
         <ExamResultView
           score={score}
+          sittingId={sitting?.sittingId}
           courseTitles={courseTitles}
           onReview={reviewAnswers ? () => setPhase('review') : undefined}
           onBack={onExit}

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsEnum, IsString, MaxLength, MinLength } from "class-validator";
+import { IsEnum, IsNumber, IsString, MaxLength, MinLength } from "class-validator";
 import { PaymentMethod } from "@mastara/database";
 
 export class SubmitProofDto {
@@ -39,6 +39,7 @@ export class SubmitProofDto {
     description: "Size of the receipt image in bytes",
     example: 204800,
   })
+  @IsNumber({}, { message: "imageSizeBytes must be a number" })
   imageSizeBytes!: number;
 }
 

@@ -8,6 +8,10 @@ import {
   Difficulty,
   ExamKind,
   EntitlementStatus,
+  OrderStatus,
+  PaymentMethod,
+  ProofStatus,
+  TicketStatus,
 } from "@prisma/client";
 import { prisma } from "./client";
 
@@ -514,6 +518,298 @@ async function main() {
     }
   }
   console.log(`  ✅ Demo student courses and active entitlements configured.`);
+
+  // --------------------------------------------------------------------------
+  // 10. Additional Demo Students, Orders & Payment Proofs for Live Testing
+  // --------------------------------------------------------------------------
+  if (univMap.get("AASTU")) {
+    await prisma.student.update({
+      where: { id: student.id },
+      data: { university_id: univMap.get("AASTU") },
+    });
+  }
+
+  const chaltu = await prisma.student.upsert({
+    where: { email: "chaltu@mastara.edu.et" },
+    update: { university_id: univMap.get("AAU") },
+    create: {
+      email: "chaltu@mastara.edu.et",
+      phone: "+251922334455",
+      password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq",
+      role: Role.STUDENT,
+      first_name: "Chaltu",
+      last_name: "Desta",
+      stream_pref: Stream.NATURAL,
+      university_id: univMap.get("AAU"),
+    },
+  });
+
+  const yared = await prisma.student.upsert({
+    where: { email: "yared@mastara.edu.et" },
+    update: { university_id: univMap.get("BDU") },
+    create: {
+      email: "yared@mastara.edu.et",
+      phone: "+251933445566",
+      password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq",
+      role: Role.STUDENT,
+      first_name: "Yared",
+      last_name: "Tadesse",
+      stream_pref: Stream.SOCIAL,
+      university_id: univMap.get("BDU"),
+    },
+  });
+
+  const bundleProduct = await prisma.product.findFirst({
+    where: { type: ProductType.BUNDLE },
+  });
+
+  if (bundleProduct) {
+    const existingProof1 = await prisma.paymentProof.findUnique({
+      where: { transaction_reference: "FT24098ABC12345" },
+    });
+    if (!existingProof1) {
+      const order1 = await prisma.order.create({
+        data: {
+          student_id: student.id,
+          product_id: bundleProduct.id,
+          stream: Stream.NATURAL,
+          quoted_amount: 200.0,
+          status: OrderStatus.PAYMENT_SUBMITTED,
+          items: {
+            create: seededCourses.slice(0, 6).map((c) => ({
+              course_id: c.id,
+              price_component: 33.33,
+            })),
+          },
+        },
+      });
+
+      await prisma.paymentProof.create({
+        data: {
+          order_id: order1.id,
+          method: PaymentMethod.CBE_MOBILE,
+          transaction_reference: "FT24098ABC12345",
+          image_key: "proofs/cbe_abebe_receipt.png",
+          image_size_bytes: 124500,
+          image_mime: "image/png",
+          status: ProofStatus.PENDING,
+        },
+      });
+    }
+
+    const existingProof2 = await prisma.paymentProof.findUnique({
+      where: { transaction_reference: "TB2499118822" },
+    });
+    if (!existingProof2) {
+      const order2 = await prisma.order.create({
+        data: {
+          student_id: chaltu.id,
+          product_id: bundleProduct.id,
+          stream: Stream.NATURAL,
+          quoted_amount: 200.0,
+          status: OrderStatus.APPROVED,
+          items: {
+            create: seededCourses.slice(0, 6).map((c) => ({
+              course_id: c.id,
+              price_component: 33.33,
+            })),
+          },
+        },
+      });
+
+      await prisma.paymentProof.create({
+        data: {
+          order_id: order2.id,
+          method: PaymentMethod.TELEBIRR,
+          transaction_reference: "TB2499118822",
+          image_key: "proofs/telebirr_chaltu_receipt.png",
+          image_size_bytes: 98400,
+          image_mime: "image/png",
+          status: ProofStatus.APPROVED,
+          reviewed_by: admin.id,
+          reviewed_at: new Date(),
+        },
+      });
+    }
+
+    const existingProof3 = await prisma.paymentProof.findUnique({
+      where: { transaction_reference: "CB2488331122" },
+    });
+    if (!existingProof3) {
+      const order3 = await prisma.order.create({
+        data: {
+          student_id: yared.id,
+          product_id: bundleProduct.id,
+          stream: Stream.SOCIAL,
+          quoted_amount: 200.0,
+          status: OrderStatus.PAYMENT_SUBMITTED,
+          items: {
+            create: seededCourses.slice(6, 12).map((c) => ({
+              course_id: c.id,
+              price_component: 33.33,
+            })),
+          },
+        },
+      });
+
+      await prisma.paymentProof.create({
+        data: {
+          order_id: order3.id,
+          method: PaymentMethod.CBE_BIRR,
+          transaction_reference: "CB2488331122",
+          image_key: "proofs/cbebirr_yared_receipt.png",
+          image_size_bytes: 112000,
+          image_mime: "image/png",
+          status: ProofStatus.PENDING,
+        },
+      });
+    }
+  }
+  console.log(`  ✅ Demo students, orders and payment proofs configured.`);
+
+  // --------------------------------------------------------------------------
+  // Support Tickets
+  // --------------------------------------------------------------------------
+  const ticketCount = await prisma.supportTicket.count();
+  if (ticketCount === 0) {
+    const studentUser = await prisma.student.findUnique({ where: { email: studentEmail } });
+    const chaltuUser = await prisma.student.findUnique({ where: { email: "chaltu@mastara.edu.et" } });
+    const yaredUser = await prisma.student.findUnique({ where: { email: "yared@mastara.edu.et" } });
+
+    if (studentUser) {
+      await prisma.supportTicket.create({
+        data: {
+          student_id: studentUser.id,
+          subject: "CBE Mobile receipt verified but bundle still locked",
+          category: "PAYMENT",
+          priority: "HIGH",
+          status: TicketStatus.OPEN,
+          messages: {
+            create: [
+              {
+                sender_id: studentUser.id,
+                sender_role: Role.STUDENT,
+                body: "I transferred 200 ETB via CBE Mobile banking with reference number FT2409187312 this morning. The payment status shows Approved in CBE, but when I open Calculus I, it still prompts me to purchase and says trial expired. Please verify and unlock access.",
+              },
+            ],
+          },
+        },
+      });
+
+      await prisma.supportTicket.create({
+        data: {
+          student_id: studentUser.id,
+          subject: "Phone replaced – need device released",
+          category: "DEVICE",
+          priority: "HIGH",
+          status: TicketStatus.OPEN,
+          messages: {
+            create: [
+              {
+                sender_id: studentUser.id,
+                sender_role: Role.STUDENT,
+                body: "Hello Admin, I lost my Android phone yesterday on campus. I bought a new Samsung device today, but when I try to log in, the app shows 'Device limit reached: Account already bound to another phone'. Could you please release my old phone binding so I can continue studying for my midterms?",
+              },
+            ],
+          },
+        },
+      });
+    }
+
+    if (chaltuUser) {
+      await prisma.supportTicket.create({
+        data: {
+          student_id: chaltuUser.id,
+          subject: "COC exit exam mock questions review",
+          category: "EXAMS",
+          priority: "NORMAL",
+          status: TicketStatus.ANSWERED,
+          messages: {
+            create: [
+              {
+                sender_id: chaltuUser.id,
+                sender_role: Role.STUDENT,
+                body: "I noticed question 14 on the Exit Exam Mock for Nursing had two conflicting options. Could the content team check the explanation provided?",
+              },
+              {
+                sender_id: admin.id,
+                sender_role: Role.ADMIN,
+                body: "Thank you for bringing this to our attention Chaltu! Our medical review panel reviewed question 14 and updated the explanation and answer key in today's content release.",
+              },
+            ],
+          },
+        },
+      });
+    }
+
+    if (yaredUser) {
+      await prisma.supportTicket.create({
+        data: {
+          student_id: yaredUser.id,
+          subject: "Offline downloads resume support",
+          category: "GENERAL",
+          priority: "LOW",
+          status: TicketStatus.RESOLVED,
+          messages: {
+            create: [
+              {
+                sender_id: yaredUser.id,
+                sender_role: Role.STUDENT,
+                body: "When downloading videos on Ethio Telecom 3G, the download pauses and restarts from zero. Is there resume support?",
+              },
+              {
+                sender_id: admin.id,
+                sender_role: Role.ADMIN,
+                body: "Hello! We have rolled out an update that enables chunked byte-range resume for offline downloads. Please ensure your Mastara mobile app is updated to the latest version.",
+              },
+            ],
+          },
+        },
+      });
+    }
+    console.log("  ✅ Support tickets seeded.");
+  }
+
+  // --------------------------------------------------------------------------
+  // Broadcasts
+  // --------------------------------------------------------------------------
+  const broadcastCount = await prisma.broadcast.count();
+  if (broadcastCount === 0) {
+    await prisma.broadcast.createMany({
+      data: [
+        {
+          title: "2026 Model COC Exam Sets Released",
+          body: "Comprehensive Model COC exams for Natural and Social sciences are now unlocked in the Exams section.",
+          audience: "ALL",
+          priority: "EXAM",
+          action_url: "/exam/coc",
+          sent_by: "Admin (System)",
+          recipient_count: 148,
+          created_at: new Date(Date.now() - 3600000 * 5),
+        },
+        {
+          title: "General Physics Formula Notes Updated",
+          body: "Formulas and offline KaTeX equation cards updated for Chapter 3 with Ethiopic translations.",
+          audience: "NATURAL_SCIENCE",
+          priority: "INFO",
+          action_url: "/course/physics",
+          sent_by: "Admin (System)",
+          recipient_count: 92,
+          created_at: new Date(Date.now() - 3600000 * 28),
+        },
+        {
+          title: "Telebirr Payment Gateway Maintenance",
+          body: "Scheduled payment verification maintenance completed. Instant bundle activations are back online.",
+          audience: "ALL",
+          priority: "MAINTENANCE",
+          sent_by: "Admin (System)",
+          recipient_count: 148,
+          created_at: new Date(Date.now() - 3600000 * 72),
+        },
+      ],
+    });
+    console.log("  ✅ Student broadcasts seeded.");
+  }
 
   console.log("✨ Mastara Phase 2 Seed Enrichment completed successfully!");
 }

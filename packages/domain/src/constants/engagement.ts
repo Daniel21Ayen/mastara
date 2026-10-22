@@ -5,6 +5,7 @@ export const NOTIFICATION_KINDS = [
   'PAYMENT_APPROVED',
   'PAYMENT_REJECTED',
   'ACCESS_EXPIRING',
+  'EXAM_RESULT',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 

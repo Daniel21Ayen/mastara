@@ -59,6 +59,7 @@ model Student {
   semester_id          String?           @db.Uuid
   stream_pref          Stream?
   profile_completed_at DateTime?         @db.Timestamptz(6)
+  push_token           String?
 
   created_at           DateTime          @default(now()) @db.Timestamptz(6)
   updated_at           DateTime          @updatedAt @db.Timestamptz(6)
@@ -93,6 +94,7 @@ model DeviceBinding {
   device_name           String?
   platform              DevicePlatform
   status                DeviceBindingStatus @default(ACTIVE)
+  push_token            String?
   bound_at              DateTime            @default(now()) @db.Timestamptz(6)
   released_at           DateTime?           @db.Timestamptz(6)
   revoked_at            DateTime?           @db.Timestamptz(6)

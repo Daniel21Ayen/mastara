@@ -5,9 +5,12 @@ import { LocalDriver } from "./local.driver";
 import { S3Driver } from "./s3.driver";
 import { StorageService } from "./storage.service";
 
+import { StorageController } from "./controllers/storage.controller";
+
 @Global()
 @Module({
   imports: [ConfigModule],
+  controllers: [StorageController],
   providers: [
     LocalDriver,
     S3Driver,

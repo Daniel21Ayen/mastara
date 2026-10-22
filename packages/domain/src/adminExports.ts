@@ -12,3 +12,7 @@ export * from './content/publish';
 export * from './identity/identifier';
 export * from './assessment/setRules';
 export * from './payments/decision';
+export * from './assessment/csvParser';
+export * from './assessment/bulkQuestionParser';
+export * from './assessment/examSetExport';
+
