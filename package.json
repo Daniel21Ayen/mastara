@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "npm test --workspaces --if-present",
-    "dev:admin": "npm run dev --workspace @mastara/admin-web"
+    "dev:admin": "npm run dev --workspace @mastara/admin-web",
+    "postinstall": "node scripts/patch-expo-notifications.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

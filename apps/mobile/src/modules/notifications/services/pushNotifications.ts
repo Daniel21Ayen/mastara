@@ -1,6 +1,7 @@
 // apps/mobile/src/modules/notifications/services/pushNotifications.ts
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Alert, Platform } from 'react-native';
 
 import { env } from '@/core/config/env';
@@ -12,17 +13,23 @@ export interface PushNotificationPayload {
   data?: Record<string, unknown>;
 }
 
-// Configure foreground notification handling
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+// Configure foreground notification handling safely
 if (Platform.OS !== 'web') {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  } catch (err) {
+    console.warn('[PushNotification] Foreground handler registration skipped:', err);
+  }
 }
 
 /**
@@ -40,28 +47,32 @@ export const pushNotificationService = {
 
     try {
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'General',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#2563EB',
-        });
-        await Notifications.setNotificationChannelAsync('payments', {
-          name: 'Payments & Approvals',
-          importance: Notifications.AndroidImportance.HIGH,
-          sound: 'default',
-        });
-        await Notifications.setNotificationChannelAsync('assessments', {
-          name: 'Exam & Quiz Results',
-          importance: Notifications.AndroidImportance.HIGH,
-          sound: 'default',
-        });
+        try {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'General',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#2563EB',
+          });
+          await Notifications.setNotificationChannelAsync('payments', {
+            name: 'Payments & Approvals',
+            importance: Notifications.AndroidImportance.HIGH,
+            sound: 'default',
+          });
+          await Notifications.setNotificationChannelAsync('assessments', {
+            name: 'Exam & Quiz Results',
+            importance: Notifications.AndroidImportance.HIGH,
+            sound: 'default',
+          });
+        } catch {
+          // Channels may not be fully supported in Expo Go
+        }
       }
 
-      if (!Device.isDevice) {
-        // In emulators/simulators, push tokens cannot receive remote APNS/FCM notifications directly.
+      if (isExpoGo || !Device.isDevice) {
+        // In Expo Go (SDK 53+) or emulators, remote push tokens cannot be obtained from native FCM.
         // We register a dev token with the backend so API contracts work seamlessly.
-        const devToken = `ExponentPushToken[dev-simulator-${userId || 'student'}]`;
+        const devToken = `ExponentPushToken[${isExpoGo ? 'expo-go' : 'dev-simulator'}-${userId || 'student'}]`;
         try {
           await httpClient.post('/notifications/push-token', {
             token: devToken,
