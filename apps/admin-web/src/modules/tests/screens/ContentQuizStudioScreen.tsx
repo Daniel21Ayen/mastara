@@ -4,11 +4,17 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { QuizNumber } from '@mastara/domain';
 import { Icon } from '@/shared/ui';
+<<<<<<< HEAD
 import { useContentCourse, useModules } from '@/modules/content';
 import { testsApi } from '../api/tests.api';
 import { useQuestions } from '../hooks/useTests';
 import { QuestionPreviewDialog } from '../components/QuestionPreviewDialog';
 import { toInput, type QuestionFormState } from '../lib/questionForm';
+=======
+import { MathInputHelper } from '@/shared/math';
+import { StudentPreviewModal } from '@/shared/preview';
+import { useContentCourse } from '@/modules/content';
+>>>>>>> origin/main
 import { TestListScreen } from './TestListScreen';
 import styles from '@/modules/content/components/ContentStudio.module.css';
 
@@ -90,7 +96,11 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
     'A book is a written work, often made of pages, that gives information or tells a story.',
   );
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+<<<<<<< HEAD
   const [saving, setSaving] = useState(false);
+=======
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+>>>>>>> origin/main
 
   const selectedChapter =
     activeChapters.find((ch) => ch.id === selectedChapterId) ?? activeChapters[0] ?? DEFAULT_QUIZ_CHAPTERS[0]!;
@@ -234,8 +244,13 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
           <button
             type="button"
             className={styles.actionBtnOutline}
+<<<<<<< HEAD
             onClick={() => setPreviewOpen(true)}
             title="Preview question as seen by students"
+=======
+            onClick={() => setIsPreviewOpen(true)}
+            title="Preview as Student (desktop & mobile simulation)"
+>>>>>>> origin/main
           >
             <Icon name="eye" size={16} />
             Preview as student
@@ -416,6 +431,11 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
                 placeholder="What is the correct meaning of the word 'book'?"
                 rows={3}
               />
+              <MathInputHelper
+                value={questionPrompt}
+                onChange={setQuestionPrompt}
+                placeholderHelp="Formulas: Inline $E = mc^2$, Display block $$\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$"
+              />
             </div>
 
             {/* Answers List */}
@@ -472,6 +492,11 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
                 placeholder="A book is a written work, often made of pages, that gives information or tells a story."
                 rows={3}
               />
+              <MathInputHelper
+                value={explanation}
+                onChange={setExplanation}
+                placeholderHelp="LaTeX math symbols supported in student explanation"
+              />
             </div>
 
             <button
@@ -486,12 +511,27 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
         </div>
       )}
 
+<<<<<<< HEAD
       {previewOpen ? (
         <QuestionPreviewDialog
           question={currentFormState}
           onClose={() => setPreviewOpen(false)}
         />
       ) : null}
+=======
+      {/* Student Preview Modal with desktop/mobile frames, stripped correct answers */}
+      <StudentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title={selectedChapter.title || 'Quiz Preview'}
+        subtitle={`Quiz ${quizNo} • ${questionType}`}
+        category={course?.title || 'Course'}
+        mode="question"
+        prompt={questionPrompt}
+        questionType={questionType}
+        options={options.map((opt) => opt.text.trim() || `${opt.letter}. Option text`)}
+      />
+>>>>>>> origin/main
     </div>
   );
 }

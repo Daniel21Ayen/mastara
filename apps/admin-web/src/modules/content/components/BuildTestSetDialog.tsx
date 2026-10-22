@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Icon } from '@/shared/ui';
 import { testsApi } from '@/modules/tests/api/tests.api';
+import { StudentPreviewModal } from '@/shared/preview';
 import type { TestSetItem } from '../state/contentManagementData';
 import styles from './BuildTestSetDialog.module.css';
 
@@ -68,11 +69,19 @@ const COURSE_OPTIONS: Record<string, string[]> = {
   ],
 };
 
-const ACCESS_CHOICES = [
-  { id: 'Enrolled Only', title: 'Enrolled / Premium Only', desc: 'Active subscription or course enrollment' },
-  { id: 'Public', title: 'Public (All Students)', desc: 'Open to registered and guest students' },
-  { id: 'Restricted', title: 'Restricted / Evaluation', desc: 'Requires special permission code' },
-  { id: 'Free Trial', title: 'Free Trial Access', desc: 'Accessible during trial period' },
+const CHAPTER_OPTIONS = [
+  'Chapter 1',
+  'Chapter 2',
+  'Chapter 3',
+  'Chapter 4',
+  'Chapter 5',
+  'Chapter 6',
+  'Chapter 7',
+  'Chapter 8',
+  'Chapter 9',
+  'Chapter 10',
+  'Chapter 11',
+  'Chapter 12',
 ];
 
 export function BuildTestSetDialog({
@@ -90,12 +99,10 @@ export function BuildTestSetDialog({
   const [testSetId, setTestSetId] = useState(
     `TS-${Date.now().toString().slice(-6)}-Q${defaultQuizNo}`,
   );
-  const [timeAllowed, setTimeAllowed] = useState('45 minutes');
-  const [access, setAccess] = useState('Enrolled Only');
   const [quizNo, setQuizNo] = useState<1 | 2 | 3>(defaultQuizNo);
-  const [chapter, setChapter] = useState('Chapter 1');
-  const [chapterSubtitle, setChapterSubtitle] = useState('Introduction');
+  const [chapter, setChapter] = useState(CHAPTER_OPTIONS[0] || 'Chapter 1');
   const [status, setStatus] = useState<'Active' | 'Inactive'>('Active');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -114,18 +121,10 @@ export function BuildTestSetDialog({
     setTestSetId(`TS-${streamCode}-Q${quizNo}-${rand}`);
   };
 
-  const handlePresetTime = (time: string) => {
-    setTimeAllowed(time);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!testSetId.trim()) {
       setError('Test Set ID is required.');
-      return;
-    }
-    if (!timeAllowed.trim()) {
-      setError('Time allowed is required.');
       return;
     }
 
@@ -138,14 +137,13 @@ export function BuildTestSetDialog({
       quizNo,
       chapterNumber: Number(chapter.replace(/[^0-9]/g, '')) || 1,
       chapterTitle: chapter,
-      chapterSubtitle: chapterSubtitle || 'Foundations',
+      chapterSubtitle: '',
       courseTitle: course,
       courseCode: course.split(' ')[0] || 'COURSE',
       semester,
       stream,
       program,
-      timeAllowed: timeAllowed.trim(),
-      access,
+      access: 'Enrolled Only',
       status,
       verified: true,
       questionCount: 1,
@@ -190,18 +188,29 @@ export function BuildTestSetDialog({
             <div>
               <h2 className={styles.modalTitle}>Build Test Set</h2>
               <p className={styles.modalSubtitle}>
-                Configure parameters and access permissions to assemble a new assessment set.
+                Assemble an assessment quiz set bound directly to Course Entitlements.
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            className={styles.closeButton}
-            onClick={onClose}
-            aria-label="Close dialog"
-          >
-            ✕
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button
+              type="button"
+              className={styles.previewStudentBtn}
+              onClick={() => setIsPreviewOpen(true)}
+              title="Preview simulated student view"
+            >
+              <Icon name="eye" size={16} />
+              <span>Preview as Student</span>
+            </button>
+            <button
+              type="button"
+              className={styles.closeButton}
+              onClick={onClose}
+              aria-label="Close dialog"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.modalBody}>
@@ -303,30 +312,20 @@ export function BuildTestSetDialog({
 
             <div className={styles.fieldGroup}>
               <label className={styles.fieldLabel} htmlFor="build-chapter">
-                Chapter
+                Chapter <span className={styles.requiredAsterisk}>*</span>
               </label>
-              <input
+              <select
                 id="build-chapter"
-                type="text"
-                className={styles.input}
+                className={styles.select}
                 value={chapter}
                 onChange={(e) => setChapter(e.target.value)}
-                placeholder="Chapter 1"
-              />
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor="build-chapter-sub">
-                Chapter Subtitle
-              </label>
-              <input
-                id="build-chapter-sub"
-                type="text"
-                className={styles.input}
-                value={chapterSubtitle}
-                onChange={(e) => setChapterSubtitle(e.target.value)}
-                placeholder="Introduction & Basics"
-              />
+              >
+                {CHAPTER_OPTIONS.map((ch) => (
+                  <option key={ch} value={ch}>
+                    {ch}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className={styles.fieldGroup}>
@@ -370,66 +369,14 @@ export function BuildTestSetDialog({
               </div>
             </div>
 
-            {/* 6. Time Allowed */}
-            <div className={`${styles.fieldGroup} ${styles.formGridFull}`}>
-              <label className={styles.fieldLabel} htmlFor="build-time-allowed">
-                Time Allowed <span className={styles.requiredAsterisk}>*</span>
-              </label>
-              <input
-                id="build-time-allowed"
-                type="text"
-                className={styles.input}
-                value={timeAllowed}
-                onChange={(e) => setTimeAllowed(e.target.value)}
-                placeholder="e.g. 45 minutes"
-                required
-              />
-              <div className={styles.timePresets}>
-                {['15 minutes', '30 minutes', '45 minutes', '60 minutes', '90 minutes'].map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    className={`${styles.presetBtn} ${
-                      timeAllowed === t ? styles.presetBtnActive : ''
-                    }`}
-                    onClick={() => handlePresetTime(t)}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 7. Access / Permission */}
-            <div className={`${styles.fieldGroup} ${styles.formGridFull}`}>
-              <label className={styles.fieldLabel}>
-                Access / Permission <span className={styles.requiredAsterisk}>*</span>
-              </label>
-              <div className={styles.accessOptions}>
-                {ACCESS_CHOICES.map((choice) => {
-                  const isChecked = access === choice.id;
-                  return (
-                    <label
-                      key={choice.id}
-                      className={`${styles.accessCard} ${
-                        isChecked ? styles.accessCardActive : ''
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="access-permission"
-                        value={choice.id}
-                        checked={isChecked}
-                        onChange={() => setAccess(choice.id)}
-                        className={styles.accessRadio}
-                      />
-                      <div className={styles.accessInfo}>
-                        <span className={styles.accessTitle}>{choice.title}</span>
-                        <span className={styles.accessDesc}>{choice.desc}</span>
-                      </div>
-                    </label>
-                  );
-                })}
+            {/* Course Entitlement Access Notice (SRS Section 7.5 & 4.3) */}
+            <div className={styles.entitlementNotice}>
+              <Icon name="shieldCheck" size={20} />
+              <div>
+                <strong>Course Entitlement Model</strong>
+                <p>
+                  Quizzes have no independent timers or custom permission lists. Student access is automatically bound to active course subscription and chapter free-trial flags.
+                </p>
               </div>
             </div>
           </div>
@@ -445,6 +392,22 @@ export function BuildTestSetDialog({
           </div>
         </form>
       </div>
+
+      <StudentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title={`${course} · ${chapter} (Quiz ${quizNo})`}
+        category={`${stream} Stream · ${program} · ${semester}`}
+        mode="question"
+        prompt={`Sample simulated question for ${course} (${chapter}).\n\nSolve the equation: $$x^2 - 4x + 4 = 0$$`}
+        questionType="Multiple Choice"
+        options={[
+          'x = 2 (multiplicity 2)',
+          'x = -2 (multiplicity 2)',
+          'x = 0 and x = 4',
+          'No real roots',
+        ]}
+      />
     </div>
   );
 }

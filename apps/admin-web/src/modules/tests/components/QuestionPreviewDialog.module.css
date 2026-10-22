@@ -1,3 +1,69 @@
+/* apps/admin-web/src/modules/tests/components/QuestionPreviewDialog.module.css */
+
+.previewWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  transition: max-width 0.2s ease;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.mobileViewport {
+  max-width: 375px;
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 4px solid #334155;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.viewportBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.simNotice {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.viewportToggle {
+  display: flex;
+  background-color: var(--color-surface-hover, #f1f5f9);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+}
+
+.viewportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: none;
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.viewportBtnActive {
+  background-color: var(--color-surface, #ffffff);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
 .preview {
   display: flex;
   flex-direction: column;
@@ -7,6 +73,11 @@
 .title {
   margin: 0;
   font-size: var(--font-size-heading);
+}
+
+.prompt {
+  line-height: 1.5;
+  font-size: 0.95rem;
 }
 
 .choices {
@@ -25,6 +96,21 @@
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  background: #ffffff;
+}
+
+.choice:hover {
+  border-color: var(--color-primary);
+  background-color: #f8fafc;
+}
+
+.choiceSelected {
+  border-color: var(--color-primary);
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 .letter {
@@ -38,23 +124,64 @@
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-weight: 700;
+  font-size: 0.85rem;
 }
 
-.answerBox {
-  margin: 0;
-  padding: var(--space-md);
-  border: 1px dashed var(--color-border);
+.letterActive {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.choiceText {
+  flex: 1;
+}
+
+.tfContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.tfBtn {
+  padding: 0.75rem;
   border-radius: var(--radius-md);
-  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  background: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-.hint {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-caption);
+.tfBtn:hover {
+  border-color: var(--color-primary);
+}
+
+.tfBtnActive {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+  color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.inputContainer {
+  width: 100%;
+}
+
+.simInput {
+  width: 100%;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.simInput:focus {
+  border-color: var(--color-primary);
 }
 
 .buttons {
   display: flex;
   justify-content: flex-end;
+  margin-top: 0.5rem;
 }

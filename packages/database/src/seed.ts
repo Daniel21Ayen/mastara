@@ -20,6 +20,7 @@ import {
   DocumentStatus,
   AttemptCategory,
   AttemptState,
+  ContentKind,
 } from "@prisma/client";
 import { prisma } from "./client";
 
@@ -246,8 +247,7 @@ async function main() {
   ];
 
   const studentMap = new Map<string, any>();
-  for (let idx = 0; idx < studentSeeds.length; idx++) {
-    const s = studentSeeds[idx];
+  for (const [idx, s] of studentSeeds.entries()) {
     const studentCode = `MS${(idx + 1).toString().padStart(4, '0')}`;
     const studentRecord = await prisma.student.upsert({
       where: { email: s.email },
@@ -388,7 +388,7 @@ async function main() {
 
       // Bilingual STEM Note
       await prisma.content.upsert({
-        where: { topic_id_version: { topic_id: topic.id, version: 1 } },
+        where: { topic_id_kind_version: { topic_id: topic.id, kind: ContentKind.NOTE, version: 1 } },
         update: {},
         create: {
           topic_id: topic.id,
@@ -530,8 +530,12 @@ async function main() {
       },
     });
 
-    const sampleQs = await prisma.question.findMany({ take: 5 });
+    const sampleQs = await prisma.question.findMany({
+      where: { course_id: { not: null } },
+      take: 5,
+    });
     for (const [idx, q] of sampleQs.entries()) {
+      if (!q.course_id) continue;
       const cocQ = await prisma.cocQuestion.upsert({
         where: { question_id: q.id },
         update: {},

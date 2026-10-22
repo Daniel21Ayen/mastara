@@ -38,6 +38,7 @@ import {
 } from '@/shared/ui';
 
 import { testsApi } from '../api/tests.api';
+import { MathInputHelper } from '@/shared/math';
 import { AnswerList } from '../components/AnswerList';
 import { OptionsEditor } from '../components/OptionsEditor';
 import { QuestionPreviewDialog } from '../components/QuestionPreviewDialog';
@@ -279,6 +280,20 @@ function EditorBody({ courseId, courseTitle, quizNo, question }: BodyProps) {
                 }}
                 error={errors.prompt || errors.title}
               />
+              <MathInputHelper
+                value={state.prompt}
+                onChange={(val: string) =>
+                  patch(
+                    {
+                      prompt: val,
+                      title: val.trim().slice(0, 80) || 'Question',
+                    },
+                    'prompt',
+                    'title',
+                  )
+                }
+                placeholderHelp="Inline $E = mc^2$ and block $$\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$"
+              />
               <p className={styles.counter}>
                 {state.prompt.length}/{QUESTION_PROMPT_MAX}
               </p>
@@ -324,6 +339,11 @@ function EditorBody({ courseId, courseTitle, quizNo, question }: BodyProps) {
                   placeholder="Explain why this answer is correct..."
                   value={state.explanation || ''}
                   onChange={(event) => patch({ explanation: event.target.value }, 'explanation')}
+                />
+                <MathInputHelper
+                  value={state.explanation || ''}
+                  onChange={(val: string) => patch({ explanation: val }, 'explanation')}
+                  placeholderHelp="LaTeX symbols for explanation"
                 />
                 <p className={styles.hint}>
                   This explanation will be shown to students after they answer the question.

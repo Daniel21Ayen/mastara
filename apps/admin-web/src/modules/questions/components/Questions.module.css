@@ -297,3 +297,42 @@
   padding-inline: var(--space-xs);
   font-size: var(--font-size-caption);
 }
+
+/* Question attribute cell: single line, strictly preventing row height expansion */
+.questionCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  max-width: 240px;
+  min-width: 120px;
+}
+
+.questionText {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+  max-height: 1.25rem;
+  line-height: 1.25;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.questionText:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.questionMeta {
+  flex-shrink: 0;
+  font-size: 0.725rem;
+  color: var(--color-primary);
+  background: var(--color-primary-soft, #eff6ff);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm, 4px);
+  font-weight: 700;
+  white-space: nowrap;
+}

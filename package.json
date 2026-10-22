@@ -20,6 +20,7 @@
     "format:check": "prettier --check .",
     "test": "npm test --workspaces --if-present",
     "dev:admin": "npm run dev --workspace @mastara/admin-web",
+    "dev:worker": "npm run dev --workspace=@mastara/worker",
     "postinstall": "node scripts/patch-expo-notifications.mjs"
   },
   "devDependencies": {

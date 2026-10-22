@@ -120,8 +120,9 @@ export const quizSettingsSchema = z.object({
   minutes: z
     .number({ message: TESTS_VALIDATION.minutes })
     .int({ message: TESTS_VALIDATION.minutes })
-    .min(QUIZ_MINUTES_MIN, { message: TESTS_VALIDATION.minutes })
-    .max(QUIZ_MINUTES_MAX, { message: TESTS_VALIDATION.minutes }),
+    .min(0, { message: TESTS_VALIDATION.minutes })
+    .max(QUIZ_MINUTES_MAX, { message: TESTS_VALIDATION.minutes })
+    .optional(),
   status,
   reason: reasonSchema.optional(),
 });

@@ -399,7 +399,7 @@ export function updateQuiz(
     throw new ApiError(ADMIN_ERROR_CODES.VALIDATION_FAILED);
   }
   const before = record.status;
-  record.minutes = input.minutes;
+  record.minutes = input.minutes ?? record.minutes ?? 0;
   record.status = input.status;
   return { quiz: quizSummary(courseId, quizNo), before };
 }

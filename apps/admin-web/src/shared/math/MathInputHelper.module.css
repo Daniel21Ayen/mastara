@@ -1,0 +1,173 @@
+/* apps/admin-web/src/shared/math/MathInputHelper.module.css */
+
+.katexContainer {
+  display: inline;
+  line-height: 1.6;
+}
+
+.inlineMath {
+  display: inline-block;
+  margin: 0 0.15em;
+  vertical-align: -0.1em;
+}
+
+.blockMath {
+  display: block;
+  margin: 0.75rem 0;
+  text-align: center;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+
+.mathError {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.4rem;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px dashed #f87171;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85em;
+  margin: 0 0.2rem;
+}
+
+.mathErrorBadge {
+  font-size: 0.7em;
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* Helper Toolbar & Accordion */
+.helperBox {
+  margin-top: 0.4rem;
+  font-size: 0.825rem;
+}
+
+.helperTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.helperTrigger:hover {
+  background-color: #eff6ff;
+}
+
+.syntaxBar {
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.syntaxRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.syntaxLabel {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.75rem;
+  min-width: 80px;
+}
+
+.syntaxChip {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.syntaxChip:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.symbolGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.symbolBtn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.symbolBtn:hover {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+/* Real-time Live Preview */
+.livePreviewCard {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #3b82f6;
+  border-radius: 0 6px 6px 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.previewTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.previewBody {
+  font-size: 0.9rem;
+  color: #1e293b;
+  min-height: 1.5rem;
+}
+
+.previewEmpty {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 0.825rem;
+}

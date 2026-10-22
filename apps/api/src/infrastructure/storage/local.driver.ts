@@ -1,54 +1,71 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import * as fs from "fs/promises";
-import * as path from "path";
-import * as crypto from "crypto";
-import { StorageDriver, StorageUploadResult } from "./storage.interface";
+// apps/api/src/infrastructure/storage/local.driver.ts
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
+import type { StorageDriver, StorageUploadResult } from './storage.interface';
 
-@Injectable()
-export class LocalDriver implements StorageDriver {
-  private readonly logger = new Logger(LocalDriver.name);
-  private readonly baseDir: string;
+export class LocalStorageDriver implements StorageDriver {
+  private readonly uploadDir: string;
   private readonly publicBaseUrl: string;
 
-  constructor(private readonly config: ConfigService) {
-    const rawDir = this.config.get<string>("STORAGE_LOCAL_DIR") || "uploads";
-    this.baseDir = path.isAbsolute(rawDir)
-      ? rawDir
-      : path.join(process.cwd(), rawDir);
-    this.publicBaseUrl =
-      this.config.get<string>("STORAGE_PUBLIC_BASE_URL") || "/uploads";
+  constructor(uploadDir = './uploads', publicBaseUrl = '/uploads') {
+    this.uploadDir = path.resolve(process.cwd(), uploadDir);
+    this.publicBaseUrl = publicBaseUrl;
+    if (!fs.existsSync(this.uploadDir)) {
+      fs.mkdirSync(this.uploadDir, { recursive: true });
+    }
   }
 
   private resolvePath(key: string): string {
-    const sanitizedKey = key.replace(/^[/\\]+/, "");
-    return path.join(this.baseDir, sanitizedKey);
+    const safeKey = key.replace(/\.\./g, '').replace(/^[/\\]+/, '');
+    return path.join(this.uploadDir, safeKey);
+  }
+
+  async getUploadUrl(
+    key: string,
+    _contentType: string,
+    baseUrl = 'http://localhost:4001',
+  ): Promise<{ key: string; uploadUrl: string; publicUrl: string }> {
+    const safeKey = key.replace(/\.\./g, '');
+    const uploadUrl = `${baseUrl}/content/admin/scans/storage-upload/${encodeURIComponent(safeKey)}`;
+    const publicUrl = `${baseUrl}/content/admin/scans/storage-download/${encodeURIComponent(safeKey)}`;
+    return { key: safeKey, uploadUrl, publicUrl };
+  }
+
+  async getDownloadUrl(key: string, baseUrl = 'http://localhost:4001'): Promise<string> {
+    const safeKey = key.replace(/\.\./g, '');
+    return `${baseUrl}/content/admin/scans/storage-download/${encodeURIComponent(safeKey)}`;
+  }
+
+  async saveFile(key: string, buffer: Buffer): Promise<string> {
+    const filePath = this.resolvePath(key);
+    const parentDir = path.dirname(filePath);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
+    await fs.promises.writeFile(filePath, buffer);
+    return filePath;
+  }
+
+  async readFile(key: string): Promise<Buffer> {
+    const filePath = this.resolvePath(key);
+    return fs.promises.readFile(filePath);
   }
 
   async upload(
     key: string,
     data: Buffer | Uint8Array | string,
-    mimeType = "application/octet-stream",
+    mimeType = 'application/octet-stream',
   ): Promise<StorageUploadResult> {
-    const filePath = this.resolvePath(key);
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
-
     const buffer = Buffer.isBuffer(data)
       ? data
-      : typeof data === "string"
-      ? Buffer.from(data, "utf8")
+      : typeof data === 'string'
+      ? Buffer.from(data, 'utf8')
       : Buffer.from(data);
 
-    await fs.writeFile(filePath, buffer);
-
-    const checksumSha256 = crypto
-      .createHash("sha256")
-      .update(buffer)
-      .digest("hex");
-
-    const url = `${this.publicBaseUrl}/${key.replace(/\\/g, "/")}`;
-
-    this.logger.debug(`Stored local file at ${filePath} (${buffer.length} bytes)`);
+    await this.saveFile(key, buffer);
+    const checksumSha256 = crypto.createHash('sha256').update(buffer).digest('hex');
+    const url = `${this.publicBaseUrl}/${key.replace(/\\/g, '/')}`;
 
     return {
       key,
@@ -60,32 +77,26 @@ export class LocalDriver implements StorageDriver {
   }
 
   async download(key: string): Promise<Buffer> {
-    const filePath = this.resolvePath(key);
-    return fs.readFile(filePath);
+    return this.readFile(key);
   }
 
   async delete(key: string): Promise<void> {
     const filePath = this.resolvePath(key);
     try {
-      await fs.unlink(filePath);
+      await fs.promises.unlink(filePath);
     } catch (err: any) {
-      if (err.code !== "ENOENT") {
-        throw err;
-      }
+      if (err.code !== 'ENOENT') throw err;
     }
   }
 
   async getSignedUrl(key: string, _expiresInSeconds = 3600): Promise<string> {
-    return `${this.publicBaseUrl}/${key.replace(/\\/g, "/")}`;
+    return `${this.publicBaseUrl}/${key.replace(/\\/g, '/')}`;
   }
 
   async exists(key: string): Promise<boolean> {
     const filePath = this.resolvePath(key);
-    try {
-      await fs.access(filePath);
-      return true;
-    } catch {
-      return false;
-    }
+    return fs.existsSync(filePath);
   }
 }
+
+export const LocalDriver = LocalStorageDriver;

@@ -10,7 +10,8 @@ import type { FormEvent } from 'react';
 
 import { adminText, adminTextFor, errorText } from '@/core/i18n';
 import { reasonProblem } from '@/shared/forms';
-import { Button, Checkbox, Modal, SelectField, TextArea, TextField } from '@/shared/ui';
+import { Button, Checkbox, Icon, Modal, SelectField, TextArea, TextField } from '@/shared/ui';
+import { MathInputHelper } from '@/shared/math';
 
 import { contentApi } from '../api/content.api';
 
@@ -204,6 +205,14 @@ export function NoteEditorDialog({
           }}
           error={errors[`body.${shown}`]}
         />
+        <MathInputHelper
+          value={body[shown]}
+          onChange={(val: string) => {
+            setBody({ ...body, [shown]: val });
+            clear(`body.${shown}`);
+          }}
+          placeholderHelp="Math formulas: $E=mc^2$ or $$\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$"
+        />
         <p className={styles.hint}>{adminText('admin.content.notes.formulaHint')}</p>
 
         <p className={styles.label}>{adminText('admin.content.notes.preview')}</p>
@@ -239,6 +248,7 @@ export function NoteEditorDialog({
             {adminText('admin.common.cancel')}
           </Button>
           <Button variant="outline" onClick={() => setPreviewing(true)} disabled={busy}>
+            <Icon name="eye" size={16} />
             {adminText('admin.content.reviewAsStudent')}
           </Button>
           <Button variant="outline" onClick={() => void save('DRAFT')} disabled={busy}>

@@ -7,3 +7,6 @@ export { AnswerList } from './components/AnswerList';
 export { OptionsEditor } from './components/OptionsEditor';
 export { QuestionPreviewDialog } from './components/QuestionPreviewDialog';
 export { StatusBadge } from './components/StatusBadge';
+export { SharedQuestionEditor } from './components/SharedQuestionEditor';
+export { AssessmentDrawerWorkflow } from './components/AssessmentDrawerWorkflow';
+export { UnifiedAssessmentsHubScreen } from './screens/UnifiedAssessmentsHubScreen';

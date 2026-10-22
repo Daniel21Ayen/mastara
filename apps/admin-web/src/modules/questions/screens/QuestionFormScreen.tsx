@@ -25,6 +25,7 @@ import { adminText, errorText } from '@/core/i18n';
 import { catalogApi } from '@/modules/catalog/api/catalog.api';
 import { programsOf, usePrograms, useScanCourses, useUniversities } from '@/modules/scans';
 import { AnswerList, OptionsEditor, QuestionPreviewDialog } from '@/modules/tests';
+import { MathInputHelper } from '@/shared/math';
 import { fieldErrors, reasonProblem } from '@/shared/forms';
 import { useAsync } from '@/shared/hooks';
 import {
@@ -307,7 +308,7 @@ function FormBody({ kind, set }: BodyProps) {
       <PageHeader
         title={adminText('admin.questions.form.heading')}
         actions={
-          <>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             {set?.id ? (
               <>
                 <Button
@@ -328,11 +329,28 @@ function FormBody({ kind, set }: BodyProps) {
                 </Button>
               </>
             ) : null}
-            <Button variant="outline" onClick={() => setPreviewing(current)} disabled={isBlankQuestion(current)}>
+            <Button
+              variant="outline"
+              onClick={() => setPreviewing(current)}
+              disabled={isBlankQuestion(current)}
+            >
               <Icon name="eye" size={18} />
               {adminText('admin.content.reviewAsStudent')}
             </Button>
-          </>
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => void save('DRAFT')}
+            >
+              {adminText('admin.tests.editor.saveDraft')}
+            </Button>
+            <Button
+              disabled={busy}
+              onClick={() => void save('PUBLISHED')}
+            >
+              {adminText(wasPublished ? 'admin.tests.editor.update' : 'admin.tests.editor.publish')}
+            </Button>
+          </div>
         }
 
       />
@@ -518,6 +536,11 @@ function FormBody({ kind, set }: BodyProps) {
                 onChange={(event) => patchQ({ prompt: event.target.value }, 'prompt')}
                 error={qErrors.prompt}
               />
+              <MathInputHelper
+                value={current.prompt}
+                onChange={(val: string) => patchQ({ prompt: val }, 'prompt')}
+                placeholderHelp="Inline $E = mc^2$ and block $$\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$"
+              />
               <p className={styles.counter}>
                 {current.prompt.length}/{EXAM_PROMPT_MAX}
               </p>
@@ -573,6 +596,11 @@ function FormBody({ kind, set }: BodyProps) {
                 placeholder={adminText('admin.questions.field.answerDescriptionPlaceholder')}
                 value={current.answerDescription ?? ''}
                 onChange={(event) => patchQ({ answerDescription: event.target.value }, 'description')}
+              />
+              <MathInputHelper
+                value={current.answerDescription ?? ''}
+                onChange={(val: string) => patchQ({ answerDescription: val }, 'description')}
+                placeholderHelp="LaTeX math formatting for student answer solution"
               />
               <p className={styles.counter}>
                 {(current.answerDescription ?? '').length}/{ANSWER_DESCRIPTION_MAX}

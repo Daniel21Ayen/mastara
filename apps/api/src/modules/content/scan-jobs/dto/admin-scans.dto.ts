@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsOptional, IsString, IsEnum, IsInt, Min } from "class-validator";
+import { IsOptional, IsString, IsEnum, IsInt, Min, IsArray, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 import { SCAN_KINDS, STREAMS } from "@mastara/domain";
 import type { ScanKind, Stream } from "@mastara/domain";
@@ -36,4 +36,27 @@ export class ListScanCoursesQueryDto {
   @ApiProperty({ enum: STREAMS, description: "Academic stream" })
   @IsEnum(STREAMS)
   stream!: Stream;
+}
+
+export class UploadFileItemDto {
+  @ApiProperty({ description: "File name", example: "page-1.jpg" })
+  @IsString()
+  name!: string;
+
+  @ApiProperty({ description: "MIME type", example: "image/jpeg" })
+  @IsString()
+  mime!: string;
+
+  @ApiProperty({ description: "File size in bytes", example: 250000 })
+  @Type(() => Number)
+  @IsInt()
+  sizeBytes!: number;
+}
+
+export class RequestUploadUrlsDto {
+  @ApiProperty({ type: [UploadFileItemDto], description: "List of files to get presigned URLs for" })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UploadFileItemDto)
+  files!: UploadFileItemDto[];
 }

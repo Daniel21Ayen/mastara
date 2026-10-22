@@ -78,11 +78,10 @@ export class AdminQuestionInputDto {
 }
 
 export class AdminQuizSettingsInputDto {
-  @ApiProperty({ description: "Allowed duration in minutes (5 - 180)" })
+  @ApiPropertyOptional({ description: "Allowed duration in minutes (deprecated for quizzes)" })
+  @IsOptional()
   @IsInt()
-  @Min(5)
-  @Max(180)
-  minutes!: number;
+  minutes?: number;
 
   @ApiProperty({ enum: ["DRAFT", "PUBLISHED", "ARCHIVED"], description: "Publication status" })
   @IsEnum(["DRAFT", "PUBLISHED", "ARCHIVED"])

@@ -1,78 +1,106 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+// apps/api/src/infrastructure/storage/s3.driver.ts
 import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import * as crypto from "crypto";
-import { Readable } from "stream";
-import { StorageDriver, StorageUploadResult } from "./storage.interface";
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as crypto from 'crypto';
+import type { StorageDriver, StorageUploadResult } from './storage.interface';
 
-@Injectable()
-export class S3Driver implements StorageDriver {
-  private readonly logger = new Logger(S3Driver.name);
+export interface S3Config {
+  endpoint?: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucket: string;
+  region?: string;
+  forcePathStyle?: boolean;
+}
+
+export class S3StorageDriver implements StorageDriver {
   private readonly client: S3Client;
   private readonly bucket: string;
-  private readonly publicBaseUrl?: string;
 
-  constructor(private readonly config: ConfigService) {
-    this.bucket = this.config.get<string>("S3_BUCKET") || "mastara-storage";
-    const region = this.config.get<string>("S3_REGION") || "us-east-1";
-    const endpoint = this.config.get<string>("S3_ENDPOINT");
-    const accessKeyId = this.config.get<string>("S3_ACCESS_KEY_ID") || "";
-    const secretAccessKey = this.config.get<string>("S3_SECRET_ACCESS_KEY") || "";
-    const forcePathStyle =
-      this.config.get<string>("S3_FORCE_PATH_STYLE") === "true" || !!endpoint;
-    this.publicBaseUrl = this.config.get<string>("S3_PUBLIC_BASE_URL");
-
+  constructor(config: S3Config) {
+    this.bucket = config.bucket;
     this.client = new S3Client({
-      region,
-      endpoint: endpoint || undefined,
-      forcePathStyle,
-      credentials:
-        accessKeyId && secretAccessKey
-          ? {
-              accessKeyId,
-              secretAccessKey,
-            }
-          : undefined,
+      region: config.region || 'us-east-1',
+      endpoint: config.endpoint,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
+      forcePathStyle: config.forcePathStyle ?? true,
     });
+  }
+
+  async getUploadUrl(
+    key: string,
+    contentType: string,
+    expiresIn = 900,
+  ): Promise<{ key: string; uploadUrl: string; publicUrl: string }> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ContentType: contentType,
+    });
+    const uploadUrl = await getSignedUrl(this.client, command, { expiresIn });
+    const publicUrl = uploadUrl.split('?')[0] || uploadUrl;
+    return { key, uploadUrl, publicUrl };
+  }
+
+  async getDownloadUrl(key: string, expiresIn = 3600): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    });
+    return getSignedUrl(this.client, command, { expiresIn });
+  }
+
+  async uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<void> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    });
+    await this.client.send(command);
+  }
+
+  async downloadBuffer(key: string): Promise<Buffer> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+    });
+    const response = await this.client.send(command);
+    if (!response.Body) {
+      throw new Error(`Empty body for key ${key}`);
+    }
+    const byteArray = await response.Body.transformToByteArray();
+    return Buffer.from(byteArray);
   }
 
   async upload(
     key: string,
     data: Buffer | Uint8Array | string,
-    mimeType = "application/octet-stream",
+    mimeType = 'application/octet-stream',
   ): Promise<StorageUploadResult> {
     const buffer = Buffer.isBuffer(data)
       ? data
-      : typeof data === "string"
-      ? Buffer.from(data, "utf8")
+      : typeof data === 'string'
+      ? Buffer.from(data, 'utf8')
       : Buffer.from(data);
 
+    await this.uploadBuffer(key, buffer, mimeType);
+
     const checksumSha256 = crypto
-      .createHash("sha256")
+      .createHash('sha256')
       .update(buffer)
-      .digest("hex");
+      .digest('hex');
 
-    await this.client.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-        Body: buffer,
-        ContentType: mimeType,
-      }),
-    );
-
-    const url = this.publicBaseUrl
-      ? `${this.publicBaseUrl}/${key}`
-      : await this.getSignedUrl(key, 86400);
-
-    this.logger.debug(`Uploaded S3 object: ${key} to bucket: ${this.bucket}`);
+    const url = await this.getDownloadUrl(key);
 
     return {
       key,
@@ -84,23 +112,7 @@ export class S3Driver implements StorageDriver {
   }
 
   async download(key: string): Promise<Buffer> {
-    const response = await this.client.send(
-      new GetObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-      }),
-    );
-
-    if (!response.Body) {
-      throw new Error(`Empty body returned for S3 object: ${key}`);
-    }
-
-    const stream = response.Body as Readable;
-    const chunks: Buffer[] = [];
-    for await (const chunk of stream) {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    }
-    return Buffer.concat(chunks);
+    return this.downloadBuffer(key);
   }
 
   async delete(key: string): Promise<void> {
@@ -113,24 +125,21 @@ export class S3Driver implements StorageDriver {
   }
 
   async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-    });
-    return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
+    return this.getDownloadUrl(key, expiresInSeconds);
   }
 
   async exists(key: string): Promise<boolean> {
     try {
-      await this.client.send(
-        new HeadObjectCommand({
-          Bucket: this.bucket,
-          Key: key,
-        }),
-      );
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+      await this.client.send(command);
       return true;
     } catch {
       return false;
     }
   }
 }
+
+export const S3Driver = S3StorageDriver;
