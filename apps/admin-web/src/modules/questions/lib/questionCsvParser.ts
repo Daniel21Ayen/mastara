@@ -73,6 +73,33 @@ export function parseQuestionsInput(rawContent: string, defaultTopic = 'General'
     return { totalRows: 0, validRows: [], invalidRows: [], allQuestions: [] };
   }
 
+  // Reject PDF formats explicitly
+  if (trimmed.startsWith('%PDF') || trimmed.includes('PDF-1.') || trimmed.includes('/Root') || trimmed.includes('/Pages')) {
+    return {
+      totalRows: 1,
+      validRows: [],
+      invalidRows: [
+        {
+          rowNumber: 1,
+          question: {
+            id: '1',
+            form: 'MULTIPLE_CHOICE',
+            topic: defaultTopic,
+            prompt: '',
+            options: [],
+            correctOption: null,
+            trueIsCorrect: null,
+            acceptedAnswers: [],
+          },
+          rawRecord: {},
+          isValid: false,
+          errors: ['PDF files are disallowed. Bulk import accepts CSV files only.'],
+        },
+      ],
+      allQuestions: [],
+    };
+  }
+
   // Attempt JSON parsing if text begins with '['
   if (trimmed.startsWith('[')) {
     try {
@@ -147,8 +174,11 @@ function parseJsonQuestions(items: unknown[], defaultTopic: string): CsvParseRes
       }
     }
 
+    let numId = String(obj.id || obj.number || rowNumber).trim().replace(/\D+/g, '');
+    if (!numId || parseInt(numId, 10) < 1) numId = String(rowNumber);
+
     const question: ExamQuestionInput = {
-      id: String(obj.id || `Q${rowNumber}`).trim(),
+      id: numId,
       form,
       topic: String(obj.topic || defaultTopic).trim() || defaultTopic,
       prompt,
@@ -301,7 +331,10 @@ function parseCsvQuestions(csvText: string, defaultTopic: string): CsvParseResul
 
     const topic = (topicIdx >= 0 ? values[topicIdx] || '' : '').trim() || defaultTopic;
     const explanation = (expIdx >= 0 ? values[expIdx] || '' : '').trim();
-    const id = (idIdx >= 0 ? values[idIdx] || '' : '').trim() || `Q${rowNumber - 1}`;
+    const rawId = (idIdx >= 0 ? values[idIdx] || '' : '').trim();
+    let numId = rawId.replace(/\D+/g, '');
+    if (!numId || parseInt(numId, 10) < 1) numId = String(rowNumber - 1);
+    const id = numId;
 
     const rawRecord: Record<string, string> = {};
     rawHeaders.forEach((h, i) => {

@@ -5,7 +5,7 @@ import { ERROR_CODES } from '@mastara/domain';
 
 import { env } from '@/core/config/env';
 import { simulateLatency } from '@/core/mock/delay';
-import { httpClient, isApiError } from '@/core/network';
+import { ApiError, httpClient, isApiError } from '@/core/network';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
 
 export interface AuthApi {
@@ -92,37 +92,54 @@ export const realAuthApi: AuthApi = {
 
 export const authApi: AuthApi = {
   login: async (input) => {
-    if (env.useMocks) return mockAuthApi.login(input);
-    try {
-      return await realAuthApi.login(input);
-    } catch (err) {
-      if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
-        return mockAuthApi.login(input);
+    // 1. Check local pending credentials (offline registration)
+    const pendingSync = await secureStorage.getJson<{ name: string; identifier: string; password: string }>(
+      STORAGE_KEYS.pendingRemoteSync,
+    );
+    if (
+      pendingSync &&
+      pendingSync.identifier.trim().toLowerCase() === input.identifier.trim().toLowerCase()
+    ) {
+      if (pendingSync.password === input.password) {
+        const user = upsertUser(pendingSync.identifier, pendingSync.name);
+        return { user, token: 'local-offline-token' };
       }
-      throw err;
+      throw new ApiError(ERROR_CODES.UNAUTHORIZED);
     }
+
+    // 2. If not in mock mode, attempt remote login
+    if (!env.useMocks) {
+      try {
+        return await realAuthApi.login(input);
+      } catch (err) {
+        if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
+          // If offline, check last cached session
+          const session = await secureStorage.getJson<{ user: User }>(STORAGE_KEYS.session);
+          if (
+            session?.user &&
+            session.user.identifier.trim().toLowerCase() === input.identifier.trim().toLowerCase()
+          ) {
+            return { user: session.user, token: 'cached-offline-token' };
+          }
+          return mockAuthApi.login(input);
+        }
+        throw err;
+      }
+    }
+
+    return mockAuthApi.login(input);
   },
   register: async (input) => {
-    // Store credentials for lazy database sync when student buys paid courses online
+    // Store credentials locally for lazy database sync when student buys paid courses
+    // In accordance with policy, student details are not pushed to central DB until purchase
     await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, {
       name: input.name.trim(),
       identifier: input.identifier.trim(),
       password: input.password,
     });
 
-    if (env.useMocks) return mockAuthApi.register(input);
-    try {
-      const res = await realAuthApi.register(input);
-      // Already registered on remote database
-      await secureStorage.remove(STORAGE_KEYS.pendingRemoteSync);
-      return res;
-    } catch (err) {
-      if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
-        // Create offline user account so onboarding continues without error
-        return mockAuthApi.register(input);
-      }
-      throw err;
-    }
+    const user = upsertUser(input.identifier, input.name);
+    return { user, token: 'offline-registered-token' };
   },
   updateAccount: (user, input) =>
     env.useMocks ? mockAuthApi.updateAccount(user, input) : realAuthApi.updateAccount(user, input),

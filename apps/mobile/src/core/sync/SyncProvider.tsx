@@ -6,6 +6,7 @@ import { useSession } from '@/core/session';
 
 import { outbox } from './outbox';
 import { flushOutbox } from './syncWorker';
+import { syncDownstreamContent } from './contentSync';
 
 const isNative =
   typeof navigator !== 'undefined' &&
@@ -75,10 +76,23 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   // Start, reconnect and periodic uploads.
   useEffect(() => {
-    if (!user || !online) return;
-    void syncNow();
-    const interval = setInterval(() => void syncNow(), INTERVAL_MS);
-    const subscription = AppState ? AppState.addEventListener('change', (state) => state === 'active' && void syncNow()) : null;
+    if (!online) return;
+    if (user) void syncNow();
+    void syncDownstreamContent(user?.id);
+
+    const interval = setInterval(() => {
+      if (user) void syncNow();
+      void syncDownstreamContent(user?.id);
+    }, INTERVAL_MS);
+
+    const subscription = AppState
+      ? AppState.addEventListener('change', (state) => {
+          if (state === 'active') {
+            if (user) void syncNow();
+            void syncDownstreamContent(user?.id);
+          }
+        })
+      : null;
     return () => {
       clearInterval(interval);
       subscription?.remove();

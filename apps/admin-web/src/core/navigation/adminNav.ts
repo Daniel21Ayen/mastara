@@ -95,6 +95,12 @@ export function activeNavId(pathname: string): string | null {
 
 /** The sub-menu link that is open at `pathname`, for example `notes` at `/content/notes`. */
 export function activeSubNavId(pathname: string): string | null {
+  if (pathname === '/content' || pathname === '/content/material' || pathname.startsWith('/content/material/')) {
+    return 'modules';
+  }
+  if (pathname === '/content/tests') {
+    return 'quiz-1';
+  }
   for (const item of ADMIN_NAV) {
     if (item.items) {
       const match = item.items.find(

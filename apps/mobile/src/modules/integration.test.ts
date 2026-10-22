@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { authApi } from './auth/api/auth.api';
+import { authApi, realAuthApi } from './auth/api/auth.api';
 import { academicApi } from './profile/api/academic.api';
 import { coursesApi } from './course-list/api/courses.api';
 import { profileApi } from './profile/api/profile.api';
@@ -17,31 +17,40 @@ import { deviceApi } from './device-lock/api/device.api';
 import { notificationsApi } from './notifications/api/notifications.api';
 import { supportApi } from './support/api/support.api';
 
-test('Mobile Integration: Auth Flow (register & login)', async () => {
+test('Mobile Integration: Auth Flow (offline registration & central server login)', async () => {
   const rand = Math.floor(Math.random() * 900000 + 100000);
   const identifier = `+251911${rand}`;
   const password = 'Password@123';
   const name = `Mobile Student ${rand}`;
 
-  // 1. Register student
-  const registered = await authApi.register({
+  // 1. Offline Register student (stored locally, not pushed to central DB until purchase)
+  const registeredOffline = await authApi.register({
     identifier,
     password,
     name,
   });
 
-  assert.ok(registered.token, 'Registration should return an auth token');
-  assert.ok(registered.user.id, 'Registration should return a student user ID');
-  assert.strictEqual(registered.user.identifier, identifier);
+  assert.ok(registeredOffline.token, 'Registration should return an auth token');
+  assert.ok(registeredOffline.user.id, 'Registration should return a student user ID');
+  assert.strictEqual(registeredOffline.user.identifier, identifier);
 
-  // 2. Login student
-  const loggedIn = await authApi.login({
+  // 2. Offline Login student
+  const loggedInOffline = await authApi.login({
     identifier,
     password,
   });
 
-  assert.ok(loggedIn.token, 'Login should return an auth token');
-  assert.strictEqual(loggedIn.user.id, registered.user.id);
+  assert.ok(loggedInOffline.token, 'Login should return an auth token');
+  assert.strictEqual(loggedInOffline.user.id, registeredOffline.user.id);
+
+  // 3. Central database registration (simulating purchase commitment)
+  const registeredServer = await realAuthApi.register({
+    identifier,
+    password,
+    name,
+  });
+  assert.ok(registeredServer.token);
+  assert.strictEqual(registeredServer.user.identifier, identifier);
 });
 
 test('Mobile Integration: Academic Catalog Flow', async () => {
@@ -79,7 +88,7 @@ test('Mobile Integration: Academic Catalog Flow', async () => {
 test('Mobile Integration: Student Profile & Enrollment Flow', async () => {
   const rand = Math.floor(Math.random() * 900000 + 100000);
   const identifier = `+251922${rand}`;
-  const registered = await authApi.register({
+  const registered = await realAuthApi.register({
     identifier,
     password: 'Password@123',
     name: 'Profile Test Student',

@@ -44,6 +44,7 @@ export function BulkImportDialog({
   const [importMode, setImportMode] = useState<'append' | 'replace'>('append');
   const [dragOver, setDragOver] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   // Sync dialog modal state
   useEffect(() => {
@@ -69,6 +70,13 @@ export function BulkImportDialog({
   // Process uploaded file
   const handleFile = useCallback(
     (file: File) => {
+      setFileError(null);
+      const isCsv = file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv';
+      if (!isCsv) {
+        setFileName(null);
+        setFileError('Bulk question import accepts CSV files only. PDF and other formats are strictly disallowed.');
+        return;
+      }
       setFileName(file.name);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -145,6 +153,12 @@ export function BulkImportDialog({
 
         {/* Body */}
         <div className={styles.body}>
+          {fileError ? (
+            <div style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#991b1b', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px', fontSize: '0.9rem', fontWeight: 600 }}>
+              ⚠️ {fileError}
+            </div>
+          ) : null}
+
           {/* Tabs */}
           <div className={styles.tabBar}>
             <button
@@ -169,7 +183,7 @@ export function BulkImportDialog({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,text/csv,application/json,.json"
+                accept=".csv,text/csv"
                 style={{ display: 'none' }}
                 onChange={(e) => {
                   const files = e.target.files;
@@ -189,7 +203,7 @@ export function BulkImportDialog({
                 <p className={styles.dropzoneTitle}>
                   {fileName ? `📄 ${fileName}` : adminText('admin.questions.bulk.dropzone')}
                 </p>
-                <p className={styles.dropzoneSubtitle}>Supports .CSV and .JSON files</p>
+                <p className={styles.dropzoneSubtitle}>Accepts .CSV files only (PDF and other formats are disallowed)</p>
               </div>
             </div>
           ) : (

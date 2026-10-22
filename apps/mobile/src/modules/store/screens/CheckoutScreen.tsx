@@ -5,12 +5,12 @@ import type { PaymentMethod } from '@mastara/domain';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { env } from '@/core/config/env';
 import { getDeviceId, getDeviceName } from '@/core/device/device';
 import { useI18n } from '@/core/i18n';
-import { isApiError, isOnline } from '@/core/network';
+import { httpClient, isApiError, isOnline } from '@/core/network';
 import { useSession } from '@/core/session';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
 import { useTheme } from '@/core/theme';
@@ -46,6 +46,12 @@ export function CheckoutScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
 
+  // Guest registration state for students who browsed free content without registering
+  const [guestName, setGuestName] = useState('');
+  const [guestIdentifier, setGuestIdentifier] = useState('');
+  const [guestPassword, setGuestPassword] = useState('');
+  const [guestError, setGuestError] = useState<string>();
+
   const isFull = draft?.type === 'FULL_STREAM' || draft?.type === 'FULL_BOTH';
   const coverage = useFullCoverage(profile?.programId ?? '', draft?.stream ?? 'NATURAL', Boolean(isFull));
 
@@ -64,7 +70,14 @@ export function CheckoutScreen() {
   }));
 
   async function submit() {
-    if (!draft || !user || !quote) return;
+    if (!draft || !quote) return;
+
+    if (!user) {
+      if (!guestName.trim() || !guestIdentifier.trim() || guestPassword.length < 6) {
+        setGuestError('Please enter your Full Name, Phone/Email, and a Password (min 6 chars) to register your account upon purchase.');
+        return;
+      }
+    }
 
     const check = referenceSchemaFor(method).safeParse(reference);
     setReferenceError(check.success ? undefined : check.error.issues[0]?.message);
@@ -80,13 +93,22 @@ export function CheckoutScreen() {
         return;
       }
 
-      let activeUserId = user.id;
+      let activeUserId = user?.id;
 
-      // Lazy remote registration: if student was registered offline,
+      // Lazy remote registration: if student was browsing as a guest or registered offline,
       // register their user account, bind their phone device ID, and sync profile now that they are purchasing.
-      const pendingSync = await secureStorage.getJson<{ name: string; identifier: string; password: string }>(
+      let pendingSync = await secureStorage.getJson<{ name: string; identifier: string; password: string }>(
         STORAGE_KEYS.pendingRemoteSync,
       );
+
+      if (!pendingSync && !user) {
+        pendingSync = {
+          name: guestName.trim(),
+          identifier: guestIdentifier.trim(),
+          password: guestPassword,
+        };
+        await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, pendingSync);
+      }
 
       if (!env.useMocks && pendingSync) {
         let authRes;
@@ -97,6 +119,10 @@ export function CheckoutScreen() {
             identifier: pendingSync.identifier,
             password: pendingSync.password,
           });
+        }
+
+        if (authRes?.token) {
+          await httpClient.setToken(authRes.token);
         }
 
         activeUserId = authRes.user.id;
@@ -117,6 +143,12 @@ export function CheckoutScreen() {
         }
 
         await secureStorage.remove(STORAGE_KEYS.pendingRemoteSync);
+      }
+
+      if (!activeUserId) {
+        setSubmitError('error.generic');
+        setSubmitting(false);
+        return;
       }
 
       await storeApi.createOrder(
@@ -158,6 +190,46 @@ export function CheckoutScreen() {
 
       {!quote ? <ActivityIndicator color={theme.colors.primary} /> : <PriceSummary quote={quote} />}
       {isFull && coverage.data ? <AppText muted>{t('builder.covers', { count: coverage.data.length })}</AppText> : null}
+
+      {!user ? (
+        <View style={{ gap: theme.spacing.sm, paddingVertical: theme.spacing.md }}>
+          <AppText bold variant="bodyLarge">
+            Student Registration (Committed On Purchase)
+          </AppText>
+          <AppText variant="caption" muted>
+            Enter your details below. Your permanent Student ID (e.g. MS0001+) will be assigned upon activation.
+          </AppText>
+          <TextField
+            label="Full Name"
+            value={guestName}
+            onChangeText={(v) => {
+              setGuestName(v);
+              setGuestError(undefined);
+            }}
+            placeholder="e.g. Alazar Mengistu"
+          />
+          <TextField
+            label="Phone Number or Email"
+            value={guestIdentifier}
+            onChangeText={(v) => {
+              setGuestIdentifier(v);
+              setGuestError(undefined);
+            }}
+            placeholder="e.g. 0911223344 or name@domain.com"
+          />
+          <TextField
+            label="Account Password"
+            value={guestPassword}
+            onChangeText={(v) => {
+              setGuestPassword(v);
+              setGuestError(undefined);
+            }}
+            placeholder="At least 6 characters"
+            secureTextEntry
+          />
+          {guestError ? <AppText color={theme.colors.danger}>{guestError}</AppText> : null}
+        </View>
+      ) : null}
 
       <SegmentedControl options={methods} value={method} onChange={setMethod} />
       {quote && accounts.data ? <AccountCard account={accounts.data[method]} amount={quote.total} /> : null}

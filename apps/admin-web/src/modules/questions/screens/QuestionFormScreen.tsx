@@ -81,9 +81,12 @@ function FormBody({ kind, set }: BodyProps) {
   const slug = examSetSlug(kind);
   const [details, setDetails] = useState<SetDetailsState>(set ? detailsFromSet(set) : emptyDetails());
   const [staged, setStaged] = useState<ExamQuestionInput[]>(
-    set ? set.questions.map(questionFromExisting) : [],
+    set ? set.questions.map((q, idx) => ({ ...questionFromExisting(q), id: String(idx + 1) })) : [],
   );
-  const [current, setCurrent] = useState<ExamQuestionInput>(emptyQuestion());
+  const [current, setCurrent] = useState<ExamQuestionInput>(() => ({
+    ...emptyQuestion(),
+    id: set ? String(set.questions.length + 1) : '1',
+  }));
   const [editing, setEditing] = useState<number | null>(null);
   const [errors, setErrors] = useState<SetErrors>({});
   const [qErrors, setQErrors] = useState<Partial<Record<QuestionField, string>>>({});
@@ -95,11 +98,17 @@ function FormBody({ kind, set }: BodyProps) {
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
   const handleBulkImport = (newQuestions: ExamQuestionInput[], mode: 'append' | 'replace') => {
-    if (mode === 'replace') {
-      setStaged(newQuestions);
-    } else {
-      setStaged((prev) => [...prev, ...newQuestions]);
-    }
+    const baseOffset = mode === 'replace' ? 0 : staged.length;
+    const renumbered = newQuestions.map((q, idx) => ({
+      ...q,
+      id: String(baseOffset + idx + 1),
+    }));
+    const nextStaged = mode === 'replace' ? renumbered : [...staged, ...renumbered];
+    setStaged(nextStaged);
+    setCurrent((prev) => ({
+      ...prev,
+      id: String(nextStaged.length + 1),
+    }));
     setErrors((prev) => ({ ...prev, questions: undefined }));
   };
 
@@ -197,29 +206,28 @@ function FormBody({ kind, set }: BodyProps) {
     if (topicNeeded && current.topic.trim() === '') {
       next.topic = adminText('admin.questions.problem.topic');
     }
-    const id = current.id.trim().toLowerCase();
-    if (!next.id && id !== '') {
-      if (staged.some((item, index) => index !== editing && item.id.toLowerCase() === id)) {
-        next.id = adminText('admin.questions.problem.idTwice');
-      } else {
-        const owner = await questionsApi.questionOwner(current.id);
-        if (owner && owner.toLowerCase() !== details.id.trim().toLowerCase()) {
-          next.id = adminText('admin.questions.problem.idUsed', { set: owner });
-        }
-      }
+    const cleanId = current.id.replace(/\D+/g, '');
+    if (!cleanId || parseInt(cleanId, 10) < 1) {
+      next.id = 'Question number must be numerical only, starting from 1';
+    } else if (staged.some((item, index) => index !== editing && item.id.trim() === cleanId)) {
+      next.id = adminText('admin.questions.problem.idTwice');
     }
     if (!parsed.success || Object.keys(next).length > 0) {
       setQErrors(next);
       return null;
     }
     setQErrors({});
+    const finalQ: ExamQuestionInput = { ...parsed.data, id: cleanId };
     const list =
       editing === null
-        ? [...staged, parsed.data]
-        : staged.map((item, index) => (index === editing ? parsed.data : item));
+        ? [...staged, finalQ]
+        : staged.map((item, index) => (index === editing ? finalQ : item));
     setStaged(list);
     setEditing(null);
-    setCurrent(emptyQuestion(current.form));
+    setCurrent({
+      ...emptyQuestion(current.form),
+      id: String(list.length + 1),
+    });
     setErrors((value) => ({ ...value, questions: undefined }));
     return list;
   }
@@ -488,11 +496,11 @@ function FormBody({ kind, set }: BodyProps) {
                     }
                   />
                   <TextField
-                    label={adminText('admin.questions.field.questionId')}
+                    label="Question Number"
                     autoComplete="off"
-                    placeholder={adminText('admin.questions.field.questionIdPlaceholder')}
+                    placeholder="1, 2, 3..."
                     value={current.id}
-                    onChange={(event) => patchQ({ id: event.target.value }, 'id')}
+                    onChange={(event) => patchQ({ id: event.target.value.replace(/\D+/g, '') }, 'id')}
                     error={qErrors.id}
                   />
                 </div>
@@ -665,10 +673,15 @@ function FormBody({ kind, set }: BodyProps) {
                       variant="outline"
                       aria-label={adminText('admin.questions.form.removeNamed', { id: question.id })}
                       onClick={() => {
-                        setStaged(staged.filter((_, i) => i !== index));
+                        const remaining = staged
+                          .filter((_, i) => i !== index)
+                          .map((q, i) => ({ ...q, id: String(i + 1) }));
+                        setStaged(remaining);
                         if (editing === index) {
                           setEditing(null);
-                          setCurrent(emptyQuestion(current.form));
+                          setCurrent({ ...emptyQuestion(current.form), id: String(remaining.length + 1) });
+                        } else {
+                          setCurrent((prev) => ({ ...prev, id: String(remaining.length + 1) }));
                         }
                       }}
                     >

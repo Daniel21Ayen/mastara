@@ -183,11 +183,13 @@ export function ContentManagementScreen({
   const handleQuizTabChange = (quiz: QuizNumber) => {
     setQuizNo(quiz);
     setTestPage(1);
+    router.push(`/content/tests/${quizSlug(quiz)}`);
   };
 
   const handleMaterialTabChange = (subTab: MaterialSubTab) => {
     setMaterialSubTab(subTab);
     setMaterialPage(1);
+    router.push(`/content/${subTab}`);
   };
 
   // Build Test Set Handler
@@ -274,6 +276,19 @@ export function ContentManagementScreen({
       return true;
     });
   }, [materials, materialSubTab, matChapter, matCourse, matSemester, matProgram, matStatus, globalQuery]);
+
+  const testPageCount = Math.max(1, Math.ceil(filteredTestSets.length / pageSize));
+  const materialPageCount = Math.max(1, Math.ceil(filteredMaterials.length / pageSize));
+
+  const pagedTestSets = useMemo(() => {
+    const start = (testPage - 1) * pageSize;
+    return filteredTestSets.slice(start, start + pageSize);
+  }, [filteredTestSets, testPage, pageSize]);
+
+  const pagedMaterials = useMemo(() => {
+    const start = (materialPage - 1) * pageSize;
+    return filteredMaterials.slice(start, start + pageSize);
+  }, [filteredMaterials, materialPage, pageSize]);
 
   // Unique options for filters
   const testChapters = ['All chapters', ...Array.from(new Set(testSets.map((t) => t.chapterTitle)))];
@@ -382,7 +397,10 @@ export function ContentManagementScreen({
                 id="filter-test-chapter"
                 className={styles.filterSelect}
                 value={testChapter}
-                onChange={(e) => setTestChapter(e.target.value)}
+                onChange={(e) => {
+                  setTestChapter(e.target.value);
+                  setTestPage(1);
+                }}
               >
                 {testChapters.map((ch) => (
                   <option key={ch} value={ch}>
@@ -400,7 +418,10 @@ export function ContentManagementScreen({
                 id="filter-test-course"
                 className={styles.filterSelect}
                 value={testCourse}
-                onChange={(e) => setTestCourse(e.target.value)}
+                onChange={(e) => {
+                  setTestCourse(e.target.value);
+                  setTestPage(1);
+                }}
               >
                 {testCourses.map((c) => (
                   <option key={c} value={c}>
@@ -418,7 +439,10 @@ export function ContentManagementScreen({
                 id="filter-test-stream"
                 className={styles.filterSelect}
                 value={testStream}
-                onChange={(e) => setTestStream(e.target.value)}
+                onChange={(e) => {
+                  setTestStream(e.target.value);
+                  setTestPage(1);
+                }}
               >
                 {testStreams.map((s) => (
                   <option key={s} value={s}>
@@ -436,7 +460,10 @@ export function ContentManagementScreen({
                 id="filter-test-program"
                 className={styles.filterSelect}
                 value={testProgram}
-                onChange={(e) => setTestProgram(e.target.value)}
+                onChange={(e) => {
+                  setTestProgram(e.target.value);
+                  setTestPage(1);
+                }}
               >
                 {testPrograms.map((p) => (
                   <option key={p} value={p}>
@@ -454,7 +481,10 @@ export function ContentManagementScreen({
                 id="filter-test-status"
                 className={styles.filterSelect}
                 value={testStatus}
-                onChange={(e) => setTestStatus(e.target.value)}
+                onChange={(e) => {
+                  setTestStatus(e.target.value);
+                  setTestPage(1);
+                }}
               >
                 <option value="All statuses">All statuses</option>
                 <option value="Active">Active</option>
@@ -463,7 +493,7 @@ export function ContentManagementScreen({
             </div>
           </div>
 
-          {/* Test Set Table Card */}
+          {/* Test Sets Table */}
           <div className={styles.tableCard}>
             <div className={styles.tableWrapper}>
               <table className={styles.table}>
@@ -488,9 +518,9 @@ export function ContentManagementScreen({
                       </td>
                     </tr>
                   ) : (
-                    filteredTestSets.map((row, idx) => (
+                    pagedTestSets.map((row, idx) => (
                       <tr key={row.id} className={styles.tr}>
-                        <td className={`${styles.td} ${styles.indexCell}`}>{idx + 1}</td>
+                        <td className={`${styles.td} ${styles.indexCell}`}>{(testPage - 1) * pageSize + idx + 1}</td>
                         <td className={styles.td}>
                           <div className={styles.chapterCell}>
                             <span className={styles.chapterTitle}>{row.chapterTitle}</span>
@@ -559,14 +589,27 @@ export function ContentManagementScreen({
             {/* Pagination Footer */}
             <div className={styles.paginationRow}>
               <span className={styles.paginationCount}>
-                Showing {filteredTestSets.length} of {filteredTestSets.length}
+                Showing {filteredTestSets.length === 0 ? 0 : (testPage - 1) * pageSize + 1} to{' '}
+                {Math.min(testPage * pageSize, filteredTestSets.length)} of {filteredTestSets.length}
               </span>
               <div className={styles.paginationControls}>
-                <button type="button" className={styles.pageBtn} disabled>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={testPage <= 1}
+                  onClick={() => setTestPage((p) => Math.max(1, p - 1))}
+                >
                   Previous
                 </button>
-                <span className={styles.pageIndicator}>Page 1 of 1</span>
-                <button type="button" className={styles.pageBtn} disabled>
+                <span className={styles.pageIndicator}>
+                  Page {testPage} of {testPageCount}
+                </span>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={testPage >= testPageCount}
+                  onClick={() => setTestPage((p) => Math.min(testPageCount, p + 1))}
+                >
                   Next
                 </button>
               </div>
@@ -653,7 +696,10 @@ export function ContentManagementScreen({
                 id="filter-mat-chapter"
                 className={styles.filterSelect}
                 value={matChapter}
-                onChange={(e) => setMatChapter(e.target.value)}
+                onChange={(e) => {
+                  setMatChapter(e.target.value);
+                  setMaterialPage(1);
+                }}
               >
                 {matChapters.map((ch) => (
                   <option key={ch} value={ch}>
@@ -671,7 +717,10 @@ export function ContentManagementScreen({
                 id="filter-mat-course"
                 className={styles.filterSelect}
                 value={matCourse}
-                onChange={(e) => setMatCourse(e.target.value)}
+                onChange={(e) => {
+                  setMatCourse(e.target.value);
+                  setMaterialPage(1);
+                }}
               >
                 {matCourses.map((c) => (
                   <option key={c} value={c}>
@@ -689,7 +738,10 @@ export function ContentManagementScreen({
                 id="filter-mat-semester"
                 className={styles.filterSelect}
                 value={matSemester}
-                onChange={(e) => setMatSemester(e.target.value)}
+                onChange={(e) => {
+                  setMatSemester(e.target.value);
+                  setMaterialPage(1);
+                }}
               >
                 {matSemesters.map((s) => (
                   <option key={s} value={s}>
@@ -707,7 +759,10 @@ export function ContentManagementScreen({
                 id="filter-mat-program"
                 className={styles.filterSelect}
                 value={matProgram}
-                onChange={(e) => setMatProgram(e.target.value)}
+                onChange={(e) => {
+                  setMatProgram(e.target.value);
+                  setMaterialPage(1);
+                }}
               >
                 {matPrograms.map((p) => (
                   <option key={p} value={p}>
@@ -725,7 +780,10 @@ export function ContentManagementScreen({
                 id="filter-mat-status"
                 className={styles.filterSelect}
                 value={matStatus}
-                onChange={(e) => setMatStatus(e.target.value)}
+                onChange={(e) => {
+                  setMatStatus(e.target.value);
+                  setMaterialPage(1);
+                }}
               >
                 <option value="All statuses">All statuses</option>
                 <option value="Active">Active</option>
@@ -757,9 +815,9 @@ export function ContentManagementScreen({
                       </td>
                     </tr>
                   ) : (
-                    filteredMaterials.map((row, idx) => (
+                    pagedMaterials.map((row, idx) => (
                       <tr key={row.id} className={styles.tr}>
-                        <td className={`${styles.td} ${styles.indexCell}`}>{idx + 1}</td>
+                        <td className={`${styles.td} ${styles.indexCell}`}>{(materialPage - 1) * pageSize + idx + 1}</td>
                         <td className={styles.td}>
                           <div className={styles.chapterCell}>
                             <span className={styles.chapterTitle}>{row.chapterTitle}</span>
@@ -779,8 +837,8 @@ export function ContentManagementScreen({
                             <span
                               className={
                                 row.status === 'Active'
-                                  ? styles.statusActiveDot
-                                  : styles.statusInactiveDot
+                                ? styles.statusActiveDot
+                                : styles.statusInactiveDot
                               }
                             >
                               {row.status}
@@ -848,14 +906,27 @@ export function ContentManagementScreen({
             {/* Pagination Footer */}
             <div className={styles.paginationRow}>
               <span className={styles.paginationCount}>
-                Showing {filteredMaterials.length} of {filteredMaterials.length}
+                Showing {filteredMaterials.length === 0 ? 0 : (materialPage - 1) * pageSize + 1} to{' '}
+                {Math.min(materialPage * pageSize, filteredMaterials.length)} of {filteredMaterials.length}
               </span>
               <div className={styles.paginationControls}>
-                <button type="button" className={styles.pageBtn} disabled>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={materialPage <= 1}
+                  onClick={() => setMaterialPage((p) => Math.max(1, p - 1))}
+                >
                   Previous
                 </button>
-                <span className={styles.pageIndicator}>Page 1 of 1</span>
-                <button type="button" className={styles.pageBtn} disabled>
+                <span className={styles.pageIndicator}>
+                  Page {materialPage} of {materialPageCount}
+                </span>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  disabled={materialPage >= materialPageCount}
+                  onClick={() => setMaterialPage((p) => Math.min(materialPageCount, p + 1))}
+                >
                   Next
                 </button>
               </div>

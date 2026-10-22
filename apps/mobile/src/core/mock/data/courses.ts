@@ -6,10 +6,10 @@ import { semesters } from './semesters';
 type CourseTemplate = Pick<Course, 'code' | 'title' | 'stream'>;
 
 const semesterOne: readonly CourseTemplate[] = [
-  { code: 'ENG101', title: 'Communicative English', stream: 'COMMON' },
+  { code: 'ENG101', title: 'Communicative English Language Skills', stream: 'COMMON' },
   { code: 'LOG101', title: 'Logic and Critical Thinking', stream: 'COMMON' },
   { code: 'CIV101', title: 'Civics and Ethical Education', stream: 'COMMON' },
-  { code: 'MAT101', title: 'Calculus I', stream: 'NATURAL' },
+  { code: 'MAT101', title: 'Calculus I (Applied Mathematics I)', stream: 'NATURAL' },
   { code: 'PHY101', title: 'General Physics', stream: 'NATURAL' },
   { code: 'CHE101', title: 'General Chemistry', stream: 'NATURAL' },
   { code: 'GEO101', title: 'Geography of Ethiopia and the Horn', stream: 'SOCIAL' },
@@ -20,8 +20,8 @@ const semesterOne: readonly CourseTemplate[] = [
 const semesterTwo: readonly CourseTemplate[] = [
   { code: 'ENG102', title: 'Basic Writing Skills', stream: 'COMMON' },
   { code: 'ANT102', title: 'Social Anthropology', stream: 'COMMON' },
-  { code: 'FIT102', title: 'Physical Fitness', stream: 'COMMON' },
-  { code: 'MAT102', title: 'Calculus II', stream: 'NATURAL' },
+  { code: 'FIT102', title: 'Physical Fitness and Health', stream: 'COMMON' },
+  { code: 'MAT102', title: 'Calculus II (Applied Mathematics II)', stream: 'NATURAL' },
   { code: 'BIO102', title: 'General Biology', stream: 'NATURAL' },
   { code: 'PHY102', title: 'Mechanics and Heat', stream: 'NATURAL' },
   { code: 'MAT112', title: 'Mathematics for Social Sciences', stream: 'SOCIAL' },
