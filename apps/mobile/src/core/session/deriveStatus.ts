@@ -15,11 +15,13 @@ export interface SessionFacts {
   user: User | null;
   device: DeviceState;
   profile: StudentProfile | null;
+  isGuest?: boolean;
 }
 
 /** Pure rule that decides which onboarding step the student is on. */
 export function deriveStatus(facts: SessionFacts): SessionStatus {
   if (!facts.hydrated) return 'loading';
+  if (facts.isGuest) return 'ready';
   if (!facts.user) return 'signedOut';
   if (facts.device === 'locked') return 'deviceLocked';
   // Skip device registration screen; students go straight to complete their profile

@@ -246,10 +246,13 @@ async function main() {
   ];
 
   const studentMap = new Map<string, any>();
-  for (const s of studentSeeds) {
+  for (let idx = 0; idx < studentSeeds.length; idx++) {
+    const s = studentSeeds[idx];
+    const studentCode = `MS${(idx + 1).toString().padStart(4, '0')}`;
     const studentRecord = await prisma.student.upsert({
       where: { email: s.email },
       update: {
+        student_code: studentCode,
         first_name: s.firstName,
         last_name: s.lastName,
         stream_pref: s.stream,
@@ -257,6 +260,7 @@ async function main() {
         profile_completed_at: new Date(),
       },
       create: {
+        student_code: studentCode,
         email: s.email,
         phone: s.phone,
         password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123

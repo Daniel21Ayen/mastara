@@ -27,8 +27,10 @@ export const reasonSchema = z
   .min(REASON_MIN_LENGTH, { message: ADMIN_VALIDATION.reason });
 
 export const studentSummarySchema = z.object({
-  /** Short readable ID such as ST001. */
+  /** Primary identifier (UUID) */
   id: z.string(),
+  /** Sequential readable Student ID starting at MS0001 (e.g. MS0001, MS0002) */
+  studentCode: z.string().optional(),
   name: z.string(),
   /** Phone or email the student signed up with. */
   identifier: z.string(),

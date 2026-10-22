@@ -46,7 +46,22 @@ export function StudentsScreen() {
   });
 
   const columns: Column<StudentSummary>[] = [
-    { key: 'id', header: adminText('admin.students.col.id'), render: (row) => row.id },
+    {
+      key: 'id',
+      header: adminText('admin.students.col.id'),
+      render: (row) => (
+        <span
+          style={{
+            fontFamily: 'monospace',
+            fontWeight: 700,
+            color: 'var(--color-primary, #2563eb)',
+            letterSpacing: '0.025em',
+          }}
+        >
+          {row.studentCode ?? row.id}
+        </span>
+      ),
+    },
     { key: 'name', header: adminText('admin.students.col.name'), render: (row) => row.name },
     {
       key: 'university',
@@ -140,6 +155,64 @@ export function StudentsScreen() {
           </>
         }
       />
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+          padding: '0.875rem 1.25rem',
+          marginBottom: '1.25rem',
+          borderRadius: '8px',
+          background: 'var(--color-surface, #ffffff)',
+          border: '1px solid var(--color-border, #e2e8f0)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: '280px' }}>
+          <span style={{ fontSize: '1.25rem' }}>🎓</span>
+          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary, #475569)', lineHeight: 1.45 }}>
+            <strong style={{ color: 'var(--color-text-primary, #0f172a)' }}>
+              Registration & Student ID Policy:
+            </strong>{' '}
+            Students accessing free content do not need to register. Student accounts and official sequential IDs (
+            <code style={{ fontWeight: 700, color: 'var(--color-primary, #2563eb)', background: '#eff6ff', padding: '2px 5px', borderRadius: '4px' }}>
+              MS0001+
+            </code>
+            ) are automatically assigned once students purchase locked courses.
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              padding: '0.25rem 0.625rem',
+              borderRadius: '9999px',
+              background: '#ecfdf5',
+              color: '#059669',
+              border: '1px solid #a7f3d0',
+            }}
+          >
+            Auto-Increment: MS0001
+          </span>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              padding: '0.25rem 0.625rem',
+              borderRadius: '9999px',
+              background: '#eff6ff',
+              color: '#2563eb',
+              border: '1px solid #bfdbfe',
+            }}
+          >
+            Registered via Locked Courses
+          </span>
+        </div>
+      </div>
 
       {q ? (
         <p className={styles.search}>

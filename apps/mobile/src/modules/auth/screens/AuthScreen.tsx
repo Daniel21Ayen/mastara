@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 import { env } from '@/core/config/env';
 import { useI18n } from '@/core/i18n';
+import { useSession } from '@/core/session';
 import { createStyles } from '@/core/theme';
 import { AppButton, AppText, Screen, ScreenHeader, SegmentedControl, ThemeSwitch } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
@@ -17,6 +18,7 @@ type Tab = 'login' | 'register';
 export function AuthScreen() {
   const styles = useStyles();
   const { t, language, setLanguage } = useI18n();
+  const { continueAsGuest } = useSession();
   const [tab, setTab] = useState<Tab>('login');
 
   const tabs: SegmentOption<Tab>[] = [
@@ -30,6 +32,17 @@ export function AuthScreen() {
       <SegmentedControl options={tabs} value={tab} onChange={setTab} />
 
       {tab === 'login' ? <LoginForm /> : <RegisterForm />}
+
+      <View style={styles.freeContentBox}>
+        <AppButton
+          label="📖 Browse Free Content (No Registration)"
+          variant="outline"
+          onPress={continueAsGuest}
+        />
+        <AppText variant="caption" muted style={styles.centerText}>
+          Registration and Student IDs (MS0001+) are required only when unlocking paid courses.
+        </AppText>
+      </View>
 
       {env.useMocks ? (
         <AppText variant="caption" muted>
@@ -56,4 +69,12 @@ export function AuthScreen() {
 const useStyles = createStyles((theme) => ({
   languages: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.md },
   flex: { flex: 1 },
+  freeContentBox: {
+    marginTop: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    gap: theme.spacing.xs,
+  },
+  centerText: { textAlign: 'center', marginTop: theme.spacing.xs },
 }));

@@ -294,8 +294,10 @@ export class StudentsService {
 
     if (query.q && query.q.trim()) {
       const text = query.q.trim();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(text);
       where.OR = [
-        { id: { contains: text, mode: "insensitive" } },
+        { student_code: { contains: text, mode: "insensitive" } },
+        ...(isUuid ? [{ id: text }] : []),
         { first_name: { contains: text, mode: "insensitive" } },
         { last_name: { contains: text, mode: "insensitive" } },
         { phone: { contains: text, mode: "insensitive" } },
@@ -330,7 +332,7 @@ export class StudentsService {
         where,
         skip,
         take: pageSize,
-        orderBy: { created_at: "desc" },
+        orderBy: [{ student_number: "asc" }, { created_at: "desc" }],
         include: {
           university: true,
           program: true,
@@ -360,8 +362,9 @@ export class StudentsService {
   }
 
   async getAdminStudentById(id: string): Promise<AdminStudentDetailDto> {
-    const student = await this.prisma.student.findUnique({
-      where: { id },
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const student = await this.prisma.student.findFirst({
+      where: isUuid ? { id } : { student_code: id },
       include: {
         university: true,
         program: true,
@@ -726,9 +729,13 @@ export class StudentsService {
     const name = `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim() || "Student";
     const identifier = student.phone || student.email || "";
     const isBound = student.device_binding?.status === DeviceBindingStatus.ACTIVE;
+    const studentCode =
+      student.student_code ||
+      (student.student_number ? `MS${String(student.student_number).padStart(4, "0")}` : undefined);
 
     return {
       id: student.id,
+      studentCode,
       name,
       identifier,
       universityId: student.university_id || "",

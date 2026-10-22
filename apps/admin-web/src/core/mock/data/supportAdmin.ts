@@ -16,7 +16,7 @@ const SEED_TICKETS: readonly (Omit<AdminTicket, 'id' | 'createdAt' | 'updatedAt'
 })[] = [
   {
     id: 't-101',
-    studentId: 'ST003',
+    studentId: 'MS0003',
     studentName: 'Selam Getachew',
     studentIdentifier: '0911223344',
     studentUniversity: 'Hawassa University',
@@ -37,7 +37,7 @@ const SEED_TICKETS: readonly (Omit<AdminTicket, 'id' | 'createdAt' | 'updatedAt'
   },
   {
     id: 't-102',
-    studentId: 'ST001',
+    studentId: 'MS0001',
     studentName: 'Abebe Kebede',
     studentIdentifier: '0922334455',
     studentUniversity: 'Addis Ababa University',
@@ -58,7 +58,7 @@ const SEED_TICKETS: readonly (Omit<AdminTicket, 'id' | 'createdAt' | 'updatedAt'
   },
   {
     id: 't-103',
-    studentId: 'ST004',
+    studentId: 'MS0004',
     studentName: 'Tewodros Kassahun',
     studentIdentifier: '0933445566',
     studentUniversity: 'Jimma University',
@@ -84,7 +84,7 @@ const SEED_TICKETS: readonly (Omit<AdminTicket, 'id' | 'createdAt' | 'updatedAt'
   },
   {
     id: 't-104',
-    studentId: 'ST002',
+    studentId: 'MS0002',
     studentName: 'Bethlehem Tadesse',
     studentIdentifier: '0944556677',
     studentUniversity: 'AASTU',
@@ -115,7 +115,7 @@ const SEED_TICKETS: readonly (Omit<AdminTicket, 'id' | 'createdAt' | 'updatedAt'
   },
   {
     id: 't-105',
-    studentId: 'ST005',
+    studentId: 'MS0005',
     studentName: 'Almaz Ayana',
     studentIdentifier: '0955667788',
     studentUniversity: 'Addis Ababa University',
@@ -136,7 +136,7 @@ const SEED_TICKETS: readonly (Omit<AdminTicket, 'id' | 'createdAt' | 'updatedAt'
   },
   {
     id: 't-106',
-    studentId: 'ST006',
+    studentId: 'MS0006',
     studentName: 'Dawit Mengistu',
     studentIdentifier: '0966778899',
     studentUniversity: 'Gondar University',
@@ -162,7 +162,7 @@ const SEED_TICKETS: readonly (Omit<AdminTicket, 'id' | 'createdAt' | 'updatedAt'
   },
   {
     id: 't-107',
-    studentId: 'ST007',
+    studentId: 'MS0007',
     studentName: 'Hanna Girma',
     studentIdentifier: '0977889900',
     studentUniversity: 'Hawassa University',

@@ -144,7 +144,7 @@ const pick = <T>(list: readonly T[], random: () => number): T =>
 /** The first five students match the approved design sheets. */
 const SEED_STUDENTS: readonly StudentRecord[] = [
   {
-    id: 'ST001',
+    id: 'MS0001',
     name: 'Abebe Kebede',
     identifier: '0911000001',
     universityId: 'aastu',
@@ -156,7 +156,7 @@ const SEED_STUDENTS: readonly StudentRecord[] = [
     entries: [],
   },
   {
-    id: 'ST002',
+    id: 'MS0002',
     name: 'Selam Getachew',
     identifier: '0911000002',
     universityId: 'bdu',
@@ -168,7 +168,7 @@ const SEED_STUDENTS: readonly StudentRecord[] = [
     entries: [],
   },
   {
-    id: 'ST003',
+    id: 'MS0003',
     name: 'Yonas Girma',
     identifier: 'yonas.girma@example.com',
     universityId: 'ju',
@@ -180,7 +180,7 @@ const SEED_STUDENTS: readonly StudentRecord[] = [
     entries: [],
   },
   {
-    id: 'ST004',
+    id: 'MS0004',
     name: 'Hana Mohammed',
     identifier: '0911000004',
     universityId: 'mu',
@@ -192,7 +192,7 @@ const SEED_STUDENTS: readonly StudentRecord[] = [
     entries: [],
   },
   {
-    id: 'ST005',
+    id: 'MS0005',
     name: 'Biruk Alemu',
     identifier: '0911000005',
     universityId: 'aastu',
@@ -276,7 +276,7 @@ function generate(now: number): StudentRecord[] {
     const record = { semesterId, stream };
 
     list.push({
-      id: `ST${String(n).padStart(3, '0')}`,
+      id: `MS${String(n).padStart(4, '0')}`,
       name,
       identifier,
       universityId: program.universityId,
@@ -306,6 +306,7 @@ function toSummary(record: StudentRecord, now: number): StudentSummary {
   const university = universityById(record.universityId);
   return {
     id: record.id,
+    studentCode: record.id,
     name: record.name,
     identifier: record.identifier,
     universityId: record.universityId,
@@ -424,7 +425,7 @@ export function createStudent(input: CreateStudentInput, now = Date.now()): Stud
   }
 
   const record: StudentRecord = {
-    id: `ST${String(nextNumber).padStart(3, '0')}`,
+    id: `MS${String(nextNumber).padStart(4, '0')}`,
     name: input.name.trim(),
     identifier: input.identifier.trim(),
     universityId: input.universityId,

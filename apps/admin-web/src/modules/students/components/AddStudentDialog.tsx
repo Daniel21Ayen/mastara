@@ -91,6 +91,24 @@ export function AddStudentDialog({ onCreated, onClose }: AddStudentDialogProps) 
 
       {options.data ? (
         <form className={styles.form} onSubmit={submit} noValidate>
+          <div
+            style={{
+              padding: '0.625rem 0.875rem',
+              borderRadius: '6px',
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              fontSize: '0.8125rem',
+              color: '#166534',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <span>ℹ️</span>
+            <span>
+              Official Student ID (<strong>MS0001+</strong>) is automatically assigned sequentially upon registration.
+            </span>
+          </div>
           <TextField
             label={adminText('admin.students.create.name')}
             autoComplete="off"
