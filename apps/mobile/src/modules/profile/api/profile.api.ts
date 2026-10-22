@@ -5,6 +5,8 @@ import { env } from '@/core/config/env';
 import { getMockProfile, saveMockProfile } from '@/core/mock/data';
 import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
+import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
+import type { PendingStudentSync } from '@/modules/auth/api/auth.api';
 
 export interface ProfileApi {
   getProfile(userId: string): Promise<StudentProfile | null>;
@@ -65,7 +67,45 @@ export const realProfileApi: ProfileApi = {
 };
 
 export const profileApi: ProfileApi = {
-  getProfile: (userId) => (env.useMocks ? mockProfileApi.getProfile(userId) : realProfileApi.getProfile(userId)),
-  saveProfile: (userId, profile) =>
-    env.useMocks ? mockProfileApi.saveProfile(userId, profile) : realProfileApi.saveProfile(userId, profile),
+  getProfile: async (userId) => {
+    // 1. Check local pending registration / offline profile
+    const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
+    if (pendingSync && (pendingSync.userId === userId || !pendingSync.purchased)) {
+      if (pendingSync.profile) {
+        return pendingSync.profile;
+      }
+    }
+
+    // 2. Check local session
+    const session = await secureStorage.getJson<{ user: { id: string }; profile: StudentProfile | null }>(
+      STORAGE_KEYS.session,
+    );
+    if (session?.user?.id === userId && session.profile) {
+      return session.profile;
+    }
+
+    if (env.useMocks) {
+      return mockProfileApi.getProfile(userId);
+    }
+
+    try {
+      return await realProfileApi.getProfile(userId);
+    } catch {
+      return session?.profile ?? null;
+    }
+  },
+  saveProfile: async (userId, profile) => {
+    // If student is unpurchased, save locally only. Do not insert/save to DB until purchase
+    const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
+    if (pendingSync && !pendingSync.purchased) {
+      pendingSync.profile = profile;
+      await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, pendingSync);
+      return profile;
+    }
+
+    if (env.useMocks) {
+      return mockProfileApi.saveProfile(userId, profile);
+    }
+    return realProfileApi.saveProfile(userId, profile);
+  },
 };

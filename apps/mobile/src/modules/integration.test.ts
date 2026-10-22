@@ -233,3 +233,89 @@ test('Mobile Integration: Offline Exam Outbox Sync API Flow', async () => {
   assert.strictEqual(secondResults[0]!.status, 'already_applied');
 });
 
+test('Mobile Offline Mode: Offline Registration, Offline Login, and Offline Profile Management', async () => {
+  const randA = Math.floor(Math.random() * 900000 + 100000);
+  const identifierA = `+251944${randA}`;
+  const passwordA = 'Pass@StudentA123';
+  const nameA = 'Offline Student A';
+
+  // 1. Offline Registration: no internet connection required, zero central DB writes
+  const regA = await authApi.register({
+    identifier: identifierA,
+    password: passwordA,
+    name: nameA,
+  });
+  assert.ok(regA.user.id);
+  assert.strictEqual(regA.user.identifier, identifierA);
+
+  // 2. Offline Profile Management: fill out initial profile offline
+  const initialProfile = {
+    universityId: 'uni-aau',
+    programId: 'prog-cs',
+    semesterId: 'sem-1',
+    stream: 'NATURAL' as const,
+    courseIds: ['c1', 'c2'],
+  };
+  await profileApi.saveProfile(regA.user.id, initialProfile);
+
+  const fetchedProfile1 = await profileApi.getProfile(regA.user.id);
+  assert.ok(fetchedProfile1);
+  assert.strictEqual(fetchedProfile1.universityId, 'uni-aau');
+  assert.strictEqual(fetchedProfile1.stream, 'NATURAL');
+
+  // 3. Offline Profile Management: edit & update profile details offline
+  const updatedProfile = {
+    universityId: 'uni-inu',
+    programId: 'prog-eng',
+    semesterId: 'sem-2',
+    stream: 'SOCIAL' as const,
+    courseIds: ['c3', 'c4', 'c5'],
+  };
+  await profileApi.saveProfile(regA.user.id, updatedProfile);
+
+  const fetchedProfile2 = await profileApi.getProfile(regA.user.id);
+  assert.ok(fetchedProfile2);
+  assert.strictEqual(fetchedProfile2.universityId, 'uni-inu');
+  assert.strictEqual(fetchedProfile2.stream, 'SOCIAL');
+  assert.strictEqual(fetchedProfile2.courseIds.length, 3);
+
+  // 4. Offline Account Management: edit account offline
+  const updatedUser = await authApi.updateAccount(regA.user, {
+    name: 'Updated Student A',
+    identifier: identifierA,
+  });
+  assert.strictEqual(updatedUser.name, 'Updated Student A');
+
+  // 5. Offline Registration of second student
+  const randB = Math.floor(Math.random() * 900000 + 100000);
+  const identifierB = `+251955${randB}`;
+  const passwordB = 'Pass@StudentB456';
+  await authApi.register({
+    identifier: identifierB,
+    password: passwordB,
+    name: 'Offline Student B',
+  });
+
+  // 6. Offline Login: Students can log in without network even without prior purchase
+  const loginA = await authApi.login({
+    identifier: identifierA,
+    password: passwordA,
+  });
+  assert.ok(loginA.user);
+  assert.strictEqual(loginA.user.name, 'Updated Student A');
+
+  // Verify Student A's offline profile persists intact
+  const profileAfterLoginA = await profileApi.getProfile(loginA.user.id);
+  assert.ok(profileAfterLoginA);
+  assert.strictEqual(profileAfterLoginA.universityId, 'uni-inu');
+  assert.strictEqual(profileAfterLoginA.stream, 'SOCIAL');
+
+  // 7. Verify Student B can also log in offline
+  const loginB = await authApi.login({
+    identifier: identifierB,
+    password: passwordB,
+  });
+  assert.ok(loginB.user);
+  assert.strictEqual(loginB.user.identifier, identifierB);
+});
+

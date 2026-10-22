@@ -90,16 +90,37 @@ export const realAuthApi: AuthApi = {
   },
 };
 
+export interface PendingStudentSync {
+  userId: string;
+  name: string;
+  identifier: string;
+  password: string;
+  profile?: any;
+  purchased?: boolean;
+}
+
 export const authApi: AuthApi = {
   login: async (input) => {
-    // 1. Check local pending credentials (offline registration)
-    const pendingSync = await secureStorage.getJson<{ name: string; identifier: string; password: string }>(
-      STORAGE_KEYS.pendingRemoteSync,
-    );
-    if (
-      pendingSync &&
-      pendingSync.identifier.trim().toLowerCase() === input.identifier.trim().toLowerCase()
-    ) {
+    const norm = input.identifier.trim().toLowerCase();
+
+    // 1. Check local offline accounts registry
+    const registry =
+      (await secureStorage.getJson<Record<string, PendingStudentSync>>(STORAGE_KEYS.offlineUsers)) || {};
+    const localAccount = registry[norm];
+
+    // If student registered offline and has not yet purchased content
+    if (localAccount && !localAccount.purchased) {
+      if (localAccount.password === input.password) {
+        const user = upsertUser(localAccount.identifier, localAccount.name);
+        await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, localAccount);
+        return { user, token: 'local-offline-token' };
+      }
+      throw new ApiError(ERROR_CODES.UNAUTHORIZED);
+    }
+
+    // 2. Also check pendingRemoteSync directly
+    const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
+    if (pendingSync && pendingSync.identifier.trim().toLowerCase() === norm && !pendingSync.purchased) {
       if (pendingSync.password === input.password) {
         const user = upsertUser(pendingSync.identifier, pendingSync.name);
         return { user, token: 'local-offline-token' };
@@ -107,18 +128,19 @@ export const authApi: AuthApi = {
       throw new ApiError(ERROR_CODES.UNAUTHORIZED);
     }
 
-    // 2. If not in mock mode, attempt remote login
+    // 3. Central database login (for purchased accounts or online checks)
     if (!env.useMocks) {
       try {
         return await realAuthApi.login(input);
       } catch (err) {
         if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
-          // If offline, check last cached session
+          // If offline, check last cached session or offline registry
+          if (localAccount && localAccount.password === input.password) {
+            const user = upsertUser(localAccount.identifier, localAccount.name);
+            return { user, token: 'cached-offline-token' };
+          }
           const session = await secureStorage.getJson<{ user: User }>(STORAGE_KEYS.session);
-          if (
-            session?.user &&
-            session.user.identifier.trim().toLowerCase() === input.identifier.trim().toLowerCase()
-          ) {
+          if (session?.user && session.user.identifier.trim().toLowerCase() === norm) {
             return { user: session.user, token: 'cached-offline-token' };
           }
           return mockAuthApi.login(input);
@@ -130,17 +152,56 @@ export const authApi: AuthApi = {
     return mockAuthApi.login(input);
   },
   register: async (input) => {
-    // Store credentials locally for lazy database sync when student buys paid courses
-    // In accordance with policy, student details are not pushed to central DB until purchase
-    await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, {
+    const norm = input.identifier.trim().toLowerCase();
+    const user = upsertUser(input.identifier, input.name);
+
+    // Store credentials locally for lazy database sync when student buys paid courses.
+    // In accordance with policy, student details are not pushed to central DB until purchase.
+    const record: PendingStudentSync = {
+      userId: user.id,
       name: input.name.trim(),
       identifier: input.identifier.trim(),
       password: input.password,
-    });
+      purchased: false,
+    };
 
-    const user = upsertUser(input.identifier, input.name);
+    await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, record);
+
+    const registry =
+      (await secureStorage.getJson<Record<string, PendingStudentSync>>(STORAGE_KEYS.offlineUsers)) || {};
+    registry[norm] = record;
+    await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
+
     return { user, token: 'offline-registered-token' };
   },
-  updateAccount: (user, input) =>
-    env.useMocks ? mockAuthApi.updateAccount(user, input) : realAuthApi.updateAccount(user, input),
+  updateAccount: async (user, input) => {
+    const norm = user.identifier.trim().toLowerCase();
+    const updatedUser = {
+      ...user,
+      name: input.name.trim(),
+      identifier: input.identifier.trim(),
+    };
+
+    // If student is pending purchase (unpurchased), update local offline records only
+    const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
+    if (pendingSync && !pendingSync.purchased) {
+      pendingSync.name = updatedUser.name;
+      pendingSync.identifier = updatedUser.identifier;
+      await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, pendingSync);
+
+      const registry =
+        (await secureStorage.getJson<Record<string, PendingStudentSync>>(STORAGE_KEYS.offlineUsers)) || {};
+      if (registry[norm]) {
+        delete registry[norm];
+        registry[updatedUser.identifier.toLowerCase()] = pendingSync;
+        await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
+      }
+      return updatedUser;
+    }
+
+    if (env.useMocks) {
+      return mockAuthApi.updateAccount(user, input);
+    }
+    return realAuthApi.updateAccount(user, input);
+  },
 };

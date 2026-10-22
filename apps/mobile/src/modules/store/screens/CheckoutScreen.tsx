@@ -137,9 +137,21 @@ export function CheckoutScreen() {
           deviceName,
         });
 
-        // Sync academic profile to database
-        if (profile) {
-          await realProfileApi.saveProfile(authRes.user.id, profile);
+        // Sync academic profile to database upon purchase
+        const profileToSync = profile || (pendingSync as any).profile;
+        if (profileToSync) {
+          await realProfileApi.saveProfile(authRes.user.id, profileToSync);
+        }
+
+        // Mark as purchased in offline registry
+        const registry =
+          (await secureStorage.getJson<Record<string, any>>(STORAGE_KEYS.offlineUsers)) || {};
+        const norm = pendingSync.identifier.trim().toLowerCase();
+        if (registry[norm]) {
+          registry[norm].purchased = true;
+          registry[norm].userId = authRes.user.id;
+          if (profileToSync) registry[norm].profile = profileToSync;
+          await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
         }
 
         await secureStorage.remove(STORAGE_KEYS.pendingRemoteSync);
