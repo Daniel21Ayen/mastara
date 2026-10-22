@@ -4,7 +4,12 @@ import { Stack } from 'expo-router';
 import * as SplashScreenNative from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
+
+LogBox.ignoreLogs([
+  '[expo-notifications] Push notifications',
+  '`expo-notifications` functionality is not fully supported in Expo Go',
+]);
 
 import { env } from '@/core/config/env';
 import { DatabaseProvider } from '@/core/db';
