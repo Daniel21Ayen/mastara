@@ -31,8 +31,9 @@ COPY apps/api/        ./apps/api/
 COPY apps/worker/     ./apps/worker/
 COPY packages/        ./packages/
 
-# Generate Prisma client
+# Generate Prisma client and build domain
 RUN npm run --workspace=@mastara/database build 2>/dev/null || true
+RUN npm run --workspace=@mastara/domain build
 RUN npx --workspace=@mastara/database prisma generate 2>/dev/null || true
 
 # Build the API
@@ -72,6 +73,7 @@ RUN npm ci --omit=dev --ignore-scripts
 
 # Copy compiled output and Prisma client from builder
 COPY --from=builder /app/apps/api/dist            ./apps/api/dist
+COPY --from=builder /app/packages/domain/dist     ./packages/domain/dist
 COPY --from=builder /app/node_modules/.prisma     ./node_modules/.prisma
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 
