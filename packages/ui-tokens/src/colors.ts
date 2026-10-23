@@ -41,7 +41,7 @@ export interface ColorSet {
   overlay: string;
 }
 
-/** Light mode. Screens sit on a white root, so tints stay light. */
+/** Light mode. Aligned with the Admin Portal for 100% design consistency. */
 export const lightColors: ColorSet = {
   primary: palette.primary,
   onPrimary: palette.white,
@@ -50,9 +50,9 @@ export const lightColors: ColorSet = {
   surface: palette.white,
   text: palette.ink,
   textMuted: withAlpha(palette.ink, 0.68),
-  background: withAlpha(palette.primary, 0.07),
-  primarySoft: withAlpha(palette.primary, 0.12),
-  border: withAlpha(palette.primary, 0.28),
+  background: '#f8fafc',
+  primarySoft: withAlpha(palette.primary, 0.1),
+  border: '#e2e8f0',
   danger: palette.danger,
   dangerSoft: withAlpha(palette.danger, 0.1),
   overlay: withAlpha(palette.ink, 0.5),
@@ -78,7 +78,7 @@ export const darkColors: ColorSet = {
   textMuted: withAlpha(darkPalette.text, 0.7),
   background: darkPalette.page,
   primarySoft: withAlpha(darkPalette.primary, 0.16),
-  border: withAlpha(darkPalette.primary, 0.32),
+  border: withAlpha(darkPalette.text, 0.14),
   danger: darkPalette.danger,
   dangerSoft: withAlpha(darkPalette.danger, 0.14),
   overlay: withAlpha('#000000', 0.62),

@@ -60,12 +60,7 @@ async function runAdminTestsSuite() {
         if (where.id === testCourse.id) return testCourse;
         return null;
       },
-      findFirst: async ({ where }: any) => {
-        if (where?.id === testCourse.id || where?.code?.equals?.toLowerCase?.() === testCourse.code.toLowerCase()) {
-          return testCourse;
-        }
-        return testCourse;
-      },
+      findFirst: async ({ where }: any) => testCourse,
     },
     topic: {
       findUnique: async ({ where }: any) => {
@@ -162,16 +157,8 @@ async function runAdminTestsSuite() {
     },
   };
 
-  const moduleRef: TestingModule = await Test.createTestingModule({
-    controllers: [AdminTestsController],
-    providers: [
-      AdminTestsService,
-      { provide: PrismaService, useValue: mockPrisma },
-    ],
-  }).compile();
-
-  const controller = moduleRef.get<AdminTestsController>(AdminTestsController);
-  const service = moduleRef.get<AdminTestsService>(AdminTestsService);
+  const service = new AdminTestsService(mockPrisma as any);
+  const controller = new AdminTestsController(service);
 
   const adminId = "admin-uuid-001";
 

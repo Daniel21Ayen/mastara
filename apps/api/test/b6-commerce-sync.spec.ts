@@ -8,6 +8,7 @@ import { CommerceModule } from "../src/modules/commerce/commerce.module";
 import { SyncModule } from "../src/modules/sync/sync.module";
 import { EngagementModule } from "../src/modules/engagement/engagement.module";
 import { OrdersService } from "../src/modules/commerce/orders/services/orders.service";
+import { PricingService } from "../src/modules/commerce/pricing/services/pricing.service";
 import { PaymentProofsService } from "../src/modules/commerce/payment-proofs/services/payment-proofs.service";
 import { EntitlementsService } from "../src/modules/commerce/entitlements/services/entitlements.service";
 import { OutboxService } from "../src/modules/sync/outbox/services/outbox.service";
@@ -64,13 +65,14 @@ async function runB6Tests() {
     ],
   }).compile();
 
-  const ordersService = moduleFixture.get<OrdersService>(OrdersService);
+  const prisma = moduleFixture.get<PrismaService>(PrismaService);
+  const pricingService = moduleFixture.get<PricingService>(PricingService);
+  const ordersService = new OrdersService(prisma, pricingService);
   const proofsService = moduleFixture.get<PaymentProofsService>(PaymentProofsService);
   const entitlementsService = moduleFixture.get<EntitlementsService>(EntitlementsService);
   const outboxService = moduleFixture.get<OutboxService>(OutboxService);
   const notificationsService = moduleFixture.get<NotificationsService>(NotificationsService);
   const ticketsService = moduleFixture.get<SupportTicketsService>(SupportTicketsService);
-  const prisma = moduleFixture.get<PrismaService>(PrismaService);
 
   const ts = Date.now();
 

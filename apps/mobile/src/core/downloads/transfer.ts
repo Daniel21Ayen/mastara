@@ -1,6 +1,7 @@
 // apps/mobile/src/core/downloads/transfer.ts
 import { ERROR_CODES } from '@mastara/domain';
 
+import { env } from '@/core/config/env';
 import { ApiError, isOnline } from '@/core/network';
 
 import { downloadStore } from './downloadStore';
@@ -24,7 +25,7 @@ export interface DownloadUnit {
 
 /** Fetches and saves one item in one step: it is either fully downloaded or not at all. Needs the internet. */
 export async function downloadUnit(unit: DownloadUnit): Promise<void> {
-  if (!isOnline()) throw new ApiError(ERROR_CODES.NETWORK_OFFLINE);
+  if (!env.useMocks && !isOnline()) throw new ApiError(ERROR_CODES.NETWORK_OFFLINE);
   const entries = await unit.fetch();
   await downloadStore.saveUnit(
     { unitId: unit.unitId, kind: unit.kind, courseId: unit.courseId, title: unit.title, meta: unit.meta },

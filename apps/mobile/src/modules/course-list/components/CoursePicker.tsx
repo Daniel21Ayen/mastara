@@ -1,9 +1,8 @@
-// apps/mobile/src/modules/course-list/components/CoursePicker.tsx
 import type { StudentStream } from '@mastara/domain';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { createStyles } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Badge, SegmentedControl, SelectableRow } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
@@ -23,6 +22,7 @@ function toggle(ids: readonly string[], id: string): string[] {
 
 export function CoursePicker({ semesterId, stream, selectedIds, onChange }: CoursePickerProps) {
   const styles = useStyles();
+  const theme = useTheme();
   const { t } = useI18n();
   const { visible, filter, setFilter, loading, error, reload } = useCoursePicker({ semesterId, stream });
 
@@ -32,9 +32,33 @@ export function CoursePicker({ semesterId, stream, selectedIds, onChange }: Cour
     { value: 'COMMON', label: t('courses.filter.common') },
   ];
 
+  const allVisibleSelected = visible.length > 0 && visible.every((c) => selectedIds.includes(c.id));
+
+  function toggleAll() {
+    const visibleIds = visible.map((c) => c.id);
+    if (allVisibleSelected) {
+      onChange(selectedIds.filter((id) => !visibleIds.includes(id)));
+    } else {
+      onChange(Array.from(new Set([...selectedIds, ...visibleIds])));
+    }
+  }
+
   return (
     <View style={styles.wrap}>
       <SegmentedControl options={filterOptions} value={filter} onChange={setFilter} />
+
+      <View style={styles.headerRow}>
+        <AppText muted>
+          {selectedIds.length} {t('courses.selected')}
+        </AppText>
+        {visible.length > 0 ? (
+          <Pressable accessibilityRole="button" onPress={toggleAll}>
+            <AppText bold color={theme.colors.primary}>
+              {allVisibleSelected ? 'Clear all' : 'Select all'}
+            </AppText>
+          </Pressable>
+        ) : null}
+      </View>
 
       {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
       {loading ? <AppText muted>{t('common.loading')}</AppText> : null}
@@ -50,15 +74,11 @@ export function CoursePicker({ semesterId, stream, selectedIds, onChange }: Cour
           trailing={<Badge label={t('courses.freeTrial')} />}
         />
       ))}
-
-      <AppText muted style={styles.count}>
-        {selectedIds.length} {t('courses.selected')}
-      </AppText>
     </View>
   );
 }
 
 const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.sm },
-  count: { textAlign: 'center' },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: theme.spacing.xs },
 }));

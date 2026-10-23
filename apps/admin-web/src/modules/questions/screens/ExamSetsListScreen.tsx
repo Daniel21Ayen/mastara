@@ -5,7 +5,7 @@ import type { ExamQuestion, ExamSet } from '@mastara/contracts';
 import { CATALOG_STATUSES, examSetSlug, needsCourse, SET_YEARS, STREAMS } from '@mastara/domain';
 import type { CatalogStatus, ExamSetKind } from '@mastara/domain';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 import { adminText } from '@/core/i18n';
 import { usePrograms, useUniversities } from '@/modules/scans';
@@ -167,6 +167,18 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
     },
   ];
 
+  const filteredRows = useMemo(() => {
+    if (!data?.items) return [];
+    return data.items.filter((row) => {
+      if (university && row.universityId !== university) return false;
+      if (course && row.courseId !== course) return false;
+      if (year && String(row.year) !== year) return false;
+      if (stream && row.stream !== stream) return false;
+      if (program && row.programId !== program) return false;
+      return true;
+    });
+  }, [data?.items, university, course, year, stream, program]);
+
   return (
     <>
       <PageHeader
@@ -267,7 +279,7 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
                 kind: adminText(`admin.questions.kind.${kind}`),
               })}
               columns={columns}
-              rows={data.items}
+              rows={filteredRows}
               rowKey={(row) => row.id}
               empty={adminText('admin.questions.list.empty')}
             />
@@ -276,7 +288,7 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
             <Pagination
               page={data.page}
               pageCount={data.pageCount}
-              shown={data.items.length}
+              shown={filteredRows.length}
               total={data.total}
               onPage={setPage}
             />

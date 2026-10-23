@@ -1,13 +1,14 @@
-// apps/admin-web/src/modules/tests/screens/ContentQuizStudioScreen.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { QuizNumber } from '@mastara/domain';
 import { Icon } from '@/shared/ui';
-import { MathInputHelper } from '@/shared/math';
-import { StudentPreviewModal } from '@/shared/preview';
-import { useContentCourse } from '@/modules/content';
+import { useContentCourse, useModules } from '@/modules/content';
+import { testsApi } from '../api/tests.api';
+import { useQuestions } from '../hooks/useTests';
+import { QuestionPreviewDialog } from '../components/QuestionPreviewDialog';
+import { toInput, type QuestionFormState } from '../lib/questionForm';
 import { TestListScreen } from './TestListScreen';
 import styles from '@/modules/content/components/ContentStudio.module.css';
 
@@ -26,6 +27,7 @@ interface ChapterQuizItem {
   id: string;
   name: string;
   title: string;
+  topicId?: string;
 }
 
 const DEFAULT_QUIZ_CHAPTERS: ChapterQuizItem[] = [
@@ -41,14 +43,39 @@ const DEFAULT_OPTIONS: AnswerOption[] = [
   { id: 'opt-4', letter: 'D', text: 'A vehicle', isCorrect: false },
 ];
 
+function toForm(type: string): 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'BLANK_SPACE' {
+  if (type === 'True / False') return 'TRUE_FALSE';
+  if (type === 'Short Answer') return 'SHORT_ANSWER';
+  if (type === 'Blank Space') return 'BLANK_SPACE';
+  return 'MULTIPLE_CHOICE';
+}
+
 export function ContentQuizStudioScreen({ quizNo }: Props) {
   const router = useRouter();
   const { courses, course, setCourseId } = useContentCourse();
+  const modulesState = useModules(course?.id || '');
+  const questionsQuery = useQuestions({ quizNo, courseId: course?.id || '' });
 
   // Mode: 'editor' (Screenshot 1) vs 'table' (Screenshot 3)
   const [viewMode, setViewMode] = useState<'editor' | 'table'>('editor');
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  // Chapters from backend or fallback
+  const dynamicChapters: ChapterQuizItem[] = useMemo(() => {
+    if (modulesState.data && modulesState.data.length > 0) {
+      return modulesState.data.map((m) => ({
+        id: m.id,
+        name: `Chapter ${m.number}`,
+        title: `Chapter ${m.number} - ${m.title}`,
+        topicId: m.topics?.[0]?.id || m.id,
+      }));
+    }
+    return DEFAULT_QUIZ_CHAPTERS;
+  }, [modulesState.data]);
 
   const [chapters, setChapters] = useState<ChapterQuizItem[]>(DEFAULT_QUIZ_CHAPTERS);
+  const activeChapters = chapters.length > 0 ? chapters : dynamicChapters;
+
   const [selectedChapterId, setSelectedChapterId] = useState<string>('ch-1');
   const [isFreeTrial, setIsFreeTrial] = useState(false);
 
@@ -66,7 +93,7 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const selectedChapter =
-    chapters.find((ch) => ch.id === selectedChapterId) ?? chapters[0] ?? DEFAULT_QUIZ_CHAPTERS[0]!;
+    activeChapters.find((ch) => ch.id === selectedChapterId) ?? activeChapters[0] ?? DEFAULT_QUIZ_CHAPTERS[0]!;
 
   const handleTitleChange = (newTitle: string) => {
     setChapters((prev) =>
@@ -125,17 +152,59 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
     setOptions((prev) => [...prev, newOpt]);
   };
 
-  const handleAddQuestion = () => {
-    setSaveStatus(`Question ${questionNumber} saved!`);
-    setQuestionNumber((n) => n + 1);
-    setQuestionPrompt('');
-    setExplanation('');
-    setTimeout(() => setSaveStatus(null), 3000);
+  const currentFormState: QuestionFormState = useMemo(() => {
+    const formKind = toForm(questionType);
+    const correctIdx = options.findIndex((opt) => opt.isCorrect);
+    return {
+      quizNo,
+      topicId: selectedChapter.topicId || selectedChapter.id,
+      title: `${selectedChapter.name} - Q${questionNumber}`,
+      form: formKind,
+      prompt: questionPrompt,
+      options: options.map((opt) => opt.text),
+      correctOption: correctIdx >= 0 ? correctIdx : null,
+      trueIsCorrect: formKind === 'TRUE_FALSE' ? (options.find((o) => o.isCorrect)?.letter === 'A') : null,
+      acceptedAnswers: [options.find((o) => o.isCorrect)?.text || ''],
+      explanation,
+    };
+  }, [quizNo, selectedChapter, questionNumber, questionType, questionPrompt, options, explanation]);
+
+  const handleAddQuestion = async () => {
+    if (!course?.id) return;
+    setSaving(true);
+    try {
+      const input = toInput(course.id, currentFormState, 'PUBLISHED');
+      await testsApi.createQuestion(input);
+      setSaveStatus(`Question ${questionNumber} saved to database!`);
+      setQuestionNumber((n) => n + 1);
+      setQuestionPrompt('');
+      setExplanation('');
+      void questionsQuery.reload();
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch (err: any) {
+      setSaveStatus(`Error saving question: ${err?.message || 'Unknown error'}`);
+      setTimeout(() => setSaveStatus(null), 5000);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSave = (kind: 'DRAFT' | 'PUBLISH') => {
-    setSaveStatus(kind === 'PUBLISH' ? 'Quiz published live!' : 'Quiz draft saved!');
-    setTimeout(() => setSaveStatus(null), 3000);
+  const handleSave = async (kind: 'DRAFT' | 'PUBLISH') => {
+    if (!course?.id) return;
+    setSaving(true);
+    try {
+      await testsApi.updateQuiz(course.id, quizNo, {
+        minutes: 30,
+        status: kind === 'PUBLISH' ? 'PUBLISHED' : 'DRAFT',
+      });
+      setSaveStatus(kind === 'PUBLISH' ? 'Quiz published live to database!' : 'Quiz draft saved to database!');
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch (err: any) {
+      setSaveStatus(`Error saving quiz: ${err?.message || 'Unknown error'}`);
+      setTimeout(() => setSaveStatus(null), 5000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -165,8 +234,8 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
           <button
             type="button"
             className={styles.actionBtnOutline}
-            onClick={() => setIsPreviewOpen(true)}
-            title="Preview as Student (desktop & mobile simulation)"
+            onClick={() => setPreviewOpen(true)}
+            title="Preview question as seen by students"
           >
             <Icon name="eye" size={16} />
             Preview as student
@@ -174,7 +243,8 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
           <button
             type="button"
             className={styles.actionBtnOutline}
-            onClick={() => handleSave('DRAFT')}
+            onClick={() => void handleSave('DRAFT')}
+            disabled={saving}
           >
             <Icon name="check" size={16} />
             Save draft
@@ -182,7 +252,8 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
           <button
             type="button"
             className={styles.actionBtnPrimary}
-            onClick={() => handleSave('PUBLISH')}
+            onClick={() => void handleSave('PUBLISH')}
+            disabled={saving}
           >
             <Icon name="send" size={16} />
             Publish
@@ -413,8 +484,13 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
               />
             </div>
 
-            <button type="button" className={styles.addQuestionBtn} onClick={handleAddQuestion}>
-              + Add Question
+            <button
+              type="button"
+              className={styles.addQuestionBtn}
+              onClick={() => void handleAddQuestion()}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : '+ Add Question'}
             </button>
           </main>
         </div>

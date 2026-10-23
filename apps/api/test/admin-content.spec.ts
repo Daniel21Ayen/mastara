@@ -57,14 +57,8 @@ async function runAdminContentTests() {
     course: {
       findMany: async () => courses,
       findUnique: async ({ where }: any) => courses.find((c) => c.id === where.id) || null,
-      findFirst: async ({ where }: any) => {
-        if (where.id) return courses.find((c) => c.id === where.id) || null;
-        if (where.code?.equals) {
-          const target = String(where.code.equals).toLowerCase();
-          return courses.find((c) => c.code.toLowerCase() === target || c.id.toLowerCase() === target) || null;
-        }
-        return courses[0] || null;
-      },
+      findFirst: async ({ where }: any) =>
+        courses.find((c) => c.id === where?.id || c.code === where?.code?.equals) || courses[0] || null,
     },
     module: {
       findMany: async ({ where, orderBy }: any) => {
@@ -222,19 +216,8 @@ async function runAdminContentTests() {
     },
   };
 
-  const moduleFixture: TestingModule = await Test.createTestingModule({
-    controllers: [AdminContentController],
-    providers: [
-      ContentService,
-      {
-        provide: PrismaService,
-        useValue: mockPrisma,
-      },
-    ],
-  }).compile();
-
-  const service = moduleFixture.get<ContentService>(ContentService);
-  const controller = moduleFixture.get<AdminContentController>(AdminContentController);
+  const service = new ContentService(mockPrisma as any);
+  const controller = new AdminContentController(service);
 
   // 1. List Courses
   const courseList = await service.listAdminCourses();

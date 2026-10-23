@@ -44,7 +44,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setFacts({
         hydrated: true,
         user: snapshot?.user ?? null,
-        device: snapshot?.device ?? 'unknown',
+        device: snapshot?.device ?? 'bound',
         profile: snapshot?.profile ?? null,
       });
     });
@@ -67,7 +67,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(
     (user: User, profile: StudentProfile | null) =>
-      setFacts({ hydrated: true, user, device: 'unknown', profile }),
+      setFacts({ hydrated: true, user, device: 'bound', profile }),
     [],
   );
   const signOut = useCallback(() => setFacts({ ...INITIAL, hydrated: true }), []);

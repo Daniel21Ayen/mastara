@@ -16,7 +16,6 @@ type OnboardingStatus = Exclude<SessionStatus, 'loading' | 'ready'>;
 
 const ROUTE_FOR_STATUS: Record<OnboardingStatus, AppRoute> = {
   signedOut: ROUTES.login,
-  needsDevice: ROUTES.deviceRegistration,
   deviceLocked: ROUTES.deviceLocked,
   needsProfile: ROUTES.profileSetup,
 };

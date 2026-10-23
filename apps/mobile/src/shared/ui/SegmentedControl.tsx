@@ -49,7 +49,8 @@ const useStyles = createStyles((theme) => ({
     borderRadius: theme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
-  active: { backgroundColor: theme.colors.primary },
-  idle: { backgroundColor: theme.colors.surface },
+  active: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  idle: { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
 }));

@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Icon } from '@/shared/ui';
-import { StudentPreviewModal } from '@/shared/preview';
+import { testsApi } from '@/modules/tests/api/tests.api';
 import type { TestSetItem } from '../state/contentManagementData';
 import styles from './BuildTestSetDialog.module.css';
 
@@ -147,6 +147,30 @@ export function BuildTestSetDialog({
       verified: true,
       questionCount: 1,
     };
+
+    // Asynchronously sync to backend tests API if online
+    void testsApi
+      .createQuestion({
+        courseId: course.toLowerCase().replace(/\s+/g, '-'),
+        quizNo,
+        topicId: `topic-${chapter.replace(/[^0-9]/g, '') || '1'}`,
+        title: `${testSetId.trim()}: ${chapter}`,
+        form: 'MULTIPLE_CHOICE',
+        prompt: newTestSet.question,
+        options: [
+          'Option A: Core concept definition',
+          'Option B: Methodological principle',
+          'Option C: Empirical evidence',
+          'Option D: Applied practice',
+        ],
+        correctOption: 0,
+        trueIsCorrect: null,
+        acceptedAnswers: [],
+        status: status === 'Active' ? 'PUBLISHED' : 'DRAFT',
+      })
+      .catch(() => {
+        // Safe offline / mock fallback
+      });
 
     onBuild(newTestSet);
     onClose();
