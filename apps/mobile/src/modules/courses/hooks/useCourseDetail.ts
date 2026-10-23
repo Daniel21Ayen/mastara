@@ -1,5 +1,4 @@
-// apps/mobile/src/modules/courses/hooks/useCourseDetail.ts
-import { myCoursesApi } from '@/modules/my-courses';
+import { myCoursesApi } from '@/modules/my-courses/api/myCourses.api';
 import { useAsync } from '@/shared/hooks';
 
 /** The course with its access state and progress, or null if it is not in the student's list. */

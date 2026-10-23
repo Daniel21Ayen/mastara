@@ -8,7 +8,7 @@ import { useSession } from '@/core/session';
 import { useUnreadCount } from '@/modules/notifications';
 import { createStyles, useTheme } from '@/core/theme';
 import { useComingSoon } from '@/shared/hooks';
-import { AppButton, AppText, Screen } from '@/shared/ui';
+import { AppButton, AppText, Card, Screen } from '@/shared/ui';
 
 import { HomeHeader } from '../components/HomeHeader';
 import { QuickCard } from '../components/QuickCard';
@@ -39,49 +39,61 @@ export function HomeScreen() {
       {loading && !data ? <ActivityIndicator color={theme.colors.primary} /> : null}
       {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
 
-      {data ? (
-        <>
-          <View style={styles.grid}>
-            <QuickCard
-              icon="course"
-              accent="violet"
-              title={t('home.quick.courses')}
-              subtitle={t('home.quick.courses.sub', { n: profile?.courseIds.length ?? 0 })}
-              onPress={() => router.push('/course' as Href)}
-            />
-            <QuickCard
-              icon="stats"
-              accent="emerald"
-              title={t('home.quick.stats')}
-              subtitle={t('home.quick.stats.sub', { done: data.chaptersDone, total: data.chaptersTotal })}
-              onPress={() => router.push('/progress' as Href)}
-            />
-            <QuickCard
-              icon="store"
-              accent="orange"
-              title={t('home.quick.store')}
-              subtitle={t('home.quick.store.sub', { active: data.activeProducts, pending: data.pendingProducts })}
-              alert={data.pendingProducts > 0}
-              onPress={() => router.push('/store' as Href)}
-            />
-            <QuickCard
-              icon="trophy"
-              accent="fuchsia"
-              title={t('home.coc.title')}
-              subtitle={t('home.coc.sub')}
-              onPress={() => router.push('/coc' as Href)}
-            />
-          </View>
+      <View style={styles.grid}>
+        <QuickCard
+          icon="course"
+          accent="violet"
+          title={t('home.quick.courses')}
+          subtitle={t('home.quick.courses.sub', { n: profile?.courseIds.length ?? 0 })}
+          onPress={() => router.push('/course' as Href)}
+        />
+        <QuickCard
+          icon="stats"
+          accent="emerald"
+          title={t('home.quick.stats')}
+          subtitle={t('home.quick.stats.sub', {
+            done: data?.chaptersDone ?? 0,
+            total: data?.chaptersTotal ?? 0,
+          })}
+          onPress={() => router.push('/progress' as Href)}
+        />
+        <QuickCard
+          icon="store"
+          accent="orange"
+          title={t('home.quick.store')}
+          subtitle={t('home.quick.store.sub', {
+            active: data?.activeProducts ?? 0,
+            pending: data?.pendingProducts ?? 0,
+          })}
+          alert={(data?.pendingProducts ?? 0) > 0}
+          onPress={() => router.push('/store' as Href)}
+        />
+        <QuickCard
+          icon="trophy"
+          accent="fuchsia"
+          title={t('home.coc.title')}
+          subtitle={t('home.coc.sub')}
+          onPress={() => router.push('/coc' as Href)}
+        />
+      </View>
 
-          <RecentlyAccessedList
-            items={data.recent}
-            onSeeAll={comingSoon}
-            onItemPress={(item) => (item.courseId ? openCourse(item.courseId) : comingSoon())}
+      {data?.recent && data.recent.length > 0 ? (
+        <RecentlyAccessedList
+          items={data.recent}
+          onSeeAll={comingSoon}
+          onItemPress={(item) => (item.courseId ? openCourse(item.courseId) : comingSoon())}
+        />
+      ) : (
+        <Card>
+          <AppText bold>{t('home.empty')}</AppText>
+          <AppText muted>{t('home.recent.empty')}</AppText>
+          <AppButton
+            label={t('mycourses.add')}
+            variant="outline"
+            onPress={() => router.push('/course' as Href)}
           />
-        </>
-      ) : null}
-
-      {!loading && !data && !error ? <AppText muted>{t('home.empty')}</AppText> : null}
+        </Card>
+      )}
     </Screen>
   );
 }
@@ -89,4 +101,5 @@ export function HomeScreen() {
 const useStyles = createStyles((theme) => ({
   // Four cards of the same size: two rows of two.
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
+  emptyCard: { gap: theme.spacing.sm, marginTop: theme.spacing.md, padding: theme.spacing.md },
 }));

@@ -1,8 +1,8 @@
 // apps/mobile/src/modules/reader/hooks/useReader.ts
 import { canOpenContent } from '@mastara/domain';
 
-import { contentApi } from '@/modules/courses';
-import { myCoursesApi } from '@/modules/my-courses';
+import { contentApi } from '@/modules/courses/api/content.api';
+import { myCoursesApi } from '@/modules/my-courses/api/myCourses.api';
 import { useAsync } from '@/shared/hooks';
 
 /** Loads one topic, the other topics of the same kind (for Previous/Next) and the course access. */

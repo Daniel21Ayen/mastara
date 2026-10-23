@@ -8,7 +8,7 @@ import { ActivityIndicator, FlatList, View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
 import { createStyles, useTheme } from '@/core/theme';
-import { AppButton, AppText, ScreenHeader, SegmentedControl, Screen } from '@/shared/ui';
+import { AppButton, AppText, Card, ScreenHeader, SegmentedControl, Screen } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
 import { AddCoursesSheet } from '../components/AddCoursesSheet';
@@ -53,9 +53,16 @@ export function MyCoursesScreen() {
   const empty = courses.loading ? (
     <ActivityIndicator color={theme.colors.primary} />
   ) : courses.error ? (
-    <AppButton label={t('common.retry')} variant="outline" onPress={courses.reload} />
+    <View style={styles.gap}>
+      <AppText muted>{t('error.offline') || 'Unable to load courses.'}</AppText>
+      <AppButton label={t('common.retry')} variant="outline" onPress={courses.reload} />
+    </View>
   ) : courses.total === 0 ? (
-    <AppText muted>{t('mycourses.empty.none')}</AppText>
+    <Card>
+      <AppText bold>{t('mycourses.empty.none')}</AppText>
+      <AppText muted>{t('home.empty')}</AppText>
+      <AppButton label={t('mycourses.add')} onPress={() => setAddOpen(true)} />
+    </Card>
   ) : (
     <View style={styles.gap}>
       <AppText muted>{t('mycourses.empty.match')}</AppText>
@@ -96,4 +103,5 @@ const useStyles = createStyles((theme) => ({
   list: { paddingBottom: theme.spacing.lg },
   separator: { height: theme.spacing.sm },
   gap: { gap: theme.spacing.sm },
+  emptyCard: { gap: theme.spacing.sm, padding: theme.spacing.lg, marginTop: theme.spacing.md },
 }));

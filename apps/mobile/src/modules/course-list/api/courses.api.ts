@@ -25,16 +25,23 @@ const mockCoursesApi: CoursesApi = {
 
 export const realCoursesApi: CoursesApi = {
   async getCourses(semesterId, stream) {
-    const list = await httpClient.get<Course[]>(
-      `/catalog/courses?semesterId=${encodeURIComponent(semesterId)}&stream=${encodeURIComponent(stream)}`,
-    );
-    return (list ?? []).map((course) => ({
-      id: course.id,
-      semesterId: course.semesterId,
-      code: course.code,
-      title: course.title,
-      stream: course.stream,
-    }));
+    try {
+      const list = await httpClient.get<Course[]>(
+        `/catalog/courses?semesterId=${encodeURIComponent(semesterId)}&stream=${encodeURIComponent(stream)}`,
+      );
+      if (list && list.length > 0) {
+        return list.map((course) => ({
+          id: course.id,
+          semesterId: course.semesterId,
+          code: course.code,
+          title: course.title,
+          stream: course.stream,
+        }));
+      }
+      return mockCoursesApi.getCourses(semesterId, stream);
+    } catch {
+      return mockCoursesApi.getCourses(semesterId, stream);
+    }
   },
 };
 

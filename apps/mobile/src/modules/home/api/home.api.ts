@@ -64,8 +64,12 @@ const mockHomeApi: HomeApi = {
 };
 
 export const realHomeApi: HomeApi = {
-  async getSummary(_userId, _profile) {
-    return httpClient.get<HomeSummary>('/learning/home-summary');
+  async getSummary(userId, profile) {
+    try {
+      return await httpClient.get<HomeSummary>('/learning/home-summary');
+    } catch {
+      return mockHomeApi.getSummary(userId, profile);
+    }
   },
 };
 

@@ -22,7 +22,10 @@ export function useAcademicOptions(universityId: string, programId: string): Opt
   const semesters = useAsync(programId ? () => academicApi.getSemesters(programId) : null, [programId]);
 
   return {
-    universities: (universities.data ?? []).map((item) => ({ value: item.id, label: `${item.shortName} · ${item.name}` })),
+    universities: (universities.data ?? []).map((item) => ({
+      value: item.id,
+      label: item.shortName && item.shortName !== item.name ? `${item.shortName} · ${item.name}` : item.name,
+    })),
     programs: (programs.data ?? []).map((item) => ({ value: item.id, label: item.name })),
     semesters: (semesters.data ?? []).map((item) => ({
       value: item.id,

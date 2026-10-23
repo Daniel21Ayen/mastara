@@ -1,7 +1,7 @@
 // apps/mobile/src/modules/quizzes/hooks/usePracticeData.ts
 import { canOpenContent } from '@mastara/domain';
 
-import { myCoursesApi } from '@/modules/my-courses';
+import { myCoursesApi } from '@/modules/my-courses/api/myCourses.api';
 import { useAsync } from '@/shared/hooks';
 
 import { quizApi } from '../api/quiz.api';

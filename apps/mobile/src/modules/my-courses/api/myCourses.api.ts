@@ -26,15 +26,19 @@ const mockMyCoursesApi: MyCoursesApi = {
 
 export const realMyCoursesApi: MyCoursesApi = {
   async getMyCourses(courseIds) {
-    const list = await httpClient.get<MyCourse[]>('/learning/my-courses');
-    if (courseIds && courseIds.length > 0) {
-      const map = new Map((list ?? []).map((item) => [item.course.id, item]));
-      return courseIds.flatMap((id) => {
-        const item = map.get(id);
-        return item ? [item] : [];
-      });
+    try {
+      const list = await httpClient.get<MyCourse[]>('/learning/my-courses');
+      if (courseIds && courseIds.length > 0) {
+        const map = new Map((list ?? []).map((item) => [item.course.id, item]));
+        return courseIds.flatMap((id) => {
+          const item = map.get(id);
+          return item ? [item] : [];
+        });
+      }
+      return list ?? [];
+    } catch {
+      return mockMyCoursesApi.getMyCourses(courseIds);
     }
-    return list ?? [];
   },
 };
 

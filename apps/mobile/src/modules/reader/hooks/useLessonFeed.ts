@@ -2,8 +2,8 @@
 import type { Topic } from '@mastara/contracts';
 import { canOpenContent } from '@mastara/domain';
 
-import { contentApi } from '@/modules/courses';
-import { myCoursesApi } from '@/modules/my-courses';
+import { contentApi } from '@/modules/courses/api/content.api';
+import { myCoursesApi } from '@/modules/my-courses/api/myCourses.api';
 import { useAsync } from '@/shared/hooks';
 
 export interface LessonEntry {

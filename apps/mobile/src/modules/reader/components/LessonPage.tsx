@@ -6,7 +6,7 @@ import { ActivityIndicator } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { useTheme } from '@/core/theme';
-import { contentApi } from '@/modules/courses';
+import { contentApi } from '@/modules/courses/api/content.api';
 import { useAsync } from '@/shared/hooks';
 import { AppButton, AppText, Card, ErrorNotice, RichText } from '@/shared/ui';
 

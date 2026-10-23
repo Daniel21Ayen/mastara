@@ -9,8 +9,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { createStyles, useTheme } from '@/core/theme';
 import { LockedSheet } from '@/modules/access';
-import { examResultRepository } from '@/modules/exams';
-import type { ExamResultRecord } from '@/modules/exams';
+import { examResultRepository, type ExamResultRecord } from '@/modules/exams/repo/examResult.repository';
 import { useAsync, useTimeAgo } from '@/shared/hooks';
 import { AppText, Badge, BottomSheet, Card, ErrorNotice, IconTile, ListRow, Screen, TopBar } from '@/shared/ui';
 
@@ -30,7 +29,7 @@ export function CocScreen() {
   const timeAgo = useTimeAgo();
   const { sets, paid, hasCourses, courseIds, loading, error, reload } = useCocSets();
   const [sheet, setSheet] = useState<Sheet>(null);
-  const results = useAsync(sheet === 'results' ? () => examResultRepository.list() : null, [sheet]);
+  const results = useAsync<ExamResultRecord[]>(sheet === 'results' ? () => examResultRepository.list() : null, [sheet]);
 
   function openSet(set: CocSet) {
     if (!canOpenContent(paid ? 'PAID' : 'FREE_TRIAL', set.isFree)) {

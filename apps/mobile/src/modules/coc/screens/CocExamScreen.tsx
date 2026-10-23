@@ -4,7 +4,7 @@ import { ActivityIndicator } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { useTheme } from '@/core/theme';
-import { ExamFlow } from '@/modules/exams';
+import { ExamFlow } from '@/modules/exams/components/ExamFlow';
 import { AppText, Card, ErrorNotice, Screen, TopBar } from '@/shared/ui';
 
 import { useCocSession } from '../hooks/useCocData';

@@ -2,7 +2,7 @@
 import { canOpenContent } from '@mastara/domain';
 
 import { useSession } from '@/core/session';
-import { myCoursesApi } from '@/modules/my-courses';
+import { myCoursesApi } from '@/modules/my-courses/api/myCourses.api';
 import { useAsync } from '@/shared/hooks';
 
 import { cocApi } from '../api/coc.api';

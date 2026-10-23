@@ -78,6 +78,11 @@ export function SelectField({
               <AppText bold={item.value === value}>{item.label}</AppText>
             </Pressable>
           )}
+          ListEmptyComponent={
+            <View style={{ padding: theme.spacing.md, alignItems: 'center' }}>
+              <AppText muted>No options available</AppText>
+            </View>
+          }
         />
       </BottomSheet>
     </View>

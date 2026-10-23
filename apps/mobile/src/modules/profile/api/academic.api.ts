@@ -30,32 +30,53 @@ const mockAcademicApi: AcademicApi = {
 
 export const realAcademicApi: AcademicApi = {
   async getUniversities() {
-    const list = await httpClient.get<Array<{ id: string; name: string; shortName: string }>>('/catalog/universities');
-    return (list ?? []).map((u) => ({
-      id: u.id,
-      name: u.name,
-      shortName: u.shortName,
-    }));
+    try {
+      const list = await httpClient.get<Array<{ id: string; name: string; shortName: string }>>('/catalog/universities');
+      if (list && list.length > 0) {
+        return list.map((u) => ({
+          id: u.id,
+          name: u.name,
+          shortName: u.shortName,
+        }));
+      }
+      return mockAcademicApi.getUniversities();
+    } catch {
+      return mockAcademicApi.getUniversities();
+    }
   },
   async getPrograms(universityId) {
-    const list = await httpClient.get<Array<{ id: string; universityId: string; name: string }>>(
-      `/catalog/universities/${universityId}/programs`,
-    );
-    return (list ?? []).map((p) => ({
-      id: p.id,
-      universityId: p.universityId,
-      name: p.name,
-    }));
+    try {
+      const list = await httpClient.get<Array<{ id: string; universityId: string; name: string }>>(
+        `/catalog/universities/${universityId}/programs`,
+      );
+      if (list && list.length > 0) {
+        return list.map((p) => ({
+          id: p.id,
+          universityId: p.universityId,
+          name: p.name,
+        }));
+      }
+      return mockAcademicApi.getPrograms(universityId);
+    } catch {
+      return mockAcademicApi.getPrograms(universityId);
+    }
   },
   async getSemesters(programId) {
-    const list = await httpClient.get<Array<{ id: string; programId: string; number: number }>>(
-      `/catalog/programs/${programId}/semesters`,
-    );
-    return (list ?? []).map((s) => ({
-      id: s.id,
-      programId: s.programId,
-      number: s.number === 2 ? 2 : 1,
-    }));
+    try {
+      const list = await httpClient.get<Array<{ id: string; programId: string; number: number }>>(
+        `/catalog/programs/${programId}/semesters`,
+      );
+      if (list && list.length > 0) {
+        return list.map((s) => ({
+          id: s.id,
+          programId: s.programId,
+          number: s.number === 2 ? 2 : 1,
+        }));
+      }
+      return mockAcademicApi.getSemesters(programId);
+    } catch {
+      return mockAcademicApi.getSemesters(programId);
+    }
   },
 };
 
