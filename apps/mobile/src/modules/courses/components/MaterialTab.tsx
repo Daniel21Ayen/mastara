@@ -1,5 +1,4 @@
-// apps/mobile/src/modules/courses/components/MaterialTab.tsx
-import type { Topic } from '@mastara/contracts';
+import type { Course, Topic } from '@mastara/contracts';
 import type { AccessState, ContentKind, ContentLang } from '@mastara/domain';
 import type { TranslationKey } from '@mastara/i18n';
 import type { Href } from 'expo-router';
@@ -10,11 +9,13 @@ import { ActivityIndicator, View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { createStyles, useTheme } from '@/core/theme';
 import { LockedSheet } from '@/modules/access';
+import { useIsCourseDownloaded } from '@/modules/downloads';
 import { AppText, ErrorNotice, IconTile, UnderlineTabs } from '@/shared/ui';
 import type { IconName, UnderlineTabOption } from '@/shared/ui';
 
 import { useTopics } from '../hooks/useTopics';
 
+import { DownloadRequiredSheet } from './DownloadRequiredSheet';
 import { TopicRow } from './TopicRow';
 
 type MaterialTabId = 'MODULES' | 'NOTES' | 'AMHARIC';
@@ -44,16 +45,19 @@ const TAB_ORDER: readonly MaterialTabId[] = ['MODULES', 'NOTES', 'AMHARIC'];
 interface MaterialTabProps {
   courseId: string;
   access: AccessState;
+  course?: Course;
 }
 
-export function MaterialTab({ courseId, access }: MaterialTabProps) {
+export function MaterialTab({ courseId, access, course }: MaterialTabProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const [tab, setTab] = useState<MaterialTabId>('MODULES');
   const [lockedOpen, setLockedOpen] = useState(false);
+  const [downloadPromptOpen, setDownloadPromptOpen] = useState(false);
 
+  const isDownloaded = useIsCourseDownloaded(courseId);
   const config = TAB_CONFIG[tab];
   const { topics, loading, error, reload } = useTopics(courseId, config.kind);
 
@@ -63,12 +67,24 @@ export function MaterialTab({ courseId, access }: MaterialTabProps) {
   }));
 
   function openTopic(topic: Topic, open: boolean) {
+    if (!isDownloaded) {
+      setDownloadPromptOpen(true);
+      return;
+    }
     if (!open) {
       setLockedOpen(true);
       return;
     }
     router.push(`/reader/${topic.id}?lang=${config.lang}` as Href);
   }
+
+  const fallbackCourse: Course = course ?? {
+    id: courseId,
+    semesterId: '',
+    code: '',
+    title: t('mycourses.title') || 'Course',
+    stream: 'COMMON',
+  };
 
   return (
     <View style={styles.wrap}>
@@ -95,6 +111,11 @@ export function MaterialTab({ courseId, access }: MaterialTabProps) {
       ))}
 
       <LockedSheet visible={lockedOpen} onClose={() => setLockedOpen(false)} />
+      <DownloadRequiredSheet
+        visible={downloadPromptOpen}
+        course={fallbackCourse}
+        onClose={() => setDownloadPromptOpen(false)}
+      />
     </View>
   );
 }

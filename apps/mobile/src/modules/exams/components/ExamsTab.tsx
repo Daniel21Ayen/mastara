@@ -1,5 +1,4 @@
-// apps/mobile/src/modules/exams/components/ExamsTab.tsx
-import type { Exam } from '@mastara/contracts';
+import type { Course, Exam } from '@mastara/contracts';
 import { canOpenContent, EXAM_KINDS } from '@mastara/domain';
 import type { AccessState, ExamKind } from '@mastara/domain';
 import type { TranslationKey } from '@mastara/i18n';
@@ -11,6 +10,8 @@ import { ActivityIndicator, View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { createStyles, useTheme } from '@/core/theme';
 import { LockedSheet } from '@/modules/access';
+import { DownloadRequiredSheet } from '@/modules/courses/components/DownloadRequiredSheet';
+import { useIsCourseDownloaded } from '@/modules/downloads';
 import { AppText, ErrorNotice, IconTile, UnderlineTabs } from '@/shared/ui';
 import type { UnderlineTabOption } from '@/shared/ui';
 
@@ -33,16 +34,20 @@ const KIND_TEXT: Record<ExamKind, KindText> = {
 interface ExamsTabProps {
   courseId: string;
   access: AccessState;
+  course?: Course;
 }
 
 /** Course "Exams" tab: lower tabs Mid, Final, Mock. COC is not here: it opens from Home. */
-export function ExamsTab({ courseId, access }: ExamsTabProps) {
+export function ExamsTab({ courseId, access, course }: ExamsTabProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const [kind, setKind] = useState<ExamKind>('MID');
   const [lockedOpen, setLockedOpen] = useState(false);
+  const [downloadPromptOpen, setDownloadPromptOpen] = useState(false);
+
+  const isDownloaded = useIsCourseDownloaded(courseId);
   const { items, loading, error, reload } = useExams(courseId, kind);
 
   const options: UnderlineTabOption<ExamKind>[] = EXAM_KINDS.map((value) => ({
@@ -51,9 +56,24 @@ export function ExamsTab({ courseId, access }: ExamsTabProps) {
   }));
 
   function openExam(exam: Exam, open: boolean) {
-    if (!open) setLockedOpen(true);
-    else router.push(`/exam/${exam.id}` as Href);
+    if (!isDownloaded) {
+      setDownloadPromptOpen(true);
+      return;
+    }
+    if (!open) {
+      setLockedOpen(true);
+      return;
+    }
+    router.push(`/exam/${exam.id}` as Href);
   }
+
+  const fallbackCourse: Course = course ?? {
+    id: courseId,
+    semesterId: '',
+    code: '',
+    title: t('course.tab.exams') || 'Course Exam',
+    stream: 'COMMON',
+  };
 
   return (
     <View style={styles.wrap}>
@@ -86,6 +106,11 @@ export function ExamsTab({ courseId, access }: ExamsTabProps) {
       ))}
 
       <LockedSheet visible={lockedOpen} onClose={() => setLockedOpen(false)} />
+      <DownloadRequiredSheet
+        visible={downloadPromptOpen}
+        course={fallbackCourse}
+        onClose={() => setDownloadPromptOpen(false)}
+      />
     </View>
   );
 }

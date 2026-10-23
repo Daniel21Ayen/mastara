@@ -3,8 +3,8 @@ import { utf8Bytes } from '@mastara/domain';
 
 import { dbUser, getDb } from '@/core/db';
 
-/** What can be downloaded. One "unit" is what a student sees as one item: a lesson, a quiz chapter, an exam, a COC set. */
-export type DownloadKind = 'TOPIC' | 'QUIZ_CHAPTER' | 'EXAM' | 'COC_SET';
+/** What can be downloaded. One "unit" is what a student sees as one item: a course, a lesson, a quiz chapter, an exam, a COC set. */
+export type DownloadKind = 'COURSE' | 'TOPIC' | 'QUIZ_CHAPTER' | 'EXAM' | 'COC_SET';
 
 /** One saved server answer that belongs to a unit. `key` is the API call it answers (see contentKey). */
 export interface DownloadEntry {
@@ -142,6 +142,39 @@ export const downloadStore = {
       await db.runAsync('DELETE FROM downloads WHERE user_id = ? AND unit_id = ?', [dbUser(), unitId]);
     });
     notify();
+  },
+
+  /** Removes all downloaded content, units, and cache for a course, enabling Download state to reappear. */
+  async removeCourse(courseId: string): Promise<void> {
+    const db = await getDb();
+    const user = dbUser();
+    await db.withTransactionAsync(async () => {
+      const rows = await db.getAllAsync<{ unit_id: string }>(
+        'SELECT unit_id FROM downloads WHERE user_id = ? AND (course_id = ? OR unit_id = ?)',
+        [user, courseId, `COURSE:${courseId}`],
+      );
+      for (const row of rows) {
+        await db.runAsync('DELETE FROM downloaded_content WHERE user_id = ? AND unit_id = ?', [user, row.unit_id]);
+      }
+      await db.runAsync(
+        'DELETE FROM downloads WHERE user_id = ? AND (course_id = ? OR unit_id = ?)',
+        [user, courseId, `COURSE:${courseId}`],
+      );
+    });
+    notify();
+  },
+
+  async isCourseDownloaded(courseId: string): Promise<boolean> {
+    try {
+      const db = await getDb();
+      const row = await db.getFirstAsync<{ unit_id: string }>(
+        'SELECT unit_id FROM downloads WHERE user_id = ? AND unit_id = ?',
+        [dbUser(), `COURSE:${courseId}`],
+      );
+      return Boolean(row);
+    } catch {
+      return false;
+    }
   },
 
   async removeAll(): Promise<void> {

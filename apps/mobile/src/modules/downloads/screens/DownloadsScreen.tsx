@@ -16,6 +16,7 @@ import type { IconName } from '@/shared/ui';
 import { useDownloadList } from '../hooks/useDownloads';
 
 const SECTIONS: readonly { kind: DownloadKind; icon: IconName; title: Parameters<ReturnType<typeof useI18n>['t']>[0] }[] = [
+  { kind: 'COURSE', icon: 'course', title: 'mycourses.title' },
   { kind: 'TOPIC', icon: 'module', title: 'downloads.section.material' },
   { kind: 'QUIZ_CHAPTER', icon: 'quiz', title: 'downloads.section.tests' },
   { kind: 'EXAM', icon: 'exam', title: 'downloads.section.exams' },
@@ -35,6 +36,13 @@ export function DownloadsScreen() {
   /** The name shown, in the student's language, built from the saved list entry. */
   function nameOf(unit: DownloadedUnit): { title: string; subtitle: string } {
     switch (unit.kind) {
+      case 'COURSE': {
+        const course = unit.meta as { title?: string };
+        return {
+          title: course?.title ?? unit.title,
+          subtitle: t('course.download.downloaded') || 'Full course downloaded',
+        };
+      }
       case 'TOPIC': {
         const topic = unit.meta as Topic;
         return {
@@ -69,8 +77,16 @@ export function DownloadsScreen() {
   async function confirmDelete() {
     const target = deleting;
     setDeleting(null);
-    if (target === 'ALL') await downloadStore.removeAll();
-    else if (target) await downloadStore.remove(target.unitId);
+    if (target === 'ALL') {
+      await downloadStore.removeAll();
+    } else if (target) {
+      if (target.kind === 'COURSE') {
+        const courseId = target.courseId ?? target.unitId.replace('COURSE:', '');
+        await downloadStore.removeCourse(courseId);
+      } else {
+        await downloadStore.remove(target.unitId);
+      }
+    }
   }
 
   return (

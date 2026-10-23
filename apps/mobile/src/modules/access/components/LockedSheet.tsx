@@ -21,20 +21,15 @@ export function LockedSheet({ visible, onClose }: LockedSheetProps) {
   };
 
   return (
-    <BottomSheet visible={visible} title={t('locked.title') || 'Locked Content'} onClose={onClose}>
+    <BottomSheet visible={visible} title={t('locked.title') || 'You cannot access this content'} onClose={onClose}>
       <AppText muted>
-        {t('locked.body') || 'This content is locked. You must purchase the course to unlock full access to Modules, Notes, Amharic Notes, Tests, and Exams.'}
+        {t('locked.body') || 'You cannot access this content without an active course purchase or free trial. Please purchase this course in the Store to unlock full access.'}
       </AppText>
       <AppButton
-        label="Purchase Course"
+        label={t('locked.buy') || 'Buy Now / Pricing'}
         onPress={handleGoToStore}
       />
-      <AppButton
-        label="Return to Buy"
-        variant="outline"
-        onPress={handleGoToStore}
-      />
-      <AppButton label={t('common.back')} variant="outline" onPress={onClose} />
+      <AppButton label={t('common.cancel') || 'Cancel'} variant="outline" onPress={onClose} />
     </BottomSheet>
   );
 }

@@ -1,5 +1,4 @@
-// apps/mobile/src/modules/quizzes/components/TestsTab.tsx
-import type { QuizChapter } from '@mastara/contracts';
+import type { Course, QuizChapter } from '@mastara/contracts';
 import { QUIZ_NUMBERS } from '@mastara/domain';
 import type { AccessState, QuizNumber } from '@mastara/domain';
 import type { Href } from 'expo-router';
@@ -10,6 +9,8 @@ import { ActivityIndicator, View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { createStyles, useTheme } from '@/core/theme';
 import { LockedSheet } from '@/modules/access';
+import { DownloadRequiredSheet } from '@/modules/courses/components/DownloadRequiredSheet';
+import { useIsCourseDownloaded } from '@/modules/downloads';
 import { AppText, ErrorNotice, IconTile, UnderlineTabs } from '@/shared/ui';
 import type { UnderlineTabOption } from '@/shared/ui';
 
@@ -20,16 +21,20 @@ import { QuizChapterRow } from './QuizChapterRow';
 interface TestsTabProps {
   courseId: string;
   access: AccessState;
+  course?: Course;
 }
 
 /** Course "Tests" tab: lower tabs Quiz 1, 2, 3, each listing its chapters. */
-export function TestsTab({ courseId, access }: TestsTabProps) {
+export function TestsTab({ courseId, access, course }: TestsTabProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
   const router = useRouter();
   const [quizNo, setQuizNo] = useState<QuizNumber>(1);
   const [lockedOpen, setLockedOpen] = useState(false);
+  const [downloadPromptOpen, setDownloadPromptOpen] = useState(false);
+
+  const isDownloaded = useIsCourseDownloaded(courseId);
   const { items, loading, error, reload } = useQuizChapters(courseId, quizNo);
 
   const options: UnderlineTabOption<`${QuizNumber}`>[] = QUIZ_NUMBERS.map((n) => ({
@@ -38,9 +43,24 @@ export function TestsTab({ courseId, access }: TestsTabProps) {
   }));
 
   function openChapter(chapter: QuizChapter, open: boolean) {
-    if (!open) setLockedOpen(true);
-    else router.push(`/quiz/${chapter.id}` as Href);
+    if (!isDownloaded) {
+      setDownloadPromptOpen(true);
+      return;
+    }
+    if (!open) {
+      setLockedOpen(true);
+      return;
+    }
+    router.push(`/quiz/${chapter.id}` as Href);
   }
+
+  const fallbackCourse: Course = course ?? {
+    id: courseId,
+    semesterId: '',
+    code: '',
+    title: t('tests.title') || 'Course Quiz',
+    stream: 'COMMON',
+  };
 
   return (
     <View style={styles.wrap}>
@@ -67,6 +87,11 @@ export function TestsTab({ courseId, access }: TestsTabProps) {
       ))}
 
       <LockedSheet visible={lockedOpen} onClose={() => setLockedOpen(false)} />
+      <DownloadRequiredSheet
+        visible={downloadPromptOpen}
+        course={fallbackCourse}
+        onClose={() => setDownloadPromptOpen(false)}
+      />
     </View>
   );
 }

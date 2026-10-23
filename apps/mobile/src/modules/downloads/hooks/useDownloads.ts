@@ -52,3 +52,9 @@ export function useTransferStatus(unitId: string): TransferStatus | undefined {
   const subscribe = useCallback((listener: () => void) => downloadStatus.subscribe(listener), []);
   return useSyncExternalStore(subscribe, () => downloadStatus.get(unitId));
 }
+
+/** Whether a course is currently downloaded locally on this device. */
+export function useIsCourseDownloaded(courseId: string): boolean {
+  const ids = useDownloadedIds();
+  return ids.has(`COURSE:${courseId}`);
+}
