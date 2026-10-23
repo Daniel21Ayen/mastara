@@ -1,8 +1,7 @@
 // apps/mobile/src/shared/ui/AppText.tsx
-import React, { type ReactNode } from 'react';
-import type { Language } from '@mastara/i18n';
 import React from 'react';
 import type { ReactNode } from 'react';
+import type { Language } from '@mastara/i18n';
 import { Text } from 'react-native';
 import type { TextProps } from 'react-native';
 

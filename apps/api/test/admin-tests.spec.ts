@@ -60,6 +60,12 @@ async function runAdminTestsSuite() {
         if (where.id === testCourse.id) return testCourse;
         return null;
       },
+      findFirst: async ({ where }: any) => {
+        if (where?.id === testCourse.id || where?.code?.equals?.toLowerCase?.() === testCourse.code.toLowerCase()) {
+          return testCourse;
+        }
+        return testCourse;
+      },
     },
     topic: {
       findUnique: async ({ where }: any) => {

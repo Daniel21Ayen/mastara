@@ -20,6 +20,7 @@
     "format:check": "prettier --check .",
     "test": "npm test --workspaces --if-present",
     "dev:admin": "npm run dev --workspace @mastara/admin-web",
+    "dev:admin-web": "npm run dev:admin",
     "dev:worker": "npm run dev --workspace=@mastara/worker"
   },
   "devDependencies": {

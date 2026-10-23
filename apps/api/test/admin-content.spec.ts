@@ -57,6 +57,14 @@ async function runAdminContentTests() {
     course: {
       findMany: async () => courses,
       findUnique: async ({ where }: any) => courses.find((c) => c.id === where.id) || null,
+      findFirst: async ({ where }: any) => {
+        if (where.id) return courses.find((c) => c.id === where.id) || null;
+        if (where.code?.equals) {
+          const target = String(where.code.equals).toLowerCase();
+          return courses.find((c) => c.code.toLowerCase() === target || c.id.toLowerCase() === target) || null;
+        }
+        return courses[0] || null;
+      },
     },
     module: {
       findMany: async ({ where, orderBy }: any) => {
@@ -233,8 +241,8 @@ async function runAdminContentTests() {
   assert(courseList.length === 1, "Lists 1 course");
   const parsedCourse = contentCourseSchema.safeParse(courseList[0]);
   assert(parsedCourse.success, "Course matches contentCourseSchema");
-  assert(courseList[0].programName === "Software Engineering", "Course programName matches");
-  assert(courseList[0].universityShortName === "AAU", "Course universityShortName matches");
+  assert(courseList[0]!.programName === "Software Engineering", "Course programName matches");
+  assert(courseList[0]!.universityShortName === "AAU", "Course universityShortName matches");
 
   // 2. Create Module
   const createdMod = await service.createAdminModule(
@@ -362,12 +370,12 @@ async function runAdminContentTests() {
   // 8. List Modules & Notes
   const modList = await service.listAdminModules("course-uuid-1");
   assert(modList.length === 1, "listAdminModules returns 1 module");
-  assert(modList[0].topics.length >= 1, "Module has topics");
-  assert(modList[0].notes.length >= 1, "Module has notes");
+  assert(modList[0]!.topics.length >= 1, "Module has topics");
+  assert(modList[0]!.notes.length >= 1, "Module has notes");
 
   const noteList = await service.listAdminNotes("course-uuid-1");
   assert(noteList.length >= 1, "listAdminNotes returns notes");
-  assert(noteList[0].moduleNumber === 1, "Note moduleNumber is resolved");
+  assert(noteList[0]!.moduleNumber === 1, "Note moduleNumber is resolved");
 
   // 9. Content Summary
   const summary = await service.getAdminContentSummary("course-uuid-1");
