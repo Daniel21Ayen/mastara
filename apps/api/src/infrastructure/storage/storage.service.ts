@@ -100,10 +100,7 @@ export class StorageService {
     return this.activeDriver.upload(key, data, mimeType);
   }
 
-  /**
-   * Generic file upload
-   */
-  async upload(
+  async getUploadUrl(
     key: string,
     data: Buffer | Uint8Array | string,
     mimeType?: string,
@@ -132,9 +129,6 @@ export class StorageService {
     return this.activeDriver.delete(key);
   }
 
-  /**
-   * Check if asset exists
-   */
   async exists(key: string): Promise<boolean> {
     return this.activeDriver.exists(key);
   }

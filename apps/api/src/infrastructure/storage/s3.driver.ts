@@ -3,7 +3,6 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
-  DeleteObjectCommand,
   HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -87,7 +86,7 @@ export class S3StorageDriver implements StorageDriver {
     return Buffer.from(byteArray);
   }
 
-  async upload(
+  async getUploadUrl(
     key: string,
     data: Buffer | Uint8Array | string,
     mimeType = 'application/octet-stream',
@@ -120,13 +119,14 @@ export class S3StorageDriver implements StorageDriver {
     return this.downloadBuffer(key);
   }
 
-  async delete(key: string): Promise<void> {
-    await this.client.send(
-      new DeleteObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-      }),
-    );
+  async uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<void> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    });
+    await this.client.send(command);
   }
 
   async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
