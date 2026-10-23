@@ -15,6 +15,12 @@ const config: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  allowedDevOrigins: [
+    'localhost',
+    '127.0.0.1',
+    '192.168.73.116',
+    ...(process.env.ALLOWED_DEV_ORIGINS ? process.env.ALLOWED_DEV_ORIGINS.split(',') : []),
+  ],
 };
 
 export default config;
