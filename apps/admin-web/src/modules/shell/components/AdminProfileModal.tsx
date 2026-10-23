@@ -6,7 +6,6 @@ import type { AdminUser, AuditEntry } from '@mastara/contracts';
 import type { AuditAction } from '@mastara/domain';
 import { ATTENTION_AUDIT_ACTIONS } from '@mastara/domain';
 import { Icon } from '@/shared/ui';
-import { listAudit } from '@/core/mock/data';
 import { agoText } from '@/core/format';
 import { fetchAttentionAuditLogs } from '@/modules/audit/api/audit.api';
 import styles from './AdminProfileModal.module.css';
@@ -27,11 +26,7 @@ function AttentionChip({ action }: { action: AuditAction }) {
 
 /** Inline audit panel – only "needs attention" entries, newest first, max 8. */
 function AuditAttentionPanel() {
-  const [entries, setEntries] = useState<AuditEntry[]>(() => {
-    return listAudit()
-      .filter((e) => ATTENTION_ACTIONS.has(e.action as AuditAction))
-      .slice(0, 8);
-  });
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
 
   useEffect(() => {
     let mounted = true;

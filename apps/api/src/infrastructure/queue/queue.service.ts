@@ -60,7 +60,7 @@ export class QueueService implements OnModuleDestroy {
         this.logger.log(`BullMQ connected to Redis for queue '${SCAN_PDF_QUEUE_NAME}'`);
       });
 
-      this.redisClient.on('error', (err) => {
+      this.redisClient.on('error', (err: Error) => {
         this.isConnected = false;
         this.logger.warn(`Redis connection warning in QueueService: ${err.message}`);
       });

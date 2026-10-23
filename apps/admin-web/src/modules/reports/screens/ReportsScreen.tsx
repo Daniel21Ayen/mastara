@@ -35,13 +35,13 @@ export function ReportsScreen() {
     };
   }, []);
 
-  const handleExportStudents = () => {
-    exportStudentsCsvReport();
+  const handleExportStudents = async () => {
+    await exportStudentsCsvReport();
     showNotice('Student Directory CSV report downloaded.');
   };
 
-  const handleExportRevenue = () => {
-    exportRevenueCsvReport();
+  const handleExportRevenue = async () => {
+    await exportRevenueCsvReport();
     showNotice('Revenue & Payments Ledger CSV report downloaded.');
   };
 

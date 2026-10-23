@@ -48,8 +48,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const refresh = useCallback(async () => {
-    setPending(user ? await outbox.pendingCount() : 0);
-    setRejected(user ? await outbox.rejectedCount() : 0);
+    try {
+      setPending(user ? await outbox.pendingCount() : 0);
+      setRejected(user ? await outbox.rejectedCount() : 0);
+    } catch {
+      // ignore
+    }
   }, [user]);
 
   const syncNow = useCallback(async () => {
@@ -58,6 +62,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     try {
       const result = await flushOutbox(user.id);
       if (result.sent > 0) setLastSyncAt(Date.now());
+    } catch {
+      // background sync is resilient
     } finally {
       setSyncing(false);
       await refresh();
@@ -70,26 +76,26 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     return outbox.subscribe(() => {
       void refresh();
       if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => void syncNow(), DEBOUNCE_MS);
+      timer.current = setTimeout(() => void syncNow().catch(() => undefined), DEBOUNCE_MS);
     });
   }, [refresh, syncNow]);
 
   // Start, reconnect and periodic uploads.
   useEffect(() => {
     if (!online) return;
-    if (user) void syncNow();
-    void syncDownstreamContent(user?.id);
+    if (user) void syncNow().catch(() => undefined);
+    void syncDownstreamContent(user?.id).catch(() => undefined);
 
     const interval = setInterval(() => {
-      if (user) void syncNow();
-      void syncDownstreamContent(user?.id);
+      if (user) void syncNow().catch(() => undefined);
+      void syncDownstreamContent(user?.id).catch(() => undefined);
     }, INTERVAL_MS);
 
     const subscription = AppState
       ? AppState.addEventListener('change', (state) => {
           if (state === 'active') {
-            if (user) void syncNow();
-            void syncDownstreamContent(user?.id);
+            if (user) void syncNow().catch(() => undefined);
+            void syncDownstreamContent(user?.id).catch(() => undefined);
           }
         })
       : null;

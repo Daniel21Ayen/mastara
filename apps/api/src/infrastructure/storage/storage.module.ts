@@ -10,7 +10,7 @@ import { StorageController } from './controllers/storage.controller';
 @Module({
   imports: [ConfigModule],
   controllers: [StorageController],
-  providers: [StorageService, LocalDriver, S3Driver],
+  providers: [StorageService],
   exports: [StorageService],
 })
 export class StorageModule {}

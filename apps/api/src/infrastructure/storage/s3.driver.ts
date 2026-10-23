@@ -23,16 +23,21 @@ export class S3StorageDriver implements StorageDriver {
   private readonly client: S3Client;
   private readonly bucket: string;
 
-  constructor(config: S3Config) {
-    this.bucket = config.bucket;
+  constructor(config?: S3Config) {
+    const cfg = config || {
+      bucket: 'mastara-uploads',
+      accessKeyId: 'mastara_admin',
+      secretAccessKey: 'mastara_minio_pass_2026',
+    };
+    this.bucket = cfg.bucket;
     this.client = new S3Client({
-      region: config.region || 'us-east-1',
-      endpoint: config.endpoint,
+      region: cfg.region || 'us-east-1',
+      endpoint: cfg.endpoint,
       credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
+        accessKeyId: cfg.accessKeyId,
+        secretAccessKey: cfg.secretAccessKey,
       },
-      forcePathStyle: config.forcePathStyle ?? true,
+      forcePathStyle: cfg.forcePathStyle ?? true,
     });
   }
 

@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { adminText } from '@/core/i18n';
-import { ExamSetsListScreen } from '@/modules/questions';
+import { ExamSetsListScreen } from '@/modules/questions/screens/ExamSetsListScreen';
 
 export const metadata: Metadata = { title: adminText('admin.questions.list.title') };
 

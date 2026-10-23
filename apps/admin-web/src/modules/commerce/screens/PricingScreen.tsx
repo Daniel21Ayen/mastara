@@ -8,7 +8,7 @@ import type {
   PricingSettings,
   StudentBirrStats,
   StudentPaymentSummaryItem,
-} from '@/core/mock/data';
+} from '../api/pricing.api';
 import { Icon } from '@/shared/ui';
 import styles from '../components/Pricing.module.css';
 

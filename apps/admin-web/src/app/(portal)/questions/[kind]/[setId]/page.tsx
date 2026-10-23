@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { adminText } from '@/core/i18n';
-import { QuestionFormScreen } from '@/modules/questions';
+import { QuestionFormScreen } from '@/modules/questions/screens/QuestionFormScreen';
 
 export const metadata: Metadata = { title: adminText('admin.questions.form.heading') };
 

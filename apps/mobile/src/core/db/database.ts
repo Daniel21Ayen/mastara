@@ -37,8 +37,13 @@ async function databaseKey(): Promise<string> {
 }
 
 async function migrate(db: SQLiteDatabase): Promise<void> {
-  const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-  const current = row?.user_version ?? 0;
+  let current = 0;
+  try {
+    const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+    current = row?.user_version ?? 0;
+  } catch (err) {
+    console.warn('[Database] Failed to read user_version, starting from 0:', err);
+  }
 
   for (const migration of MIGRATIONS) {
     if (migration.version <= current) continue;
@@ -70,19 +75,26 @@ async function open(): Promise<SQLiteDatabase> {
 }
 
 let opening: Promise<SQLiteDatabase> | null = null;
+let currentDb: SQLiteDatabase | null = null;
 
 /**
  * The one shared database connection, opened and upgraded on first use.
  * A failed open is NOT remembered: the next call tries again (before, one failure broke the app until it restarted).
  */
-export function getDb(): Promise<SQLiteDatabase> {
-  opening ??= open().catch((error: unknown) => {
-    opening = null;
-    throw error;
-  });
+export async function getDb(): Promise<SQLiteDatabase> {
+  if (currentDb) return currentDb;
+  opening ??= open()
+    .then((db) => {
+      currentDb = db;
+      return db;
+    })
+    .catch((error: unknown) => {
+      opening = null;
+      currentDb = null;
+      throw error;
+    });
   return opening;
 }
-
 
 /**
  * Last resort when the database cannot be opened (for example the encryption key was lost after a reinstall).
@@ -92,8 +104,11 @@ export async function resetDatabase(): Promise<void> {
   if (opening) {
     const current = await opening.catch(() => null);
     await current?.closeAsync().catch(() => undefined);
+  } else if (currentDb) {
+    await currentDb.closeAsync().catch(() => undefined);
   }
   opening = null;
+  currentDb = null;
   if (SQLite?.deleteDatabaseAsync) {
     await SQLite.deleteDatabaseAsync(DB_NAME);
   }

@@ -1,10 +1,11 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
-import { PublicationStatus } from "@mastara/database";
+import { PublicationStatus, EntitlementStatus } from "@mastara/database";
 import {
   BilingualTextResponse,
   mapQuestionToContract,
@@ -97,6 +98,25 @@ export class CocService {
 
     if (!set) {
       throw new NotFoundException(`COC set not found with ID ${setId}`);
+    }
+
+    const isFree = set.coc_set_questions.some((q) => q.is_sample);
+    if (!isFree) {
+      const activeEntitlement = await this.prisma.entitlement.findFirst({
+        where: {
+          student_id: studentId,
+          status: EntitlementStatus.ACTIVE,
+          expires_at: { gt: new Date() },
+        },
+        select: { id: true },
+      });
+
+      if (!activeEntitlement) {
+        throw new ForbiddenException({
+          errorCode: "CONTENT_LOCKED",
+          message: "This COC set requires an active subscription or entitlement",
+        });
+      }
     }
 
     const courseTitles: Record<string, string> = {};

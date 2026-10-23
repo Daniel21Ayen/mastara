@@ -278,7 +278,7 @@ export class AdminTestsService {
     const filtered = rawQuestions.filter((q) => {
       const meta = (q.correct_answers as any) || {};
       const qQuizNo = (meta.quizNo ?? 1) as QuizNumber;
-      if (qQuizNo !== query.quizNo) return false;
+      if (query.quizNo !== undefined && qQuizNo !== query.quizNo) return false;
 
       const qForm =
         meta.form ?? (q.type === "TRUE_FALSE" ? "TRUE_FALSE" : "MULTIPLE_CHOICE");

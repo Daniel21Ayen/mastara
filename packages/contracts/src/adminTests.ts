@@ -73,7 +73,7 @@ export const testsOverviewSchema = z.object({
 });
 
 export const questionListQuerySchema = z.object({
-  quizNo,
+  quizNo: quizNo.optional(),
   courseId: z.string().optional(),
   form: form.optional(),
   status: status.optional(),

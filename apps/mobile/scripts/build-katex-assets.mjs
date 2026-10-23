@@ -72,3 +72,11 @@ writeFileSync(
 );
 
 console.log(`KaTeX ${version}: ${kept} fonts (${Math.round(fontBytes / 1024)} KB woff2), stylesheet ${Math.round(css.length / 1024)} KB -> ${outFile}`);
+
+// Ensure expo-sqlite Android JSI SharedObject patch is applied before bundler starts
+try {
+  const patchScript = resolve(here, '../../../scripts/patch-expo-sqlite.mjs');
+  await import(patchScript);
+} catch {
+  // ignore
+}
