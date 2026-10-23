@@ -243,6 +243,10 @@ function toPayment(record: PaymentRecord): AdminPayment {
     decidedAt: record.decidedAtMs === null ? null : iso(record.decidedAtMs),
     durationDays: record.durationDays,
     duplicateOf: duplicateOf(record),
+    imageKey: null,
+    imageUrl: null,
+    imageMime: null,
+    imageSizeBytes: null,
   };
 }
 

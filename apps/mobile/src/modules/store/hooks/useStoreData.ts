@@ -6,6 +6,7 @@ import { useCallback, useEffect } from 'react';
 import { useAsync } from '@/shared/hooks';
 
 import { storeApi } from '../api/store.api';
+import { usePaymentApprovalSafe } from '../sync/PaymentApprovalProvider';
 
 const POLL_MS = 5000;
 
@@ -25,7 +26,7 @@ export function useFullCoverage(programId: string, stream: 'NATURAL' | 'SOCIAL' 
   return useAsync(enabled ? () => storeApi.getFullPackageCourses(programId, stream) : null, [programId, stream, enabled]);
 }
 
-/** The student's orders. Reloads when the screen regains focus and every few seconds while one is pending. */
+/** The student's orders. Reloads when the screen regains focus, on approval broadcasts, and every few seconds while one is pending. */
 export function useOrders(userId: string | undefined) {
   const state = useAsync(userId ? () => storeApi.getOrders(userId) : null, [userId]);
   const { reload } = state;
@@ -37,6 +38,14 @@ export function useOrders(userId: string | undefined) {
     const interval = setInterval(reload, POLL_MS);
     return () => clearInterval(interval);
   }, [hasPending, reload]);
+
+  const approvalSync = usePaymentApprovalSafe();
+  useEffect(() => {
+    if (!approvalSync?.subscribeApproval) return;
+    return approvalSync.subscribeApproval(() => {
+      void reload();
+    });
+  }, [approvalSync, reload]);
 
   return { orders: state.data ?? [], loading: state.loading, error: state.error, reload };
 }

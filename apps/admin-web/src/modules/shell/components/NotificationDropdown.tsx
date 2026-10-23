@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import type { AdminNotification, NotificationType } from '@/core/mock/data';
+import type { AdminNotification, NotificationType } from '@/modules/notifications/api/notifications.api';
 import { Icon } from '@/shared/ui';
 import styles from './NotificationDropdown.module.css';
 

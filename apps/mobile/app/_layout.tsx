@@ -4,7 +4,12 @@ import { Stack } from 'expo-router';
 import * as SplashScreenNative from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
+
+LogBox.ignoreLogs([
+  '[expo-notifications] Push notifications',
+  '`expo-notifications` functionality is not fully supported in Expo Go',
+]);
 
 import { env } from '@/core/config/env';
 import { DatabaseProvider } from '@/core/db';
@@ -14,6 +19,7 @@ import { SessionProvider, useRouteGuard, useSession } from '@/core/session';
 import { SyncProvider } from '@/core/sync';
 import { createStyles, fontAssets, ThemeProvider, useTheme } from '@/core/theme';
 import { DatabaseErrorScreen, SplashScreen } from '@/modules/boot';
+import { PaymentApprovalProvider } from '@/modules/store';
 import { OfflineBanner } from '@/shared/ui';
 
 void SplashScreenNative.preventAutoHideAsync();
@@ -57,7 +63,9 @@ export default function RootLayout() {
       >
         <SessionProvider>
           <SyncProvider>
-            <AppShell />
+            <PaymentApprovalProvider>
+              <AppShell />
+            </PaymentApprovalProvider>
           </SyncProvider>
         </SessionProvider>
       </DatabaseProvider>

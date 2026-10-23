@@ -6,6 +6,8 @@ import {
   HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as crypto from 'crypto';
+import type { StorageDriver, StorageUploadResult } from './storage.interface';
 
 export interface S3Config {
   endpoint?: string;
@@ -16,20 +18,25 @@ export interface S3Config {
   forcePathStyle?: boolean;
 }
 
-export class S3StorageDriver {
+export class S3StorageDriver implements StorageDriver {
   private readonly client: S3Client;
   private readonly bucket: string;
 
-  constructor(config: S3Config) {
-    this.bucket = config.bucket;
+  constructor(config?: S3Config) {
+    const cfg = config || {
+      bucket: 'mastara-uploads',
+      accessKeyId: 'mastara_admin',
+      secretAccessKey: 'mastara_minio_pass_2026',
+    };
+    this.bucket = cfg.bucket;
     this.client = new S3Client({
-      region: config.region || 'us-east-1',
-      endpoint: config.endpoint,
+      region: cfg.region || 'us-east-1',
+      endpoint: cfg.endpoint,
       credentials: {
-        accessKeyId: config.accessKeyId,
-        secretAccessKey: config.secretAccessKey,
+        accessKeyId: cfg.accessKeyId,
+        secretAccessKey: cfg.secretAccessKey,
       },
-      forcePathStyle: config.forcePathStyle ?? true, // Required for MinIO / local S3
+      forcePathStyle: cfg.forcePathStyle ?? true,
     });
   }
 
@@ -79,6 +86,53 @@ export class S3StorageDriver {
     return Buffer.from(byteArray);
   }
 
+  async getUploadUrl(
+    key: string,
+    data: Buffer | Uint8Array | string,
+    mimeType = 'application/octet-stream',
+  ): Promise<StorageUploadResult> {
+    const buffer = Buffer.isBuffer(data)
+      ? data
+      : typeof data === 'string'
+      ? Buffer.from(data, 'utf8')
+      : Buffer.from(data);
+
+    await this.uploadBuffer(key, buffer, mimeType);
+
+    const checksumSha256 = crypto
+      .createHash('sha256')
+      .update(buffer)
+      .digest('hex');
+
+    const url = await this.getDownloadUrl(key);
+
+    return {
+      key,
+      url,
+      sizeBytes: buffer.length,
+      mimeType,
+      checksumSha256,
+    };
+  }
+
+  async download(key: string): Promise<Buffer> {
+    return this.downloadBuffer(key);
+  }
+
+  async uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<void> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    });
+    await this.client.send(command);
+  }
+
+  async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
+    return this.getDownloadUrl(key, expiresInSeconds);
+  }
+
   async exists(key: string): Promise<boolean> {
     try {
       const command = new HeadObjectCommand({
@@ -92,3 +146,5 @@ export class S3StorageDriver {
     }
   }
 }
+
+export const S3Driver = S3StorageDriver;

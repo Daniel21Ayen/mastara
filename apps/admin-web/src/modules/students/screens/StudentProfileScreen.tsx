@@ -143,6 +143,23 @@ export function StudentProfileScreen({ id }: { id: string }) {
             <DescriptionList
               rows={[
                 {
+                  label: adminText('admin.students.col.id') || 'Student ID',
+                  value: (
+                    <span
+                      style={{
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        color: 'var(--color-primary, #2563eb)',
+                        background: '#eff6ff',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      {student.studentCode || student.id}
+                    </span>
+                  ),
+                },
+                {
                   label: adminText('admin.student.profile.university'),
                   value: student.universityShortName,
                 },

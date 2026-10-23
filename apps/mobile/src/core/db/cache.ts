@@ -53,8 +53,30 @@ const cacheStore = {
       return null;
     }
   },
+
+  async invalidate(prefix?: string): Promise<void> {
+    try {
+      const db = await getDb();
+      if (!prefix) {
+        await db.runAsync('DELETE FROM api_cache WHERE user_id = ?', [dbUser()]);
+      } else {
+        await db.runAsync('DELETE FROM api_cache WHERE user_id = ? AND key LIKE ?', [
+          dbUser(),
+          `%${prefix}%`,
+        ]);
+      }
+    } catch {
+      // In non-native test environments or before DB init, gracefully ignore
+    }
+  },
 };
 
+/**
+ * Remove cached responses for a given prefix (e.g. 'my-courses', 'store', 'notifications') or all cache for current user.
+ */
+export async function invalidateCache(prefix?: string): Promise<void> {
+  await cacheStore.invalidate(prefix);
+}
 
 /**
  * Network first: a successful answer is saved on the phone. When the phone is offline the saved answer is used.

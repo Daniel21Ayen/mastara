@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import type { AdminNotification, BroadcastAudience, BroadcastPriority, StudentBroadcast } from '@/core/mock/data';
+import type { AdminNotification, BroadcastAudience, BroadcastPriority, StudentBroadcast } from '../api/notifications.api';
 
 import { PageHeader, Icon, Badge } from '@/shared/ui';
 import {

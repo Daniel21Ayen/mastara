@@ -38,7 +38,10 @@ export function DatabaseProvider({ children, fallback, renderError }: DatabasePr
       .then(() => {
         if (cancelled) return;
         setState('ready');
-        void runDatabaseMaintenance().catch(() => undefined); // housekeeping must never block the app
+        // Defer housekeeping so initial screens mount cleanly without transaction contention
+        setTimeout(() => {
+          if (!cancelled) void runDatabaseMaintenance().catch(() => undefined);
+        }, 3000);
       })
       .catch(() => {
         if (!cancelled) setState('error');

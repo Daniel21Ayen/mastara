@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
-import { SyncResultStatus } from "@mastara/domain";
+import { SyncResultStatus, withinDuration } from "@mastara/domain";
+import type { ExamSubmission } from "@mastara/contracts";
+import { AttemptCategory, AttemptState } from "@mastara/database";
 import { SyncOutboxDto, OutboxOpDto } from "../dto";
 
 export interface SyncResult {
@@ -49,6 +51,73 @@ export class OutboxService {
     }
 
     try {
+      // Process EXAM_SUBMITTED domain side-effects
+      if (op.type === "EXAM_SUBMITTED" && op.payload && typeof op.payload === "object") {
+        const sub = op.payload as Partial<ExamSubmission>;
+        if (
+          typeof sub.sittingId === "string" &&
+          typeof sub.examId === "string" &&
+          typeof sub.durationMs === "number" &&
+          typeof sub.elapsedMs === "number" &&
+          sub.provisional &&
+          typeof sub.provisional.correct === "number" &&
+          typeof sub.provisional.total === "number"
+        ) {
+          const isTampered = !withinDuration(sub.elapsedMs, sub.durationMs);
+
+          if (isTampered) {
+            this.logger.warn(
+              `Exam submission ${sub.sittingId} exceeded allowed duration (elapsed: ${sub.elapsedMs}ms, duration: ${sub.durationMs}ms)`,
+            );
+          }
+
+          // Check if exam exists in DB to prevent foreign key errors (if valid UUID)
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sub.examId);
+          const exam = isUuid
+            ? await this.prisma.exam.findUnique({
+                where: { id: sub.examId },
+              }).catch(() => null)
+            : null;
+
+          // Persist student attempt record if not already recorded
+          const existingAttempt = await this.prisma.attempt.findFirst({
+            where: {
+              student_id: studentId,
+              integrity_metadata: { path: ["sittingId"], equals: sub.sittingId },
+            },
+          }).catch(() => null);
+
+          if (!existingAttempt) {
+            await this.prisma.attempt.create({
+              data: {
+                student_id: studentId,
+                exam_id: exam ? sub.examId : null,
+                category: AttemptCategory.EXAM,
+                state: AttemptState.SUBMITTED,
+                total_questions: sub.provisional.total,
+                correct_count: sub.provisional.correct,
+                score: sub.provisional.total > 0
+                  ? (sub.provisional.correct / sub.provisional.total) * 100
+                  : 0,
+                elapsed_ms: BigInt(sub.elapsedMs),
+                server_started_at: new Date(sub.startedAt || Date.now()),
+                submitted_at: new Date(sub.submittedAt || Date.now()),
+                is_tampered: isTampered,
+                integrity_metadata: {
+                  sittingId: sub.sittingId,
+                  title: sub.title || "Exam",
+                  reason: sub.reason || "manual",
+                  durationMs: sub.durationMs,
+                  answersCount: sub.answers ? Object.keys(sub.answers).length : 0,
+                },
+              },
+            }).catch((err) => {
+              this.logger.warn(`Could not persist attempt record for sitting ${sub.sittingId}`, err);
+            });
+          }
+        }
+      }
+
       await this.prisma.outboxEvent.create({
         data: {
           operation_id: op.id,

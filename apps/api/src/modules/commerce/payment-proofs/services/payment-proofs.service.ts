@@ -24,6 +24,7 @@ import {
   SubmitProofDto,
 } from "../dto";
 import { AuditService } from "../../../platform/audit/services/audit.service";
+import { PushService } from "../../../../infrastructure/push/push.service";
 
 export interface ProofResponse {
   id: string;
@@ -44,6 +45,7 @@ export class PaymentProofsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly pushService: PushService,
   ) {}
 
   /**
@@ -222,7 +224,7 @@ export class PaymentProofsService {
         data: { status: OrderStatus.APPROVED },
       });
 
-      // Provision entitlements for each course in the order
+      // Provision entitlements and active course enrollment for each course in the order
       for (const item of proof.order.items) {
         await tx.entitlement.create({
           data: {
@@ -232,6 +234,24 @@ export class PaymentProofsService {
             starts_at: now,
             expires_at: expiresAt,
             status: EntitlementStatus.ACTIVE,
+          },
+        });
+
+        await tx.studentCourse.upsert({
+          where: {
+            student_id_course_id: {
+              student_id: proof.order.student_id,
+              course_id: item.course_id,
+            },
+          },
+          update: {
+            is_active: true,
+            removed_at: null,
+          },
+          create: {
+            student_id: proof.order.student_id,
+            course_id: item.course_id,
+            is_active: true,
           },
         });
       }
@@ -245,7 +265,7 @@ export class PaymentProofsService {
           title_am: "ክፍያ ተቀበለ",
           message_en: "Your payment has been approved and your courses are now unlocked.",
           message_am: "ክፍያዎ ተቀብሎ ኮርሶቹ ተከፍተዋል።",
-          data: { orderId: proof.order_id },
+          data: { orderId: proof.order_id, days: durationDays },
         },
       });
     });
@@ -264,6 +284,18 @@ export class PaymentProofsService {
     });
 
     this.logger.log(`Proof ${proofId} approved by admin ${adminId}`);
+
+    // Dispatch instant push notification to student
+    void this.pushService.sendToStudent(proof.order.student_id, {
+      title: "Payment Approved! 🎉",
+      body: `Your payment has been approved and courses are open for ${durationDays} days.`,
+      data: {
+        type: "PAYMENT_APPROVED",
+        orderId: proof.order_id,
+        days: durationDays,
+      },
+      channelId: "payments",
+    });
   }
 
   /**
@@ -313,7 +345,7 @@ export class PaymentProofsService {
           title_am: "ክፍያ ተቀባይ ተሰርዟል",
           message_en: `Your payment proof was rejected. Reason: ${rejectReason}. Please resubmit with a valid receipt.`,
           message_am: `የክፍያ ደረሰኝዎ ተቀባይ ተሰርዟል። ምክንያት: ${rejectReason}። እባክዎ እንደገና ያስገቡ።`,
-          data: { orderId: proof.order_id, rejectReason },
+          data: { orderId: proof.order_id, reason: rejectReason, rejectReason },
         },
       });
     });
@@ -328,10 +360,22 @@ export class PaymentProofsService {
       action: "PAYMENT_REJECTED",
       targetType: "PaymentProof",
       targetId: proofId,
-      metadata: { target: `Order · ${studentName}`, orderId: proof.order_id, rejectReason },
+      metadata: { target: `Order · ${studentName}`, orderId: proof.order_id, rejectReason, reason: rejectReason },
     });
 
     this.logger.log(`Proof ${proofId} rejected by admin ${adminId}: ${rejectReason}`);
+
+    // Dispatch instant push notification for payment rejection
+    void this.pushService.sendToStudent(proof.order.student_id, {
+      title: "Payment Rejected",
+      body: `Your payment proof was rejected. Reason: ${rejectReason}. Please resubmit with a valid receipt.`,
+      data: {
+        type: "PAYMENT_REJECTED",
+        orderId: proof.order_id,
+        reason: rejectReason,
+      },
+      channelId: "payments",
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -576,6 +620,12 @@ export class PaymentProofsService {
         : null,
       durationDays: product?.duration_days ?? 120,
       duplicateOf: duplicateOfId,
+      imageKey: proof.image_key ?? null,
+      imageUrl: proof.image_key
+        ? `/api/v1/storage/file?key=${encodeURIComponent(proof.image_key)}`
+        : null,
+      imageMime: proof.image_mime ?? null,
+      imageSizeBytes: proof.image_size_bytes ?? null,
     };
   }
 

@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
 import { SupportTicketsController } from "./controllers/support-tickets.controller";
+import { AdminSupportTicketsController } from "./controllers/admin-support-tickets.controller";
 import { SupportTicketsService } from "./services/support-tickets.service";
 
 @Module({
-  controllers: [SupportTicketsController],
+  controllers: [SupportTicketsController, AdminSupportTicketsController],
   providers: [SupportTicketsService],
   exports: [SupportTicketsService],
 })

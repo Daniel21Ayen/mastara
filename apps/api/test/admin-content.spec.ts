@@ -12,6 +12,7 @@ import {
 import { ContentService } from "../src/modules/content/services/content.service";
 import { AdminContentController } from "../src/modules/content/controllers/admin-content.controller";
 import { PrismaService } from "../src/infrastructure/database/prisma.service";
+import { AuditService } from "../src/modules/platform/audit/services/audit.service";
 
 let passed = 0;
 let failed = 0;
@@ -216,7 +217,8 @@ async function runAdminContentTests() {
     },
   };
 
-  const service = new ContentService(mockPrisma as any);
+  const auditService = new AuditService(mockPrisma as any);
+  const service = new ContentService(mockPrisma as any, auditService);
   const controller = new AdminContentController(service);
 
   // 1. List Courses
@@ -224,8 +226,8 @@ async function runAdminContentTests() {
   assert(courseList.length === 1, "Lists 1 course");
   const parsedCourse = contentCourseSchema.safeParse(courseList[0]);
   assert(parsedCourse.success, "Course matches contentCourseSchema");
-  assert(courseList[0]!.programName === "Software Engineering", "Course programName matches");
-  assert(courseList[0]!.universityShortName === "AAU", "Course universityShortName matches");
+  assert(courseList[0]?.programName === "Software Engineering", "Course programName matches");
+  assert(courseList[0]?.universityShortName === "AAU", "Course universityShortName matches");
 
   // 2. Create Module
   const createdMod = await service.createAdminModule(
@@ -240,7 +242,7 @@ async function runAdminContentTests() {
   assert(createdMod.status === "PUBLISHED", "Module status is PUBLISHED");
   const parsedMod = adminModuleSchema.safeParse(createdMod);
   assert(parsedMod.success, "Created module matches adminModuleSchema");
-  assert(auditLogs.some((a) => a.action === "MODULE_CREATED"), "Logged MODULE_CREATED");
+  assert(auditLogs.length === 0, "Conserved database storage: routine MODULE_CREATED not stored in DB");
 
   // 3. Update Module (Unpublishing requires reason)
   let rejectedNoReason = false;
@@ -270,7 +272,7 @@ async function runAdminContentTests() {
     "admin-123",
   );
   assert(unpubMod.status === "DRAFT", "Updated module status to DRAFT");
-  assert(auditLogs.some((a) => a.action === "CONTENT_UNPUBLISHED"), "Logged CONTENT_UNPUBLISHED");
+  assert(auditLogs.length === 0, "Conserved database storage: routine CONTENT_UNPUBLISHED not stored in DB");
 
   // 4. Add Topic
   const createdTopic = await service.createAdminTopic(
@@ -284,7 +286,7 @@ async function runAdminContentTests() {
   assert(createdTopic.code === "1.1", "Topic code is 1.1");
   const parsedTopic = adminTopicSchema.safeParse(createdTopic);
   assert(parsedTopic.success, "Created topic matches adminTopicSchema");
-  assert(auditLogs.some((a) => a.action === "TOPIC_ADDED"), "Logged TOPIC_ADDED");
+  assert(auditLogs.length === 0, "Conserved database storage: routine TOPIC_ADDED not stored in DB");
 
   // 5. Create Note (Publishing requires both languages)
   let rejectedIncompletePublish = false;
@@ -320,7 +322,7 @@ async function runAdminContentTests() {
   assert(createdNote.isFree === true, "Note isFree is true");
   const parsedNote = adminNoteSchema.safeParse(createdNote);
   assert(parsedNote.success, "Created note matches adminNoteSchema");
-  assert(auditLogs.some((a) => a.action === "CONTENT_PUBLISHED"), "Logged CONTENT_PUBLISHED");
+  assert(auditLogs.length === 0, "Conserved database storage: routine CONTENT_PUBLISHED not stored in DB");
 
   // 6. Update Note (Bumps version on republish)
   const updatedNote = await service.updateAdminNote(
@@ -353,12 +355,12 @@ async function runAdminContentTests() {
   // 8. List Modules & Notes
   const modList = await service.listAdminModules("course-uuid-1");
   assert(modList.length === 1, "listAdminModules returns 1 module");
-  assert(modList[0]!.topics.length >= 1, "Module has topics");
-  assert(modList[0]!.notes.length >= 1, "Module has notes");
+  assert((modList[0]?.topics.length ?? 0) >= 1, "Module has topics");
+  assert((modList[0]?.notes.length ?? 0) >= 1, "Module has notes");
 
   const noteList = await service.listAdminNotes("course-uuid-1");
   assert(noteList.length >= 1, "listAdminNotes returns notes");
-  assert(noteList[0]!.moduleNumber === 1, "Note moduleNumber is resolved");
+  assert(noteList[0]?.moduleNumber === 1, "Note moduleNumber is resolved");
 
   // 9. Content Summary
   const summary = await service.getAdminContentSummary("course-uuid-1");

@@ -9,6 +9,8 @@ import { testsApi } from '../api/tests.api';
 import { useQuestions } from '../hooks/useTests';
 import { QuestionPreviewDialog } from '../components/QuestionPreviewDialog';
 import { toInput, type QuestionFormState } from '../lib/questionForm';
+import { MathInputHelper } from '@/shared/math';
+import { StudentPreviewModal } from '@/shared/preview';
 import { TestListScreen } from './TestListScreen';
 import styles from '@/modules/content/components/ContentStudio.module.css';
 
@@ -90,6 +92,7 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
     'A book is a written work, often made of pages, that gives information or tells a story.',
   );
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const selectedChapter =
@@ -234,8 +237,8 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
           <button
             type="button"
             className={styles.actionBtnOutline}
-            onClick={() => setPreviewOpen(true)}
-            title="Preview question as seen by students"
+            onClick={() => setIsPreviewOpen(true)}
+            title="Preview as Student (desktop & mobile simulation)"
           >
             <Icon name="eye" size={16} />
             Preview as student
@@ -495,6 +498,13 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
           </main>
         </div>
       )}
+
+      {previewOpen ? (
+        <QuestionPreviewDialog
+          question={currentFormState}
+          onClose={() => setPreviewOpen(false)}
+        />
+      ) : null}
 
       {/* Student Preview Modal with desktop/mobile frames, stripped correct answers */}
       <StudentPreviewModal

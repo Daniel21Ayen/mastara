@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 import { env } from '@/core/config/env';
 import { useI18n } from '@/core/i18n';
+import { useSession } from '@/core/session';
 import { createStyles } from '@/core/theme';
 import { AppButton, AppText, Screen, ScreenHeader, SegmentedControl, ThemeSwitch } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';

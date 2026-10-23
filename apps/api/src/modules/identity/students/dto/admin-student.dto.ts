@@ -15,6 +15,11 @@ export class AdminStudentSummaryDto {
   @ApiProperty({ example: "student-uuid-1" })
   id!: string;
 
+  @ApiPropertyOptional({ example: "MS0001", description: "Sequential student ID starting at MS0001" })
+  @IsOptional()
+  @IsString()
+  studentCode?: string;
+
   @ApiProperty({ example: "Abebe Kebede" })
   name!: string;
 

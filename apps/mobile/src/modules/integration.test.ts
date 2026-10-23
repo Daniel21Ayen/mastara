@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { authApi } from './auth/api/auth.api';
+import { authApi, realAuthApi } from './auth/api/auth.api';
 import { academicApi } from './profile/api/academic.api';
 import { coursesApi } from './course-list/api/courses.api';
 import { profileApi } from './profile/api/profile.api';
@@ -17,31 +17,40 @@ import { deviceApi } from './device-lock/api/device.api';
 import { notificationsApi } from './notifications/api/notifications.api';
 import { supportApi } from './support/api/support.api';
 
-test('Mobile Integration: Auth Flow (register & login)', async () => {
+test('Mobile Integration: Auth Flow (offline registration & central server login)', async () => {
   const rand = Math.floor(Math.random() * 900000 + 100000);
   const identifier = `+251911${rand}`;
   const password = 'Password@123';
   const name = `Mobile Student ${rand}`;
 
-  // 1. Register student
-  const registered = await authApi.register({
+  // 1. Offline Register student (stored locally, not pushed to central DB until purchase)
+  const registeredOffline = await authApi.register({
     identifier,
     password,
     name,
   });
 
-  assert.ok(registered.token, 'Registration should return an auth token');
-  assert.ok(registered.user.id, 'Registration should return a student user ID');
-  assert.strictEqual(registered.user.identifier, identifier);
+  assert.ok(registeredOffline.token, 'Registration should return an auth token');
+  assert.ok(registeredOffline.user.id, 'Registration should return a student user ID');
+  assert.strictEqual(registeredOffline.user.identifier, identifier);
 
-  // 2. Login student
-  const loggedIn = await authApi.login({
+  // 2. Offline Login student
+  const loggedInOffline = await authApi.login({
     identifier,
     password,
   });
 
-  assert.ok(loggedIn.token, 'Login should return an auth token');
-  assert.strictEqual(loggedIn.user.id, registered.user.id);
+  assert.ok(loggedInOffline.token, 'Login should return an auth token');
+  assert.strictEqual(loggedInOffline.user.id, registeredOffline.user.id);
+
+  // 3. Central database registration (simulating purchase commitment)
+  const registeredServer = await realAuthApi.register({
+    identifier,
+    password,
+    name,
+  });
+  assert.ok(registeredServer.token);
+  assert.strictEqual(registeredServer.user.identifier, identifier);
 });
 
 test('Mobile Integration: Academic Catalog Flow', async () => {
@@ -79,7 +88,7 @@ test('Mobile Integration: Academic Catalog Flow', async () => {
 test('Mobile Integration: Student Profile & Enrollment Flow', async () => {
   const rand = Math.floor(Math.random() * 900000 + 100000);
   const identifier = `+251922${rand}`;
-  const registered = await authApi.register({
+  const registered = await realAuthApi.register({
     identifier,
     password: 'Password@123',
     name: 'Profile Test Student',
@@ -181,3 +190,132 @@ test('Mobile Integration: Support Tickets & Notifications Flow', async () => {
   const notifications = await notificationsApi.getNotifications('test-user', []);
   assert.ok(Array.isArray(notifications));
 });
+
+test('Mobile Integration: Offline Exam Outbox Sync API Flow', async () => {
+  const rand = Math.floor(Math.random() * 900000 + 100000);
+  const authRes = await authApi.register({
+    identifier: `+251933${rand}`,
+    password: 'Password@123',
+    name: 'Sync Student',
+  });
+
+  const { syncApi } = await import('../core/sync/syncApi');
+  const now = new Date().toISOString();
+
+  const ops = [
+    {
+      id: `op-exam-sync-${Date.now()}`,
+      type: 'EXAM_SUBMITTED' as const,
+      payload: {
+        sittingId: `test-sit-${Date.now()}`,
+        examId: 'test-exam-1',
+        title: 'Computer Science (Mid)',
+        answers: { Q1: { kind: 'choice', optionIds: ['opt-a'] } },
+        reason: 'manual',
+        durationMs: 3600000,
+        elapsedMs: 1800000,
+        startedAt: now,
+        submittedAt: now,
+        provisional: { correct: 4, total: 5 },
+      },
+      createdAt: now,
+    },
+  ];
+
+  const results = await syncApi.pushBatch(authRes.user.id, ops);
+  assert.ok(Array.isArray(results), 'Sync batch should return results array');
+  assert.strictEqual(results.length, 1);
+  assert.strictEqual(results[0]!.id, ops[0]!.id);
+  assert.strictEqual(results[0]!.status, 'accepted');
+
+  // Verify idempotency on second upload
+  const secondResults = await syncApi.pushBatch(authRes.user.id, ops);
+  assert.strictEqual(secondResults[0]!.status, 'already_applied');
+});
+
+test('Mobile Offline Mode: Offline Registration, Offline Login, and Offline Profile Management', async () => {
+  const randA = Math.floor(Math.random() * 900000 + 100000);
+  const identifierA = `+251944${randA}`;
+  const passwordA = 'Pass@StudentA123';
+  const nameA = 'Offline Student A';
+
+  // 1. Offline Registration: no internet connection required, zero central DB writes
+  const regA = await authApi.register({
+    identifier: identifierA,
+    password: passwordA,
+    name: nameA,
+  });
+  assert.ok(regA.user.id);
+  assert.strictEqual(regA.user.identifier, identifierA);
+
+  // 2. Offline Profile Management: fill out initial profile offline
+  const initialProfile = {
+    universityId: 'uni-aau',
+    programId: 'prog-cs',
+    semesterId: 'sem-1',
+    stream: 'NATURAL' as const,
+    courseIds: ['c1', 'c2'],
+  };
+  await profileApi.saveProfile(regA.user.id, initialProfile);
+
+  const fetchedProfile1 = await profileApi.getProfile(regA.user.id);
+  assert.ok(fetchedProfile1);
+  assert.strictEqual(fetchedProfile1.universityId, 'uni-aau');
+  assert.strictEqual(fetchedProfile1.stream, 'NATURAL');
+
+  // 3. Offline Profile Management: edit & update profile details offline
+  const updatedProfile = {
+    universityId: 'uni-inu',
+    programId: 'prog-eng',
+    semesterId: 'sem-2',
+    stream: 'SOCIAL' as const,
+    courseIds: ['c3', 'c4', 'c5'],
+  };
+  await profileApi.saveProfile(regA.user.id, updatedProfile);
+
+  const fetchedProfile2 = await profileApi.getProfile(regA.user.id);
+  assert.ok(fetchedProfile2);
+  assert.strictEqual(fetchedProfile2.universityId, 'uni-inu');
+  assert.strictEqual(fetchedProfile2.stream, 'SOCIAL');
+  assert.strictEqual(fetchedProfile2.courseIds.length, 3);
+
+  // 4. Offline Account Management: edit account offline
+  const updatedUser = await authApi.updateAccount(regA.user, {
+    name: 'Updated Student A',
+    identifier: identifierA,
+  });
+  assert.strictEqual(updatedUser.name, 'Updated Student A');
+
+  // 5. Offline Registration of second student
+  const randB = Math.floor(Math.random() * 900000 + 100000);
+  const identifierB = `+251955${randB}`;
+  const passwordB = 'Pass@StudentB456';
+  await authApi.register({
+    identifier: identifierB,
+    password: passwordB,
+    name: 'Offline Student B',
+  });
+
+  // 6. Offline Login: Students can log in without network even without prior purchase
+  const loginA = await authApi.login({
+    identifier: identifierA,
+    password: passwordA,
+  });
+  assert.ok(loginA.user);
+  assert.strictEqual(loginA.user.name, 'Updated Student A');
+
+  // Verify Student A's offline profile persists intact
+  const profileAfterLoginA = await profileApi.getProfile(loginA.user.id);
+  assert.ok(profileAfterLoginA);
+  assert.strictEqual(profileAfterLoginA.universityId, 'uni-inu');
+  assert.strictEqual(profileAfterLoginA.stream, 'SOCIAL');
+
+  // 7. Verify Student B can also log in offline
+  const loginB = await authApi.login({
+    identifier: identifierB,
+    password: passwordB,
+  });
+  assert.ok(loginB.user);
+  assert.strictEqual(loginB.user.identifier, identifierB);
+});
+

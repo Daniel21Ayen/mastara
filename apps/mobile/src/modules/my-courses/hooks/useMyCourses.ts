@@ -1,5 +1,5 @@
-// apps/mobile/src/modules/my-courses/hooks/useMyCourses.ts
-import { useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useSession } from '@/core/session';
 import { useAsync } from '@/shared/hooks';
@@ -15,6 +15,8 @@ export function useMyCourses() {
   const [filters, setFilters] = useState<CourseFilters>(EMPTY_FILTERS);
 
   const courses = useAsync(() => myCoursesApi.getMyCourses(courseIds), [courseIds.join(',')]);
+  const { reload } = courses;
+  useFocusEffect(useCallback(() => reload(), [reload]));
   const visible = useMemo(() => filterCourses(courses.data ?? [], filters), [courses.data, filters]);
 
   return {

@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -6,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Query,
 } from "@nestjs/common";
 import {
@@ -19,14 +21,18 @@ import {
   NotificationsService,
   NotificationResponse,
 } from "../services/notifications.service";
-import { GetNotificationsQueryDto } from "../dto";
+import { GetNotificationsQueryDto, RegisterPushTokenDto } from "../dto";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
+import { PushService } from "../../../../infrastructure/push/push.service";
 
 @ApiTags("Engagement: Notifications")
 @ApiBearerAuth()
 @Controller("notifications")
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly pushService: PushService,
+  ) {}
 
   @Get()
   @ApiOperation({
@@ -74,5 +80,24 @@ export class NotificationsController {
     @CurrentUser("id") studentId: string,
   ): Promise<{ count: number }> {
     return this.notificationsService.markAllAsRead(studentId);
+  }
+
+  @Post("push-token")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Register or update push notification token (Expo or Firebase FCM)" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Push token registered successfully",
+  })
+  async registerPushToken(
+    @CurrentUser("id") studentId: string,
+    @Body() dto: RegisterPushTokenDto,
+  ): Promise<{ success: boolean; registered: boolean }> {
+    return this.pushService.registerPushToken(
+      studentId,
+      dto.token,
+      dto.platform,
+      dto.deviceId,
+    );
   }
 }

@@ -7,12 +7,12 @@ import type { FormEvent } from 'react';
 
 import { adminText } from '@/core/i18n';
 import {
-  clearNotification,
-  getNotifications,
-  markAllNotificationsRead,
-  markNotificationRead,
-} from '@/core/mock/data';
-import type { AdminNotification } from '@/core/mock/data';
+  fetchAdminNotifications,
+  markAsRead,
+  markAllAsRead,
+  removeNotification,
+} from '@/modules/notifications/api/notifications.api';
+import type { AdminNotification } from '@/modules/notifications/api/notifications.api';
 import { useAdminSession } from '@/core/session';
 import { Icon } from '@/shared/ui';
 
@@ -50,9 +50,17 @@ export function Topbar({ menuOpen, onToggleMenu }: TopbarProps) {
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Initialize notifications from mock store
+  // Initialize notifications from API
   useEffect(() => {
-    setNotifications(getNotifications());
+    let mounted = true;
+    fetchAdminNotifications()
+      .then((data) => {
+        if (mounted) setNotifications(data);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Close dropdowns when clicking outside
@@ -71,19 +79,25 @@ export function Topbar({ menuOpen, onToggleMenu }: TopbarProps) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleMarkRead = (id: string) => {
-    const updated = markNotificationRead(id);
-    setNotifications(updated);
+  const handleMarkRead = async (id: string) => {
+    try {
+      const updated = await markAsRead(id);
+      setNotifications(updated);
+    } catch {}
   };
 
-  const handleMarkAllRead = () => {
-    const updated = markAllNotificationsRead();
-    setNotifications(updated);
+  const handleMarkAllRead = async () => {
+    try {
+      const updated = await markAllAsRead();
+      setNotifications(updated);
+    } catch {}
   };
 
-  const handleClear = (id: string) => {
-    const updated = clearNotification(id);
-    setNotifications(updated);
+  const handleClear = async (id: string) => {
+    try {
+      const updated = await removeNotification(id);
+      setNotifications(updated);
+    } catch {}
   };
 
   // Search input sync

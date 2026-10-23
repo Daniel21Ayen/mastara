@@ -5,7 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { accentForKey, createStyles, useTheme } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
-import { AppButton, AppText, Card, ListRow, ProgressBar, Screen, ScreenHeader } from '@/shared/ui';
+import { AppButton, AppText, Badge, Card, ListRow, ProgressBar, Screen, ScreenHeader } from '@/shared/ui';
 
 import { useProgress } from '../hooks/useProgress';
 
@@ -67,6 +67,12 @@ export function ProgressScreen() {
                 icon="trophy"
                 title={record.title}
                 subtitle={`${t('result.score', { correct: record.correct, total: record.total })} · ${timeAgo(record.submittedAt)}`}
+                trailing={
+                  <Badge
+                    label={t('exam.result.statusSynced')}
+                    tone="primary"
+                  />
+                }
               />
             ))}
           </View>

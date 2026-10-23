@@ -66,6 +66,25 @@ export class AdminPaymentDto {
 
   @ApiPropertyOptional({ example: null, nullable: true })
   duplicateOf!: string | null;
+
+  @ApiPropertyOptional({ example: "receipts/order-cbe-98765-1792613647293.jpg", nullable: true })
+  @IsOptional()
+  @IsString()
+  imageKey?: string | null;
+
+  @ApiPropertyOptional({ example: "/api/v1/storage/file?key=receipts%2Forder-cbe-98765-1792613647293.jpg", nullable: true })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string | null;
+
+  @ApiPropertyOptional({ example: "image/jpeg", nullable: true })
+  @IsOptional()
+  @IsString()
+  imageMime?: string | null;
+
+  @ApiPropertyOptional({ example: 54321, nullable: true })
+  @IsOptional()
+  imageSizeBytes?: number | null;
 }
 
 export class PaymentCountsDto {

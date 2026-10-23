@@ -4,7 +4,7 @@
 import type { ExamQuestion, ExamSet } from '@mastara/contracts';
 import { CATALOG_STATUSES, examSetSlug, needsCourse, SET_YEARS, STREAMS } from '@mastara/domain';
 import type { CatalogStatus, ExamSetKind } from '@mastara/domain';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useMemo } from 'react';
 
 import { adminText } from '@/core/i18n';
@@ -24,17 +24,20 @@ import {
 import type { Column } from '@/shared/ui';
 
 import { BuildSetDialog } from '../components/BuildSetDialog';
+import { BulkImportDialog } from '../components/BulkImportDialog';
 import { SetReviewDialog } from '../components/SetReviewDialog';
 import { yearText } from '../components/SetFields';
 import { SetTabs } from '../components/SetTabs';
 import { useExamSets } from '../hooks/useExamSets';
 import { previewOf } from '../lib/examSetForm';
+import { questionsApi } from '../api/questions.api';
 
 import styles from '../components/Questions.module.css';
 
 
 /** Exam Set Management: the sets of one kind, with Edit, Verify and View, and the top-bar search. */
 export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
+  const router = useRouter();
   const q = useSearchParams().get('q')?.trim() || undefined;
   const [status, setStatus] = useState<CatalogStatus | ''>('');
   const [university, setUniversity] = useState('');
@@ -44,8 +47,10 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
   const [program, setProgram] = useState('');
   const [page, setPage] = useState(1);
   const [building, setBuilding] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [review, setReview] = useState<{ set: ExamSet; canChange: boolean } | null>(null);
   const [preview, setPreview] = useState<ExamQuestion | null>(null);
+
 
   const universities = useUniversities();
   const programs = usePrograms();
@@ -162,9 +167,28 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
             <Icon name="eye" size={14} />
             {adminText('admin.questions.viewAction')}
           </Button>
+          <Button
+            variant="outline"
+            title="Download CSV"
+            aria-label={`Download CSV for ${row.id}`}
+            onClick={() => questionsApi.downloadSet(row.id, 'csv')}
+          >
+            <Icon name="download" size={14} />
+            CSV
+          </Button>
+          <Button
+            variant="outline"
+            title="Print Exam Paper / Save PDF"
+            aria-label={`Print Exam Paper for ${row.id}`}
+            onClick={() => questionsApi.downloadSet(row.id, 'html', { autoprint: true })}
+          >
+            <Icon name="printer" size={14} />
+            Print
+          </Button>
         </span>
       ),
     },
+
   ];
 
   const filteredRows = useMemo(() => {
@@ -185,6 +209,11 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
         title={adminText('admin.questions.list.title')}
         actions={
           <>
+            <Button variant="outline" onClick={() => setBulkImportOpen(true)}>
+              <Icon name="upload" size={16} />
+              {adminText('admin.questions.form.bulkImport')}
+            </Button>
+
             <ButtonLink variant="outline" href={`/questions/${slug}/new`}>
               <Icon name="plus" size={16} />
               {adminText('admin.questions.newQuestion')}
@@ -195,6 +224,7 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
             </Button>
           </>
         }
+
       />
       <SetTabs current={kind} />
 
@@ -308,6 +338,21 @@ export function ExamSetsListScreen({ kind }: { kind: ExamSetKind }) {
       {preview ? (
         <QuestionPreviewDialog question={previewOf(preview)} onClose={() => setPreview(null)} />
       ) : null}
+      {bulkImportOpen ? (
+        <BulkImportDialog
+          isOpen={bulkImportOpen}
+          onClose={() => setBulkImportOpen(false)}
+          onImport={(importedQuestions) => {
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('mastara_staged_import', JSON.stringify(importedQuestions));
+              router.push(`/questions/${slug}/new`);
+            }
+          }}
+          currentCount={0}
+          defaultTopic={kind === 'COC' ? 'COC Question' : 'General'}
+        />
+      ) : null}
     </>
   );
 }
+

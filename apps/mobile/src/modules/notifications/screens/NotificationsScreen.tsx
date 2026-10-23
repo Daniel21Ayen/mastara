@@ -16,6 +16,7 @@ const DESTINATION: Partial<Record<AppNotification['kind'], Href>> = {
   PAYMENT_APPROVED: '/store/orders' as Href,
   PAYMENT_REJECTED: '/store/orders' as Href,
   ACCESS_EXPIRING: '/store' as Href,
+  EXAM_RESULT: '/(tabs)/progress' as Href,
 };
 
 export function NotificationsScreen() {

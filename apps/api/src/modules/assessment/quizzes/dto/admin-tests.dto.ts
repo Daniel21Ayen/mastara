@@ -94,12 +94,13 @@ export class AdminQuizSettingsInputDto {
 }
 
 export class AdminQuestionListQueryDto {
-  @ApiProperty({ enum: [1, 2, 3], description: "Quiz number filter" })
+  @ApiPropertyOptional({ enum: [1, 2, 3], description: "Optional quiz number filter" })
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(3)
-  quizNo!: QuizNumber;
+  quizNo?: QuizNumber;
 
   @ApiPropertyOptional({ description: "Optional course UUID filter" })
   @IsOptional()

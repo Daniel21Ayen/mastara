@@ -19,8 +19,10 @@ interface SessionValue {
   status: SessionStatus;
   user: User | null;
   profile: StudentProfile | null;
+  isGuest: boolean;
   signIn: (user: User, profile: StudentProfile | null) => void;
   signOut: () => void;
+  continueAsGuest: () => void;
   bindDevice: () => void;
   lockDevice: () => void;
   saveProfile: (profile: StudentProfile) => void;
@@ -29,7 +31,7 @@ interface SessionValue {
 
 const SessionContext = createContext<SessionValue | null>(null);
 
-const INITIAL: SessionFacts = { hydrated: false, user: null, device: 'unknown', profile: null };
+const INITIAL: SessionFacts = { hydrated: false, user: null, device: 'unknown', profile: null, isGuest: false };
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [facts, setFacts] = useState<SessionFacts>(INITIAL);
@@ -46,6 +48,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         user: snapshot?.user ?? null,
         device: snapshot?.device ?? 'bound',
         profile: snapshot?.profile ?? null,
+        isGuest: false,
       });
     });
   }, []);
@@ -67,10 +70,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(
     (user: User, profile: StudentProfile | null) =>
-      setFacts({ hydrated: true, user, device: 'bound', profile }),
+      setFacts({ hydrated: true, user, device: 'bound', profile, isGuest: false }),
     [],
   );
   const signOut = useCallback(() => setFacts({ ...INITIAL, hydrated: true }), []);
+  const continueAsGuest = useCallback(
+    () => setFacts((prev) => ({ ...prev, isGuest: true })),
+    [],
+  );
   const bindDevice = useCallback(() => setFacts((prev) => ({ ...prev, device: 'bound' })), []);
   const lockDevice = useCallback(() => setFacts((prev) => ({ ...prev, device: 'locked' })), []);
   const saveProfile = useCallback((profile: StudentProfile) => setFacts((prev) => ({ ...prev, profile })), []);
@@ -81,14 +88,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       status: deriveStatus(facts),
       user: facts.user,
       profile: facts.profile,
+      isGuest: Boolean(facts.isGuest),
       signIn,
       signOut,
+      continueAsGuest,
       bindDevice,
       lockDevice,
       saveProfile,
       updateUser,
     }),
-    [facts, signIn, signOut, bindDevice, lockDevice, saveProfile, updateUser],
+    [facts, signIn, signOut, continueAsGuest, bindDevice, lockDevice, saveProfile, updateUser],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

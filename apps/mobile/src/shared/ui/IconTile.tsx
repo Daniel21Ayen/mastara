@@ -44,6 +44,9 @@ export const ICON_ACCENT: Record<IconName, AccentName> = {
   download: 'cyan',
   downloaded: 'emerald',
   trash: 'danger',
+  sync: 'blue',
+  wifi: 'emerald',
+  wifiOff: 'amber',
 };
 
 interface IconTileProps {

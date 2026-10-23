@@ -12,6 +12,7 @@ enum NotificationType {
   ENTITLEMENT_EXPIRED
   DEVICE_MISMATCH
   SYSTEM_ANNOUNCEMENT
+  EXAM_RESULT
 }
 
 enum TicketStatus {
@@ -19,6 +20,7 @@ enum TicketStatus {
   IN_PROGRESS
   RESOLVED
   CLOSED
+  ANSWERED
 }
 
 model Notification {
@@ -43,6 +45,8 @@ model SupportTicket {
   id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   student_id String           @db.Uuid
   subject    String
+  category   String           @default("GENERAL")
+  priority   String           @default("NORMAL")
   status     TicketStatus     @default(OPEN)
   created_at DateTime         @default(now()) @db.Timestamptz(6)
   updated_at DateTime         @updatedAt @db.Timestamptz(6)
@@ -51,6 +55,7 @@ model SupportTicket {
   messages   SupportMessage[]
 
   @@index([student_id, status])
+  @@index([status, created_at])
   @@map("support_tickets")
 }
 
@@ -97,3 +102,19 @@ model SystemSetting {
 
   @@map("system_settings")
 }
+
+model Broadcast {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  body            String   @db.Text
+  audience        String
+  priority        String   @default("INFO")
+  action_url      String?
+  sent_by         String   @default("Admin")
+  recipient_count Int      @default(0)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([created_at])
+  @@map("broadcasts")
+}
+

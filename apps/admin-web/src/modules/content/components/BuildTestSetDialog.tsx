@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { Icon } from '@/shared/ui';
 import { testsApi } from '@/modules/tests/api/tests.api';
+import { StudentPreviewModal } from '@/shared/preview';
 import type { TestSetItem } from '../state/contentManagementData';
 import styles from './BuildTestSetDialog.module.css';
 
