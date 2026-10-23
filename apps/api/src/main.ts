@@ -48,7 +48,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>("PORT", 4001);
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   logger.log(`Mastara API server is running on: http://localhost:${port}/api/v1`);
   logger.log(`API Swagger documentation available at: http://localhost:${port}/api/docs`);
 }

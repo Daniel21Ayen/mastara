@@ -100,7 +100,7 @@ export class StorageService {
     return this.activeDriver.upload(key, data, mimeType);
   }
 
-  async getUploadUrl(
+  async upload(
     key: string,
     data: Buffer | Uint8Array | string,
     mimeType?: string,

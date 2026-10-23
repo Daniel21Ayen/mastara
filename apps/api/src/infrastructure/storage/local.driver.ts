@@ -87,8 +87,6 @@ export class LocalStorageDriver implements StorageDriver {
     } catch (err: any) {
       if (err.code !== 'ENOENT') throw err;
     }
-    await fs.promises.writeFile(filePath, buffer);
-    return filePath;
   }
 
   async getSignedUrl(key: string, _expiresInSeconds = 3600): Promise<string> {

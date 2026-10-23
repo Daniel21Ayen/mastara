@@ -32,6 +32,9 @@ async function request<T>(
   options: RequestOptions = {},
 ): Promise<T> {
   let baseUrl = env.apiUrl.replace(/\/$/, '');
+  if (typeof window !== 'undefined' && window.location.hostname && baseUrl.includes('localhost') && window.location.hostname !== 'localhost') {
+    baseUrl = baseUrl.replace('localhost', window.location.hostname);
+  }
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   if (!baseUrl.endsWith('/api/v1') && !cleanPath.startsWith('/api/v1')) {
     baseUrl = `${baseUrl}/api/v1`;

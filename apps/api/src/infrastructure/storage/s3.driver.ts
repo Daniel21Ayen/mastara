@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as crypto from 'crypto';
@@ -86,7 +87,7 @@ export class S3StorageDriver implements StorageDriver {
     return Buffer.from(byteArray);
   }
 
-  async getUploadUrl(
+  async upload(
     key: string,
     data: Buffer | Uint8Array | string,
     mimeType = 'application/octet-stream',
@@ -119,12 +120,10 @@ export class S3StorageDriver implements StorageDriver {
     return this.downloadBuffer(key);
   }
 
-  async uploadBuffer(key: string, buffer: Buffer, contentType: string): Promise<void> {
-    const command = new PutObjectCommand({
+  async delete(key: string): Promise<void> {
+    const command = new DeleteObjectCommand({
       Bucket: this.bucket,
       Key: key,
-      Body: buffer,
-      ContentType: contentType,
     });
     await this.client.send(command);
   }
