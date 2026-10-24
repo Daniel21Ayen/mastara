@@ -32,4 +32,13 @@ export class RegisterDto {
   @IsNotEmpty()
   @MinLength(8, { message: "Password must be at least 8 characters long" })
   password!: string;
+
+  @ApiProperty({
+    example: "b3f88647-7097-4e55-8d54-15f5a8de70c2",
+    description: "Client-generated UUID for offline-first idempotency and registration deduplication",
+    required: false,
+  })
+  @IsString()
+  @IsNotEmpty()
+  localAccountId?: string;
 }

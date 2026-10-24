@@ -85,7 +85,9 @@ export class AdminStudentDetailDto extends AdminStudentSummaryDto {
   courses!: AdminStudentCourseDto[];
 }
 
-export class StudentListQueryDto {
+import { PaginationQueryDto, PaginatedResult } from "../../../../common/pagination";
+
+export class StudentListQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({ description: "Search by ID, name, phone, or email" })
   @IsOptional()
   @IsString()
@@ -105,16 +107,9 @@ export class StudentListQueryDto {
   @IsOptional()
   @IsEnum(["PAID", "PENDING", "FREE_TRIAL", "EXPIRED"])
   access?: "PAID" | "PENDING" | "FREE_TRIAL" | "EXPIRED";
-
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
 }
 
-export class StudentListResultDto {
+export class StudentListResultDto implements PaginatedResult<AdminStudentSummaryDto> {
   @ApiProperty({ type: [AdminStudentSummaryDto] })
   items!: AdminStudentSummaryDto[];
 
@@ -123,6 +118,12 @@ export class StudentListResultDto {
 
   @ApiProperty({ example: 1 })
   page!: number;
+
+  @ApiProperty({ example: 10 })
+  pageSize!: number;
+
+  @ApiProperty({ example: 246 })
+  totalPages!: number;
 
   @ApiProperty({ example: 246 })
   pageCount!: number;

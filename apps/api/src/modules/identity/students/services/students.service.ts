@@ -276,7 +276,7 @@ export class StudentsService {
 
   async listAdminStudents(query: StudentListQueryDto): Promise<StudentListResultDto> {
     const page = Math.max(1, query.page ?? 1);
-    const pageSize = 10;
+    const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
     const skip = (page - 1) * pageSize;
     const now = new Date();
 
@@ -332,7 +332,7 @@ export class StudentsService {
         where,
         skip,
         take: pageSize,
-        orderBy: [{ student_number: "asc" }, { created_at: "desc" }],
+        orderBy: [{ student_number: "asc" }, { created_at: "desc" }, { id: "asc" }],
         include: {
           university: true,
           program: true,
@@ -350,14 +350,16 @@ export class StudentsService {
       }),
     ]);
 
-    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const items = students.map((s) => this._mapToAdminSummary(s, now.getTime()));
 
     return {
       items,
       total,
       page,
-      pageCount,
+      pageSize,
+      totalPages,
+      pageCount: totalPages,
     };
   }
 

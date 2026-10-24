@@ -98,7 +98,9 @@ export class PaymentCountsDto {
   rejected!: number;
 }
 
-export class PaymentListQueryDto {
+import { PaginationQueryDto, PaginatedResult } from "../../../../common/pagination";
+
+export class PaymentListQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     enum: ["PENDING", "APPROVED", "REJECTED"],
     default: "PENDING",
@@ -120,16 +122,9 @@ export class PaymentListQueryDto {
   @IsOptional()
   @IsString()
   q?: string;
-
-  @ApiPropertyOptional({ default: 1, minimum: 1, description: "Page number" })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
 }
 
-export class PaymentListResultDto {
+export class PaymentListResultDto implements PaginatedResult<AdminPaymentDto> {
   @ApiProperty({ type: [AdminPaymentDto] })
   items!: AdminPaymentDto[];
 
@@ -138,6 +133,12 @@ export class PaymentListResultDto {
 
   @ApiProperty({ example: 1 })
   page!: number;
+
+  @ApiProperty({ example: 10 })
+  pageSize!: number;
+
+  @ApiProperty({ example: 2 })
+  totalPages!: number;
 
   @ApiProperty({ example: 2 })
   pageCount!: number;

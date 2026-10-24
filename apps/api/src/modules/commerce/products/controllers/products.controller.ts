@@ -3,6 +3,7 @@ import {
   Get,
   HttpStatus,
   Param,
+  Query,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -15,6 +16,7 @@ import {
   ProductsService,
   ProductResponse,
 } from "../services/products.service";
+import { PaginationQueryDto } from "../../../../common/pagination";
 
 @ApiTags("Commerce & Products")
 @ApiBearerAuth()
@@ -23,13 +25,13 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  @ApiOperation({ summary: "List all active store products and packages" })
+  @ApiOperation({ summary: "List active store products and packages with optional pagination" })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "List of available store products with prices and durations",
   })
-  async getProducts(): Promise<ProductResponse[]> {
-    return this.productsService.getProducts();
+  async getProducts(@Query() query?: PaginationQueryDto) {
+    return this.productsService.getProducts(query);
   }
 
   @Get(":id")

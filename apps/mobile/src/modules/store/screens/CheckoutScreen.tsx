@@ -51,6 +51,7 @@ export function CheckoutScreen() {
   const [guestIdentifier, setGuestIdentifier] = useState('');
   const [guestPassword, setGuestPassword] = useState('');
   const [guestError, setGuestError] = useState<string>();
+  const [phoneCollision, setPhoneCollision] = useState(false);
 
   const isFull = draft?.type === 'FULL_STREAM' || draft?.type === 'FULL_BOTH';
   const coverage = useFullCoverage(profile?.programId ?? '', draft?.stream ?? 'NATURAL', Boolean(isFull));
@@ -114,10 +115,22 @@ export function CheckoutScreen() {
         let authRes;
         try {
           authRes = await realAuthApi.register(pendingSync);
-        } catch {
+        } catch (err: any) {
+          // If phone number already registered under another account, avoid dead end
+          if (
+            err?.status === 409 ||
+            err?.code === 'PHONE_COLLISION' ||
+            err?.message?.includes('already registered') ||
+            err?.message?.includes('already exists')
+          ) {
+            setPhoneCollision(true);
+            setSubmitting(false);
+            return;
+          }
+
           authRes = await realAuthApi.login({
             identifier: pendingSync.identifier,
-            password: pendingSync.password,
+            password: pendingSync.password || '',
           });
         }
 
@@ -202,6 +215,44 @@ export function CheckoutScreen() {
 
       {!quote ? <ActivityIndicator color={theme.colors.primary} /> : <PriceSummary quote={quote} />}
       {isFull && coverage.data ? <AppText muted>{t('builder.covers', { count: coverage.data.length })}</AppText> : null}
+
+      {phoneCollision ? (
+        <View
+          style={{
+            backgroundColor: theme.colors.card,
+            borderRadius: theme.radii.md,
+            padding: theme.spacing.lg,
+            borderWidth: 1,
+            borderColor: theme.colors.danger,
+            gap: theme.spacing.md,
+            marginVertical: theme.spacing.md,
+          }}
+        >
+          <AppText bold variant="bodyLarge" color={theme.colors.danger}>
+            Phone Number Already Registered
+          </AppText>
+          <AppText variant="body" muted>
+            A student account already exists for {guestIdentifier || 'this phone number'}.
+            Please sign in to your existing account to complete this purchase, or contact an administrator for assistance.
+          </AppText>
+          <View style={{ gap: theme.spacing.sm }}>
+            <AppButton
+              label="Sign In To Existing Account"
+              onPress={() => router.push('/(auth)/login' as Href)}
+            />
+            <AppButton
+              label="Contact Administrator / Support"
+              variant="outline"
+              onPress={() => router.push('/support' as Href)}
+            />
+            <AppButton
+              label="Use a Different Phone Number"
+              variant="outline"
+              onPress={() => setPhoneCollision(false)}
+            />
+          </View>
+        </View>
+      ) : null}
 
       {!user ? (
         <View style={{ gap: theme.spacing.sm, paddingVertical: theme.spacing.md }}>

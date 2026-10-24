@@ -29,6 +29,7 @@ export const bulkQuestionImportResultSchema = z.object({
   preview: z.array(examQuestionInputSchema),
   appliedCount: z.number().int().min(0),
   targetExamSetId: z.string().optional(),
+  errorReportCsv: z.string().optional(),
 });
 
 export type BulkImportRowError = z.infer<typeof bulkImportRowErrorSchema>;

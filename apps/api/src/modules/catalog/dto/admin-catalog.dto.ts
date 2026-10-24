@@ -119,7 +119,9 @@ export class AdminCourseDto {
   status!: "DRAFT" | "PUBLISHED";
 }
 
-export class CourseListQueryDto {
+import { PaginationQueryDto, PaginatedResult } from "../../../common/pagination";
+
+export class CourseListQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({ description: "Search by course code or title" })
   @IsOptional()
   @IsString()
@@ -150,16 +152,9 @@ export class CourseListQueryDto {
   @IsOptional()
   @IsEnum(["DRAFT", "PUBLISHED"])
   status?: "DRAFT" | "PUBLISHED";
-
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
 }
 
-export class CourseListResultDto {
+export class CourseListResultDto implements PaginatedResult<AdminCourseDto> {
   @ApiProperty({ type: [AdminCourseDto] })
   items!: AdminCourseDto[];
 
@@ -168,6 +163,12 @@ export class CourseListResultDto {
 
   @ApiProperty({ example: 1 })
   page!: number;
+
+  @ApiProperty({ example: 10 })
+  pageSize!: number;
+
+  @ApiProperty({ example: 3 })
+  totalPages!: number;
 
   @ApiProperty({ example: 3 })
   pageCount!: number;

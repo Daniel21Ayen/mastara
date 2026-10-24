@@ -73,7 +73,7 @@ export class AuditService {
   /**
    * Retrieves attention audit logs with filtering by actor, category, date range, and text query.
    */
-  async getAttentionAuditLogs(params: QueryAuditLogsDto = {}): Promise<AuditEntryDto[]> {
+  async getAttentionAuditLogs(params: Partial<QueryAuditLogsDto> = {}): Promise<AuditEntryDto[]> {
     const limit = Math.min(Math.max(params.limit ?? 50, 1), 200);
     const offset = Math.max(params.offset ?? 0, 0);
 
@@ -127,12 +127,19 @@ export class AuditService {
       }
     }
 
-    const rows = await this.prisma.auditLog.findMany({
-      where: whereClause,
-      orderBy: { created_at: "desc" },
-      take: limit,
-      skip: offset,
-    });
+    const page = Math.max(1, params.page ?? 1);
+    const pageSize = Math.min(100, Math.max(1, params.pageSize ?? (params.limit ?? 10)));
+    const skip = params.offset !== undefined && !params.page ? params.offset : (page - 1) * pageSize;
+
+    const [total, rows] = await Promise.all([
+      this.prisma.auditLog.count({ where: whereClause }),
+      this.prisma.auditLog.findMany({
+        where: whereClause,
+        orderBy: [{ created_at: "desc" }, { id: "asc" }],
+        take: pageSize,
+        skip,
+      }),
+    ]);
 
     let entries = rows.map((row) => this.mapToAuditEntry(row));
 
@@ -146,6 +153,18 @@ export class AuditService {
         const matchActor = e.actor.toLowerCase().includes(q);
         return matchAction || matchTarget || matchReason || matchActor;
       });
+    }
+
+    if (params.page || params.pageSize) {
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      return {
+        items: entries,
+        page,
+        pageSize,
+        total,
+        totalPages,
+        pageCount: totalPages,
+      } as any;
     }
 
     return entries;

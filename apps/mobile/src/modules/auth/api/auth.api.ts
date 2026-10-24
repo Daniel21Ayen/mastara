@@ -25,6 +25,7 @@ export interface AuthApi {
 
 export interface PendingStudentSync {
   userId: string;
+  localAccountId?: string;
   name: string;
   identifier: string;
   password?: string;               // Legacy plaintext (erased upon first successful login)
@@ -52,7 +53,7 @@ function upsertUser(identifier: string, name?: string): User {
   return user;
 }
 
-export const realAuthApi: AuthApi = {
+export const realAuthApi: AuthApi & { register(input: RegisterInput & { localAccountId?: string }): Promise<AuthResult> } = {
   async login(input) {
     const res = await httpClient.post<AuthResult>('/auth/login', {
       identifier: input.identifier.trim(),
@@ -68,6 +69,7 @@ export const realAuthApi: AuthApi = {
       name: input.name.trim(),
       identifier: input.identifier.trim(),
       password: input.password,
+      localAccountId: input.localAccountId,
     });
     if (res.token) {
       await httpClient.setToken(res.token);
@@ -218,8 +220,14 @@ export const authApi: AuthApi = {
 
     // Store credentials locally with NO plaintext password.
     // When the student purchases, the password is provided over TLS to server directly.
+    const localAccountId =
+      typeof globalThis.crypto?.randomUUID === 'function'
+        ? globalThis.crypto.randomUUID()
+        : `loc-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
     const record: PendingStudentSync = {
       userId: user.id,
+      localAccountId,
       name: input.name.trim(),
       identifier: input.identifier.trim(),
       passwordHash,

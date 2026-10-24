@@ -183,6 +183,8 @@ export const scanListResultSchema = z.object({
   items: z.array(adminScanSchema),
   total: z.number().int().min(0),
   page: z.number().int().min(1),
+  pageSize: z.number().int().min(1).optional(),
+  totalPages: z.number().int().min(1).optional(),
   pageCount: z.number().int().min(1),
 });
 

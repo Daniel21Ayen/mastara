@@ -37,6 +37,8 @@ import {
   UpdateCourseDto,
 } from "../dto";
 
+import { PaginationQueryDto } from "../../../common/pagination";
+
 @ApiTags("Admin: Academic Catalog")
 @ApiBearerAuth()
 @UseGuards(RolesGuard)
@@ -48,10 +50,10 @@ export class AdminCatalogController {
   // ---- Universities ----
 
   @Get("universities")
-  @ApiOperation({ summary: "List all universities for admin catalog" })
+  @ApiOperation({ summary: "List all universities for admin catalog with optional pagination" })
   @ApiResponse({ status: HttpStatus.OK, type: [AdminUniversityDto] })
-  async listUniversities(): Promise<AdminUniversityDto[]> {
-    return this.catalogService.listAdminUniversities();
+  async listUniversities(@Query() query?: PaginationQueryDto) {
+    return this.catalogService.listAdminUniversities(query);
   }
 
   @Post("universities")
@@ -91,10 +93,10 @@ export class AdminCatalogController {
   // ---- Programs ----
 
   @Get("programs")
-  @ApiOperation({ summary: "List all programs for admin catalog" })
+  @ApiOperation({ summary: "List all programs for admin catalog with optional pagination" })
   @ApiResponse({ status: HttpStatus.OK, type: [AdminProgramDto] })
-  async listPrograms(): Promise<AdminProgramDto[]> {
-    return this.catalogService.listAdminPrograms();
+  async listPrograms(@Query() query?: PaginationQueryDto) {
+    return this.catalogService.listAdminPrograms(query);
   }
 
   @Post("programs")
@@ -134,10 +136,10 @@ export class AdminCatalogController {
   // ---- Semesters ----
 
   @Get("semesters")
-  @ApiOperation({ summary: "List all semesters for admin catalog" })
+  @ApiOperation({ summary: "List all semesters for admin catalog with optional pagination" })
   @ApiResponse({ status: HttpStatus.OK, type: [AdminSemesterDto] })
-  async listSemesters(): Promise<AdminSemesterDto[]> {
-    return this.catalogService.listAdminSemesters();
+  async listSemesters(@Query() query?: PaginationQueryDto) {
+    return this.catalogService.listAdminSemesters(query);
   }
 
   @Put("semesters/:id")

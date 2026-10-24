@@ -14,6 +14,8 @@ export interface EntitlementResponse {
   daysLeft: number;
 }
 
+import { PaginationQueryDto, PaginatedResult } from "../../../../common/pagination";
+
 @Injectable()
 export class EntitlementsService {
   private readonly logger = new Logger(EntitlementsService.name);
@@ -21,28 +23,76 @@ export class EntitlementsService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Returns all active (non-expired, non-revoked) entitlements for a student,
-   * enriched with course info and computed days remaining.
+   * Returns active (non-expired, non-revoked) entitlements for a student with optional pagination.
    */
-  async getStudentEntitlements(studentId: string): Promise<EntitlementResponse[]> {
+  async getStudentEntitlements(
+    studentId: string,
+    query?: PaginationQueryDto,
+  ): Promise<EntitlementResponse[] | PaginatedResult<EntitlementResponse>> {
     const now = new Date();
-    const entitlements = await this.prisma.entitlement.findMany({
-      where: {
-        student_id: studentId,
-        status: EntitlementStatus.ACTIVE,
-        expires_at: { gt: now },
-      },
-      include: {
-        course: {
-          select: {
-            id: true,
-            code: true,
-            title_en: true,
-            title_am: true,
-          },
+    const where = {
+      student_id: studentId,
+      status: EntitlementStatus.ACTIVE,
+      expires_at: { gt: now },
+    };
+    const orderBy: any = [{ expires_at: "asc" }, { id: "asc" }];
+    const include = {
+      course: {
+        select: {
+          id: true,
+          code: true,
+          title_en: true,
+          title_am: true,
         },
       },
-      orderBy: { expires_at: "asc" },
+    };
+
+    if (query?.page || query?.pageSize) {
+      const page = Math.max(1, query.page ?? 1);
+      const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
+      const skip = (page - 1) * pageSize;
+      const [total, entitlements] = await Promise.all([
+        this.prisma.entitlement.count({ where }),
+        this.prisma.entitlement.findMany({
+          where,
+          include,
+          skip,
+          take: pageSize,
+          orderBy,
+        }),
+      ]);
+      const items = entitlements.map((e) => ({
+        id: e.id,
+        courseId: e.course_id,
+        courseCode: e.course.code,
+        courseTitle: {
+          en: e.course.title_en,
+          am: e.course.title_am,
+        },
+        orderId: e.order_id,
+        startsAt: e.starts_at,
+        expiresAt: e.expires_at,
+        status: e.status,
+        daysLeft: Math.max(
+          0,
+          Math.ceil((e.expires_at.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+        ),
+      }));
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      return {
+        items,
+        page,
+        pageSize,
+        total,
+        totalPages,
+        pageCount: totalPages,
+      };
+    }
+
+    const entitlements = await this.prisma.entitlement.findMany({
+      where,
+      include,
+      orderBy,
     });
 
     return entitlements.map((e) => ({

@@ -5,7 +5,9 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
 } from "@nestjs/common";
+import { PaginationQueryDto } from "../../../../common/pagination";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -72,5 +74,15 @@ export class DevicesController {
     @CurrentUser("id") studentId: string,
   ): Promise<DeviceStatusResponse> {
     return this.devicesService.getDeviceStatus(studentId);
+  }
+
+  @Get()
+  @ApiOperation({ summary: "List device bindings with pagination" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Paginated list of device bindings",
+  })
+  async listDevices(@Query() query?: PaginationQueryDto) {
+    return this.devicesService.listDevices(query);
   }
 }

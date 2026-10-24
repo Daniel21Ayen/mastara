@@ -1,8 +1,9 @@
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiPropertyOptional } from "@nestjs/swagger";
+import { PaginationQueryDto } from "../../../../common/pagination";
 
-export class QueryAuditLogsDto {
+export class QueryAuditLogsDto extends PaginationQueryDto {
   @ApiPropertyOptional({ enum: ["ALL", "ADMIN", "STUDENT", "SYSTEM"] })
   @IsOptional()
   @IsIn(["ALL", "ADMIN", "STUDENT", "SYSTEM"])

@@ -355,7 +355,7 @@ export class AdminScansService {
 
     // Query scan jobs from DB with relations
     const allJobs = await this.prisma.scanJob.findMany({
-      orderBy: { created_at: "desc" },
+      orderBy: [{ created_at: "desc" }, { id: "asc" }],
       include: {
         pages: true,
         topic: true,
@@ -399,16 +399,19 @@ export class AdminScansService {
     });
 
     const total = filtered.length;
-    const pageCount = Math.max(1, Math.ceil(total / SCAN_PAGE_SIZE));
-    const effectivePage = Math.min(page, pageCount);
-    const start = (effectivePage - 1) * SCAN_PAGE_SIZE;
-    const items = filtered.slice(start, start + SCAN_PAGE_SIZE);
+    const pageSize = Math.min(100, Math.max(1, (query as any).pageSize ?? SCAN_PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const effectivePage = Math.min(page, totalPages);
+    const start = (effectivePage - 1) * pageSize;
+    const items = filtered.slice(start, start + pageSize);
 
     return {
       items,
       total,
       page: effectivePage,
-      pageCount,
+      pageSize,
+      totalPages,
+      pageCount: totalPages,
     };
   }
 

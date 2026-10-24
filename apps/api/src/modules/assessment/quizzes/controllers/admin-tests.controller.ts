@@ -255,6 +255,16 @@ export class AdminTestsController {
   ): Promise<BulkQuestionImportResult> {
     return this.adminTestsService.bulkImportQuestions(dto, adminId, file);
   }
+
+  @Get("questions/template.csv")
+  @ApiOperation({ summary: "Download standard CSV questions import template" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Returns downloadable CSV template" })
+  async downloadTemplate(@Res() res: Response): Promise<void> {
+    const templateContent = this.adminTestsService.getTemplateCsv();
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="mastara-questions-template.csv"');
+    res.status(HttpStatus.OK).send(templateContent);
+  }
 }
 
 

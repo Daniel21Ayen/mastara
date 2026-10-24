@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Body,
+  Query,
   UseGuards,
   HttpStatus,
   HttpCode,
@@ -36,6 +37,8 @@ import type {
   AdminNote,
 } from "@mastara/contracts";
 
+import { PaginationQueryDto } from "../../../common/pagination";
+
 @ApiTags("Admin Content Management")
 @ApiBearerAuth()
 @UseGuards(RolesGuard)
@@ -45,10 +48,10 @@ export class AdminContentController {
   constructor(private readonly contentService: ContentService) {}
 
   @Get("courses")
-  @ApiOperation({ summary: "List courses available in content management studio" })
+  @ApiOperation({ summary: "List courses available in content management studio with optional pagination" })
   @ApiResponse({ status: HttpStatus.OK, description: "List of content courses" })
-  async listCourses(): Promise<ContentCourse[]> {
-    return this.contentService.listAdminCourses();
+  async listCourses(@Query() query?: PaginationQueryDto) {
+    return this.contentService.listAdminCourses(query);
   }
 
   @Get("courses/:courseId/summary")

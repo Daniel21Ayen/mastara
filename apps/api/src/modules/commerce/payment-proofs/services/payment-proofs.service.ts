@@ -384,7 +384,7 @@ export class PaymentProofsService {
 
   async getAdminPayments(query: PaymentListQueryDto): Promise<PaymentListResultDto> {
     const page = Math.max(1, query.page ?? 1);
-    const pageSize = 10;
+    const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
     const skip = (page - 1) * pageSize;
 
     let statusCondition: ProofStatus = ProofStatus.PENDING;
@@ -426,7 +426,7 @@ export class PaymentProofsService {
         where,
         skip,
         take: pageSize,
-        orderBy: { created_at: "desc" },
+        orderBy: [{ created_at: "desc" }, { id: "asc" }],
         include: {
           order: {
             include: {
@@ -448,11 +448,11 @@ export class PaymentProofsService {
         ? await this.prisma.paymentProof.findMany({
             where: { transaction_reference: { in: refs } },
             select: { id: true, transaction_reference: true, created_at: true },
-            orderBy: { created_at: "asc" },
+            orderBy: [{ created_at: "asc" }, { id: "asc" }],
           })
         : [];
 
-    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
     const mappedItems = items.map((proof) => {
       const earlier = earlierProofs.find(
@@ -468,7 +468,9 @@ export class PaymentProofsService {
       items: mappedItems,
       total,
       page,
-      pageCount,
+      pageSize,
+      totalPages,
+      pageCount: totalPages,
       counts: {
         pending: pendingCount,
         approved: approvedCount,

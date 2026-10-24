@@ -13,3 +13,4 @@ export * from './sync';
 export * from './user';
 export * from './validation';
 export * from './adminExports';
+export * from './pagination';

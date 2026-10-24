@@ -22,6 +22,7 @@ import {
 } from "../dto";
 import { GetCoursesQueryDto } from "../dto/get-courses-query.dto";
 import { AuditService } from "../../platform/audit/services/audit.service";
+import { PaginationQueryDto, PaginatedResult } from "../../../common/pagination";
 
 export interface UniversityResponse {
   id: string;
@@ -286,9 +287,46 @@ export class CatalogService {
 
   // ---- Universities ----
 
-  async listAdminUniversities(): Promise<AdminUniversityDto[]> {
+  async listAdminUniversities(
+    query?: PaginationQueryDto,
+  ): Promise<AdminUniversityDto[] | PaginatedResult<AdminUniversityDto>> {
+    const orderBy: any = [{ sort_order: "asc" }, { id: "asc" }];
+    if (query?.page || query?.pageSize) {
+      const page = Math.max(1, query.page ?? 1);
+      const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
+      const skip = (page - 1) * pageSize;
+      const [total, list] = await Promise.all([
+        this.prisma.university.count(),
+        this.prisma.university.findMany({
+          skip,
+          take: pageSize,
+          orderBy,
+          include: {
+            _count: { select: { programs: true } },
+          },
+        }),
+      ]);
+      const items: AdminUniversityDto[] = list.map((u) => ({
+        id: u.id,
+        name: u.name_en,
+        shortName: u.code,
+        logoUrl: u.logo_url ?? undefined,
+        status: u.status === PublicationStatus.DRAFT ? "DRAFT" : "PUBLISHED",
+        programCount: u._count.programs,
+      }));
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      return {
+        items,
+        page,
+        pageSize,
+        total,
+        totalPages,
+        pageCount: totalPages,
+      };
+    }
+
     const list = await this.prisma.university.findMany({
-      orderBy: { sort_order: "asc" },
+      orderBy,
       include: {
         _count: { select: { programs: true } },
       },
@@ -470,9 +508,52 @@ export class CatalogService {
 
   // ---- Programs ----
 
-  async listAdminPrograms(): Promise<AdminProgramDto[]> {
+  async listAdminPrograms(
+    query?: PaginationQueryDto,
+  ): Promise<AdminProgramDto[] | PaginatedResult<AdminProgramDto>> {
+    const orderBy: any = [{ sort_order: "asc" }, { id: "asc" }];
+    if (query?.page || query?.pageSize) {
+      const page = Math.max(1, query.page ?? 1);
+      const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
+      const skip = (page - 1) * pageSize;
+      const [total, list] = await Promise.all([
+        this.prisma.program.count(),
+        this.prisma.program.findMany({
+          skip,
+          take: pageSize,
+          orderBy,
+          include: {
+            university: true,
+            semesters: {
+              include: { _count: { select: { courses: true } } },
+            },
+          },
+        }),
+      ]);
+      const items: AdminProgramDto[] = list.map((p) => {
+        const courseCount = p.semesters.reduce((acc, s) => acc + s._count.courses, 0);
+        return {
+          id: p.id,
+          universityId: p.university_id,
+          universityShortName: p.university.code,
+          name: p.name_en,
+          status: p.status === PublicationStatus.DRAFT ? "DRAFT" : "PUBLISHED",
+          courseCount,
+        };
+      });
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      return {
+        items,
+        page,
+        pageSize,
+        total,
+        totalPages,
+        pageCount: totalPages,
+      };
+    }
+
     const list = await this.prisma.program.findMany({
-      orderBy: { sort_order: "asc" },
+      orderBy,
       include: {
         university: true,
         semesters: {
@@ -697,9 +778,57 @@ export class CatalogService {
 
   // ---- Semesters ----
 
-  async listAdminSemesters(): Promise<AdminSemesterDto[]> {
+  async listAdminSemesters(
+    query?: PaginationQueryDto,
+  ): Promise<AdminSemesterDto[] | PaginatedResult<AdminSemesterDto>> {
+    const orderBy: any = [{ sort_order: "asc" }, { id: "asc" }];
+    if (query?.page || query?.pageSize) {
+      const page = Math.max(1, query.page ?? 1);
+      const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
+      const skip = (page - 1) * pageSize;
+      const [total, list] = await Promise.all([
+        this.prisma.semester.count(),
+        this.prisma.semester.findMany({
+          skip,
+          take: pageSize,
+          orderBy,
+          include: {
+            program: { include: { university: true } },
+            courses: { select: { status: true } },
+          },
+        }),
+      ]);
+      const items: AdminSemesterDto[] = list.map((s) => {
+        const match = s.code.match(/SEM(\d+)/i) || s.code.match(/(\d+)/);
+        const parsedNum = match && match[1] ? parseInt(match[1], 10) : s.sort_order;
+        const publishedCount = s.courses.filter(
+          (c) => c.status === PublicationStatus.PUBLISHED,
+        ).length;
+
+        return {
+          id: s.id,
+          programId: s.program_id,
+          programName: s.program.name_en,
+          universityShortName: s.program.university.code,
+          number: parsedNum === 2 ? 2 : 1,
+          status: s.status === PublicationStatus.DRAFT ? "DRAFT" : "PUBLISHED",
+          courseCount: s.courses.length,
+          publishedCourseCount: publishedCount,
+        };
+      });
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      return {
+        items,
+        page,
+        pageSize,
+        total,
+        totalPages,
+        pageCount: totalPages,
+      };
+    }
+
     const list = await this.prisma.semester.findMany({
-      orderBy: { sort_order: "asc" },
+      orderBy,
       include: {
         program: { include: { university: true } },
         courses: { select: { status: true } },
@@ -850,7 +979,7 @@ export class CatalogService {
 
   async listAdminCourses(query: CourseListQueryDto): Promise<CourseListResultDto> {
     const page = Math.max(1, query.page ?? 1);
-    const pageSize = 10;
+    const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
     const skip = (page - 1) * pageSize;
 
     const where: any = {};
@@ -902,7 +1031,7 @@ export class CatalogService {
         where,
         skip,
         take: pageSize,
-        orderBy: { created_at: "desc" },
+        orderBy: [{ created_at: "desc" }, { id: "asc" }],
         include: {
           semester: {
             include: {
@@ -913,14 +1042,16 @@ export class CatalogService {
       }),
     ]);
 
-    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const items = courses.map((c) => this._mapToAdminCourse(c));
 
     return {
       items,
       total,
       page,
-      pageCount,
+      pageSize,
+      totalPages,
+      pageCount: totalPages,
     };
   }
 

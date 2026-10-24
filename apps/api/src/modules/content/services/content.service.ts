@@ -21,6 +21,7 @@ import {
   ADMIN_ERROR_CODES,
 } from "@mastara/domain";
 import { AuditService } from "../../platform/audit/services/audit.service";
+import { PaginationQueryDto, PaginatedResult } from "../../../common/pagination";
 import type {
   ContentCourse,
   ContentSummary,
@@ -353,7 +354,57 @@ export class ContentService {
   // Admin Content Management Methods
   // ============================================================================
 
-  async listAdminCourses(): Promise<ContentCourse[]> {
+  async listAdminCourses(
+    query?: PaginationQueryDto,
+  ): Promise<ContentCourse[] | PaginatedResult<ContentCourse>> {
+    const orderBy: any = [{ code: "asc" }, { id: "asc" }];
+    if (query?.page || query?.pageSize) {
+      const page = Math.max(1, query.page ?? 1);
+      const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
+      const skip = (page - 1) * pageSize;
+      const [total, courses] = await Promise.all([
+        this.prisma.course.count(),
+        this.prisma.course.findMany({
+          skip,
+          take: pageSize,
+          include: {
+            semester: {
+              include: {
+                program: {
+                  include: {
+                    university: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy,
+        }),
+      ]);
+      const items = courses.map((course) => {
+        const program = course.semester?.program;
+        const university = program?.university;
+        const isAll = !university || university.code === "ALL";
+
+        return {
+          id: course.id,
+          code: course.code,
+          title: course.title_en,
+          programName: isAll ? "Common / All Programs" : (program?.name_en ?? "General Studies"),
+          universityShortName: isAll ? "ALL" : (university?.code ?? "ALL"),
+        };
+      });
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      return {
+        items,
+        page,
+        pageSize,
+        total,
+        totalPages,
+        pageCount: totalPages,
+      };
+    }
+
     const courses = await this.prisma.course.findMany({
       include: {
         semester: {
@@ -366,7 +417,7 @@ export class ContentService {
           },
         },
       },
-      orderBy: [{ code: "asc" }],
+      orderBy,
     });
 
     return courses.map((course) => {

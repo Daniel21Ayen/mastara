@@ -24,46 +24,87 @@ export interface ProductResponse {
   }[];
 }
 
+import { PaginationQueryDto, PaginatedResult } from "../../../../common/pagination";
+
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private mapProduct(p: any): ProductResponse {
+    return {
+      id: p.id,
+      type: p.type,
+      streamScope: p.stream_scope,
+      name: {
+        en: p.name_en,
+        am: p.name_am,
+      },
+      description: {
+        en: p.description_en ?? undefined,
+        am: p.description_am ?? undefined,
+      },
+      priceEtb: Number(p.price_etb),
+      durationDays: p.duration_days,
+      minCourses: p.min_courses ?? undefined,
+      maxCourses: p.max_courses ?? undefined,
+      priceRules: p.price_rules ? p.price_rules.map((r: any) => ({
+        tierNo: r.tier_no,
+        priceEtb: Number(r.price_etb),
+      })) : undefined,
+    };
+  }
+
   /**
-   * Lists all active products available in the catalog.
+   * Lists all active products available in the catalog with optional pagination.
    */
-  async getProducts(): Promise<ProductResponse[]> {
+  async getProducts(
+    query?: PaginationQueryDto,
+  ): Promise<ProductResponse[] | PaginatedResult<ProductResponse>> {
+    const orderBy: any = [{ created_at: "asc" }, { id: "asc" }];
+    const where = { is_active: true };
+
+    if (query?.page || query?.pageSize) {
+      const page = Math.max(1, query.page ?? 1);
+      const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 10));
+      const skip = (page - 1) * pageSize;
+      const [total, products] = await Promise.all([
+        this.prisma.product.count({ where }),
+        this.prisma.product.findMany({
+          where,
+          include: {
+            price_rules: {
+              orderBy: { tier_no: "asc" },
+            },
+          },
+          skip,
+          take: pageSize,
+          orderBy,
+        }),
+      ]);
+      const items = products.map((p) => this.mapProduct(p));
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      return {
+        items,
+        page,
+        pageSize,
+        total,
+        totalPages,
+        pageCount: totalPages,
+      };
+    }
+
     const products = await this.prisma.product.findMany({
-      where: { is_active: true },
+      where,
       include: {
         price_rules: {
           orderBy: { tier_no: "asc" },
         },
       },
-      orderBy: { created_at: "asc" },
+      orderBy,
     });
 
     if (products.length > 0) {
-      return products.map((p) => ({
-        id: p.id,
-        type: p.type,
-        streamScope: p.stream_scope,
-        name: {
-          en: p.name_en,
-          am: p.name_am,
-        },
-        description: {
-          en: p.description_en ?? undefined,
-          am: p.description_am ?? undefined,
-        },
-        priceEtb: Number(p.price_etb),
-        durationDays: p.duration_days,
-        minCourses: p.min_courses ?? undefined,
-        maxCourses: p.max_courses ?? undefined,
-        priceRules: p.price_rules.map((r) => ({
-          tierNo: r.tier_no,
-          priceEtb: Number(r.price_etb),
-        })),
-      }));
+      return products.map((p) => this.mapProduct(p));
     }
 
     // Default system products if not seeded in DB
@@ -141,8 +182,9 @@ export class ProductsService {
    * Retrieves a specific product by ID.
    */
   async getProductById(id: string): Promise<ProductResponse> {
-    const products = await this.getProducts();
-    const product = products.find((p) => p.id === id);
+    const productsRes = await this.getProducts();
+    const list = Array.isArray(productsRes) ? productsRes : productsRes.items;
+    const product = list.find((p) => p.id === id);
     if (!product) {
       throw new NotFoundException(`Product not found with ID ${id}`);
     }

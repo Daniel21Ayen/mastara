@@ -56,6 +56,10 @@ import {
   BULK_IMPORT_ALLOWED_MIME_TYPES,
   DISALLOWED_EXTENSIONS,
 } from "../../../../infrastructure/storage/storage-validation";
+import {
+  parseAndValidateCsvQuestions,
+  FULL_CSV_TEMPLATE,
+} from "../../../../common/importers/csv-question-importer";
 
 
 const QUIZ_NUMBERS_LIST: readonly QuizNumber[] = [1, 2, 3];
@@ -272,7 +276,7 @@ export class AdminTestsService {
         course: true,
         topic: { include: { module: true } },
       },
-      orderBy: { created_at: "asc" },
+      orderBy: [{ created_at: "asc" }, { id: "asc" }],
     });
 
     const filtered = rawQuestions.filter((q) => {
@@ -299,10 +303,11 @@ export class AdminTestsService {
     });
 
     const total = filtered.length;
-    const pageCount = Math.max(1, Math.ceil(total / TESTS_PAGE_SIZE));
-    const page = Math.min(query.page ?? 1, pageCount);
-    const start = (page - 1) * TESTS_PAGE_SIZE;
-    const pageItems = filtered.slice(start, start + TESTS_PAGE_SIZE);
+    const pageSize = Math.min(100, Math.max(1, (query as any).pageSize ?? TESTS_PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(query.page ?? 1, totalPages);
+    const start = (page - 1) * pageSize;
+    const pageItems = filtered.slice(start, start + pageSize);
 
     const items = pageItems.map((q) => {
       const sameCourseQuiz = filtered.filter((item) => item.course_id === q.course_id);
@@ -317,7 +322,9 @@ export class AdminTestsService {
       items,
       total,
       page,
-      pageCount,
+      pageSize,
+      totalPages,
+      pageCount: totalPages,
     };
   }
 
@@ -659,7 +666,7 @@ export class AdminTestsService {
 
   async listExamSets(query: AdminExamSetListQueryDto): Promise<ExamSetListResult> {
     const page = query.page && query.page > 0 ? query.page : 1;
-    const pageSize = SET_PAGE_SIZE;
+    const pageSize = Math.min(100, Math.max(1, (query as any).pageSize ?? SET_PAGE_SIZE));
     const skip = (page - 1) * pageSize;
 
     if (query.kind === "COC") {
@@ -681,7 +688,7 @@ export class AdminTestsService {
           where,
           skip,
           take: pageSize,
-          orderBy: { updated_at: "desc" },
+          orderBy: [{ updated_at: "desc" }, { id: "asc" }],
           include: {
             coc_set_questions: {
               include: {
@@ -698,11 +705,14 @@ export class AdminTestsService {
       ]);
 
       const items = cocSets.map((cs) => this.mapToCocExamSet(cs));
+      const totalPages = Math.ceil(total / pageSize) || 1;
       return {
         items,
         total,
         page,
-        pageCount: Math.ceil(total / pageSize) || 1,
+        pageSize,
+        totalPages,
+        pageCount: totalPages,
       };
     } else {
       const where: any = {
@@ -726,7 +736,7 @@ export class AdminTestsService {
           where,
           skip,
           take: pageSize,
-          orderBy: { updated_at: "desc" },
+          orderBy: [{ updated_at: "desc" }, { id: "asc" }],
           include: {
             course: {
               include: {
@@ -749,11 +759,14 @@ export class AdminTestsService {
       ]);
 
       const items = exams.map((exam) => this.mapToExamSet(exam));
+      const totalPages = Math.ceil(total / pageSize) || 1;
       return {
         items,
         total,
         page,
-        pageCount: Math.ceil(total / pageSize) || 1,
+        pageSize,
+        totalPages,
+        pageCount: totalPages,
       };
     }
   }
@@ -1105,35 +1118,58 @@ export class AdminTestsService {
    * Parses, validates, and optionally persists bulk questions from CSV or JSON.
    * Performs cross-checks for duplicate IDs, formula validation, and dry-run reporting.
    */
+  /**
+   * Return downloadable CSV template for bulk questions import.
+   */
+  getTemplateCsv(): string {
+    return FULL_CSV_TEMPLATE;
+  }
+
+  /**
+   * Bulk import questions from CSV with server-side verification, dry-run, atomic import, and audit logging.
+   */
   async bulkImportQuestions(
     dto: AdminBulkQuestionImportDto,
     adminId: string,
     file?: Express.Multer.File,
   ): Promise<BulkQuestionImportResult> {
-    let rawContent = dto.content || "";
-    if (file) {
-      const validated = validateUploadedFile(file, {
-        maxBytes: MAX_BULK_IMPORT_BYTES,
-        allowedMimes: BULK_IMPORT_ALLOWED_MIME_TYPES,
-        disallowedExtensions: DISALLOWED_EXTENSIONS,
-      });
-      rawContent = validated.buffer.toString("utf-8");
-    }
+    const rawBuffer = file?.buffer ?? (dto.content ? Buffer.from(dto.content, "utf-8") : null);
 
-    if (!rawContent || !rawContent.trim()) {
+    if (!rawBuffer || rawBuffer.length === 0) {
       throw new BadRequestException({
         errorCode: "VALIDATION_FAILED",
         message:
-          "No content provided to import. Either attach a CSV/JSON file or specify content body.",
+          "No content provided to import. Either attach a CSV file or specify content body.",
       });
     }
 
-    // 1. Parse and validate questions using domain parser
-    const parseResult = parseBulkQuestions(rawContent);
+    // 1. Server-side CSV-only parser: blocks %PDF, PK zip/xlsx by content, validates headers, strips UTF-8 BOM, checks UTF-8 integrity, sanitizes formulas
+    const csvResult = parseAndValidateCsvQuestions(rawBuffer, {
+      maxSizeBytes: MAX_BULK_IMPORT_BYTES,
+      dryRun: dto.dryRun,
+    });
+
+    const parsedQuestions: ExamQuestion[] = csvResult.questions.map((q, idx) => ({
+      id: q.id || `Q_${Date.now()}_${idx + 1}`,
+      form: q.type,
+      topic: q.topic || "General",
+      prompt: q.prompt,
+      options: q.options,
+      correctOption: q.correctOptionIndex ?? null,
+      trueIsCorrect:
+        q.type === "TRUE_FALSE"
+          ? q.correctAnswer.trim().toLowerCase().startsWith("t")
+          : null,
+      acceptedAnswers:
+        q.type === "SHORT_ANSWER" || q.type === "BLANK_SPACE"
+          ? [q.correctAnswer.trim()]
+          : [],
+      answerDescription: q.explanation || undefined,
+    }));
 
     // 2. Cross-check existing question IDs against the database to detect collisions
     const existingCheckErrors: BulkImportRowError[] = [];
-    for (const q of parseResult.questions) {
+    for (const q of parsedQuestions) {
       const owner = await this.getQuestionOwner(q.id);
       if (owner.ownerSetId) {
         existingCheckErrors.push({
@@ -1145,25 +1181,35 @@ export class AdminTestsService {
       }
     }
 
-    const allErrors = [...parseResult.errors, ...existingCheckErrors];
+    const allErrors: BulkImportRowError[] = [
+      ...csvResult.errors.map((e) => ({
+        row: e.row,
+        questionId: undefined,
+        field: e.field,
+        message: e.message,
+      })),
+      ...existingCheckErrors,
+    ];
+
     const errorRowsCount = new Set(
       allErrors.map((e) => e.questionId || String(e.row)),
     ).size;
 
-    // If dry run, or if there are errors, return the validation report without committing
+    // If dry run, or if there are errors, return report with downloadable CSV error report
     if (dto.dryRun || allErrors.length > 0) {
       return {
-        totalRows: parseResult.totalRows,
-        validRows: parseResult.questions.length - existingCheckErrors.length,
+        totalRows: csvResult.totalRows,
+        validRows: parsedQuestions.length - existingCheckErrors.length,
         errorRows: errorRowsCount,
         errors: allErrors,
-        preview: parseResult.questions as any,
+        preview: parsedQuestions as any,
         appliedCount: 0,
         targetExamSetId: dto.targetExamSetId,
+        errorReportCsv: csvResult.errorReportCsv,
       };
     }
 
-    // 3. Commit / apply changes
+    // 3. Atomic import inside transaction with audit log entry
     let appliedCount = 0;
     if (dto.targetExamSetId) {
       const examSet = await this.findExamSet(dto.targetExamSetId);
@@ -1173,63 +1219,82 @@ export class AdminTestsService {
         );
       }
 
-      // Append new questions to existing exam set
-      const updatedQuestions = [...examSet.questions, ...parseResult.questions];
-      await this.saveExamSet(
-        {
-          ...examSet,
-          questions: updatedQuestions as any,
-          reason: `Bulk imported ${parseResult.questions.length} questions into set ${dto.targetExamSetId}`,
-        },
-        adminId,
-      );
-      appliedCount = parseResult.questions.length;
-    } else if (dto.courseId) {
-      // Standalone question insertion for course
-      for (const qInput of parseResult.questions) {
-        const studentType = this.toPrismaQuestionType(qInput.form);
-        await this.prisma.question.create({
+      await this.prisma.$transaction(async (tx) => {
+        const updatedQuestions = [...examSet.questions, ...parsedQuestions];
+        await this.saveExamSet(
+          {
+            ...examSet,
+            questions: updatedQuestions as any,
+            reason: `Bulk imported ${parsedQuestions.length} questions into set ${dto.targetExamSetId}`,
+          },
+          adminId,
+        );
+
+        await tx.auditLog.create({
           data: {
-            course_id: dto.courseId,
-            type: studentType as any,
-            prompt_en: qInput.prompt.trim(),
-            options: qInput.options,
-            explanation_en: qInput.answerDescription || null,
-            correct_answers: {
-              externalId: qInput.id,
-              form: qInput.form,
-              topic: qInput.topic,
-              correctOption: qInput.correctOption ?? null,
-              trueIsCorrect: qInput.trueIsCorrect ?? null,
-              acceptedAnswers: qInput.acceptedAnswers ?? [],
+            actor_id: adminId || "00000000-0000-0000-0000-000000000000",
+            actor_role: Role.ADMIN,
+            action: "BULK_QUESTIONS_IMPORTED",
+            target_type: "ExamSet",
+            target_id: dto.targetExamSetId!,
+            metadata: {
+              target: `Atomic imported ${parsedQuestions.length} questions into set ${dto.targetExamSetId}`,
+              count: parsedQuestions.length,
             },
           },
         });
-        appliedCount++;
-      }
+      });
+      appliedCount = parsedQuestions.length;
+    } else if (dto.courseId) {
+      // Standalone question insertion for course inside atomic transaction
+      await this.prisma.$transaction(async (tx) => {
+        for (const qInput of parsedQuestions) {
+          const studentType = this.toPrismaQuestionType(qInput.form);
+          await tx.question.create({
+            data: {
+              course_id: dto.courseId!,
+              type: studentType as any,
+              prompt_en: qInput.prompt.trim(),
+              options: qInput.options,
+              explanation_en: qInput.answerDescription || null,
+              correct_answers: {
+                externalId: qInput.id,
+                form: qInput.form,
+                topic: qInput.topic,
+                correctOption: qInput.correctOption ?? null,
+                trueIsCorrect: qInput.trueIsCorrect ?? null,
+                acceptedAnswers: qInput.acceptedAnswers ?? [],
+              },
+            },
+          });
+          appliedCount++;
+        }
 
-      await this.prisma.auditLog.create({
-        data: {
-          actor_id: adminId || "00000000-0000-0000-0000-000000000000",
-          actor_role: Role.ADMIN,
-          action: "QUESTION_CREATED",
-          target_type: "Course",
-          target_id: dto.courseId,
-          metadata: {
-            target: `Bulk imported ${appliedCount} standalone questions for course ${dto.courseId}`,
+        await tx.auditLog.create({
+          data: {
+            actor_id: adminId || "00000000-0000-0000-0000-000000000000",
+            actor_role: Role.ADMIN,
+            action: "QUESTION_CREATED",
+            target_type: "Course",
+            target_id: dto.courseId!,
+            metadata: {
+              target: `Atomic imported ${appliedCount} standalone questions for course ${dto.courseId}`,
+              count: appliedCount,
+            },
           },
-        },
+        });
       });
     }
 
     return {
-      totalRows: parseResult.totalRows,
-      validRows: parseResult.questions.length,
+      totalRows: csvResult.totalRows,
+      validRows: parsedQuestions.length,
       errorRows: 0,
       errors: [],
-      preview: parseResult.questions as any,
+      preview: parsedQuestions as any,
       appliedCount,
       targetExamSetId: dto.targetExamSetId,
+      errorReportCsv: undefined,
     };
   }
 

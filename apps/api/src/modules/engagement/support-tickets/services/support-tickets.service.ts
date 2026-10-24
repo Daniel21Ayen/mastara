@@ -279,24 +279,34 @@ export class SupportTicketsService {
             orderBy: { created_at: "asc" },
           },
         },
-        orderBy: { updated_at: "desc" },
+        orderBy: [{ updated_at: "desc" }, { id: "asc" }],
         skip,
         take: pageSize,
       }),
     ]);
 
-    // Sort: open/in_progress tickets first, then newest updated
+    // Sort: open/in_progress tickets first, then newest updated, with unique tiebreaker on id
     const sorted = [...rawTickets].sort((a, b) => {
       const aOpen = a.status === TicketStatus.OPEN || a.status === TicketStatus.IN_PROGRESS;
       const bOpen = b.status === TicketStatus.OPEN || b.status === TicketStatus.IN_PROGRESS;
       if (aOpen && !bOpen) return -1;
       if (!aOpen && bOpen) return 1;
-      return b.updated_at.getTime() - a.updated_at.getTime();
+      const timeDiff = b.updated_at.getTime() - a.updated_at.getTime();
+      if (timeDiff !== 0) return timeDiff;
+      return a.id.localeCompare(b.id);
     });
 
+    const mapped = sorted.map((t) => this._mapAdminTicket(t));
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
     return {
-      tickets: sorted.map((t) => this._mapAdminTicket(t)),
+      tickets: mapped,
+      items: mapped,
+      page,
+      pageSize,
       total,
+      totalPages,
+      pageCount: totalPages,
     };
   }
 

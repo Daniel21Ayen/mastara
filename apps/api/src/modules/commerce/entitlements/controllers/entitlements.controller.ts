@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus } from "@nestjs/common";
+import { Controller, Get, HttpStatus, Query } from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -7,6 +7,7 @@ import {
 } from "@nestjs/swagger";
 import { EntitlementsService, EntitlementResponse } from "../services/entitlements.service";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
+import { PaginationQueryDto } from "../../../../common/pagination";
 
 @ApiTags("Commerce: Entitlements")
 @ApiBearerAuth()
@@ -16,7 +17,7 @@ export class EntitlementsController {
 
   @Get()
   @ApiOperation({
-    summary: "List active course entitlements for the authenticated student",
+    summary: "List active course entitlements for the authenticated student with optional pagination",
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -24,7 +25,9 @@ export class EntitlementsController {
   })
   async getStudentEntitlements(
     @CurrentUser("id") studentId: string,
-  ): Promise<EntitlementResponse[]> {
-    return this.entitlementsService.getStudentEntitlements(studentId);
+    @Query() query?: PaginationQueryDto,
+  ) {
+    return this.entitlementsService.getStudentEntitlements(studentId, query);
   }
 }
+

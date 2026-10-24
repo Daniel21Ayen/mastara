@@ -234,4 +234,33 @@ export class DevicesService {
       lastSeenAt: binding.last_seen_at,
     };
   }
+
+  async listDevices(query?: any): Promise<any> {
+    const page = Math.max(1, query?.page ?? 1);
+    const pageSize = Math.min(100, Math.max(1, query?.pageSize ?? 10));
+    const skip = (page - 1) * pageSize;
+    const [total, items] = await Promise.all([
+      this.prisma.deviceBinding.count(),
+      this.prisma.deviceBinding.findMany({
+        skip,
+        take: pageSize,
+        orderBy: [{ created_at: "desc" }, { id: "asc" }],
+        include: {
+          student: {
+            select: { id: true, student_code: true, first_name: true, last_name: true },
+          },
+        },
+      }),
+    ]);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    return {
+      items,
+      page,
+      pageSize,
+      total,
+      totalPages,
+      pageCount: totalPages,
+    };
+  }
 }
+

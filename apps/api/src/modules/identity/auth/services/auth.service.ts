@@ -49,6 +49,30 @@ export class AuthService {
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
     const { isEmail, normalized } = this.normalizeIdentifier(dto.identifier);
 
+    // 1. Idempotency Check: if localAccountId was provided, check if already registered
+    if (dto.localAccountId) {
+      const existingById = await this.prisma.student.findUnique({
+        where: { id: dto.localAccountId },
+      });
+      if (existingById) {
+        const identifier = existingById.email || existingById.phone || dto.identifier;
+        const token = this.jwtService.sign({
+          sub: existingById.id,
+          role: existingById.role,
+          identifier,
+        });
+        return {
+          user: {
+            id: existingById.id,
+            name: `${existingById.first_name} ${existingById.last_name}`.trim(),
+            identifier,
+          },
+          token,
+        };
+      }
+    }
+
+    // 2. Phone / Email collision check
     const existingStudent = await this.prisma.student.findFirst({
       where: {
         OR: [
@@ -60,25 +84,60 @@ export class AuthService {
     });
 
     if (existingStudent) {
-      throw new ConflictException("A student with this phone or email already exists");
+      throw new ConflictException({
+        statusCode: 409,
+        errorCode: "PHONE_COLLISION",
+        message: "A student with this phone number or email is already registered. Please sign in or contact an administrator.",
+      });
     }
 
     const nameParts = dto.name.trim().split(/\s+/);
     const firstName = nameParts[0] || "Student";
     const lastName = nameParts.slice(1).join(" ") || "User";
-
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    const student = await this.prisma.student.create({
-      data: {
-        first_name: firstName,
-        last_name: lastName,
-        email: isEmail ? normalized : null,
-        phone: !isEmail ? normalized : null,
-        password_hash: passwordHash,
-        role: Role.STUDENT,
-        status: StudentStatus.ACTIVE,
-      },
+    // 3. Gapless MS ID creation inside an atomic PostgreSQL transaction
+    // If the transaction fails, the counter rolls back with it, guaranteeing no gaps!
+    const student = await this.prisma.$transaction(async (tx) => {
+      // Ensure counters table and counter row exist
+      await tx.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS counters (
+          name VARCHAR(64) PRIMARY KEY,
+          value BIGINT NOT NULL DEFAULT 0
+        );
+      `);
+      await tx.$executeRawUnsafe(`
+        INSERT INTO counters (name, value)
+        VALUES ('student_ms_code', 0)
+        ON CONFLICT (name) DO NOTHING;
+      `);
+
+      // Atomically increment counter with row-level lock
+      const counterRows: any = await tx.$queryRawUnsafe(`
+        UPDATE counters
+        SET value = value + 1
+        WHERE name = 'student_ms_code'
+        RETURNING value;
+      `);
+
+      const rawVal = counterRows?.[0]?.value ?? 1n;
+      const nextVal = Number(rawVal);
+      // Format: MS + at least 4 digits (e.g. MS0001, MS9999, widening to MS10000 past 9999)
+      const studentCode = `MS${nextVal.toString().padStart(4, "0")}`;
+
+      return tx.student.create({
+        data: {
+          ...(dto.localAccountId ? { id: dto.localAccountId } : {}),
+          student_code: studentCode,
+          first_name: firstName,
+          last_name: lastName,
+          email: isEmail ? normalized : null,
+          phone: !isEmail ? normalized : null,
+          password_hash: passwordHash,
+          role: Role.STUDENT,
+          status: StudentStatus.ACTIVE,
+        },
+      });
     });
 
     try {
@@ -86,7 +145,7 @@ export class AuthService {
         data: {
           student_id: student.id,
           event_type: SecurityEventType.REGISTER,
-          metadata: { identifier: dto.identifier },
+          metadata: { identifier: dto.identifier, studentCode: student.student_code },
         },
       });
     } catch (e) {
