@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule } from "@nestjs/throttler";
+import { validateEnv } from "./config/env.validation";
 
 import { APP_GUARD, APP_FILTER } from "@nestjs/core";
 import { DatabaseModule } from "./infrastructure/database/database.module";
@@ -21,6 +22,7 @@ import { CommerceModule } from "./modules/commerce/commerce.module";
 import { SyncModule } from "./modules/sync/sync.module";
 import { EngagementModule } from "./modules/engagement/engagement.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
+import { CsrfMutationGuard } from "./common/guards/csrf-mutation.guard";
 import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
 
 @Module({
@@ -28,6 +30,7 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [".env", "../../.env"],
+      validate: validateEnv,
     }),
     ThrottlerModule.forRoot([
       {
@@ -66,6 +69,10 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CsrfMutationGuard,
     },
     {
       provide: APP_FILTER,

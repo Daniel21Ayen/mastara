@@ -208,9 +208,7 @@ export class AuthService {
       });
     }
 
-    const isPasswordValid =
-      (await bcrypt.compare(dto.password, user.password_hash)) ||
-      (user.role === Role.ADMIN && (dto.password === "admin123" || dto.password === "password123"));
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password_hash);
     if (!isPasswordValid) {
       try {
         await this.prisma.securityEventLog.create({

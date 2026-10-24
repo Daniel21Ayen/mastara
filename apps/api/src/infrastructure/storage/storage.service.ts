@@ -28,17 +28,18 @@ export class StorageService {
         this.config.get<string>('MINIO_ACCESS_KEY') ||
         this.config.get<string>('AWS_ACCESS_KEY_ID') ||
         this.config.get<string>('S3_ACCESS_KEY_ID') ||
-        'mastara_admin';
+        '';
       const secretAccessKey =
         this.config.get<string>('MINIO_SECRET_KEY') ||
         this.config.get<string>('AWS_SECRET_ACCESS_KEY') ||
         this.config.get<string>('S3_SECRET_ACCESS_KEY') ||
-        'mastara_minio_pass_2026';
+        '';
       const bucket =
+        this.config.get<string>('S3_PRIVATE_RECEIPTS_BUCKET') ||
         this.config.get<string>('MINIO_BUCKET') ||
         this.config.get<string>('AWS_S3_BUCKET') ||
         this.config.get<string>('S3_BUCKET') ||
-        'mastara-uploads';
+        'mastara-private-receipts';
       const region = this.config.get<string>('MINIO_REGION') || this.config.get<string>('S3_REGION') || 'us-east-1';
 
       this.s3Driver = new S3StorageDriver({

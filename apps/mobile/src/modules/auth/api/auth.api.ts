@@ -1,12 +1,20 @@
 // apps/mobile/src/modules/auth/api/auth.api.ts
 import type { AuthResult, EditAccountInput, LoginInput, RegisterInput, User } from '@mastara/contracts';
-
 import { ERROR_CODES } from '@mastara/domain';
 
 import { env } from '@/core/config/env';
-import { simulateLatency } from '@/core/mock/delay';
 import { ApiError, httpClient, isApiError } from '@/core/network';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
+import {
+  hashPassword,
+  verifyPassword,
+  PasswordHashRecord,
+} from '../lib/offlineCrypto';
+import {
+  checkLockout,
+  recordFailedAttempt,
+  clearLockout,
+} from '../lib/loginLockout';
 
 export interface AuthApi {
   login(input: LoginInput): Promise<AuthResult>;
@@ -15,8 +23,18 @@ export interface AuthApi {
   updateAccount(user: User, input: EditAccountInput): Promise<User>;
 }
 
-// Mock/offline memory
-const users = new Map<string, User>();
+export interface PendingStudentSync {
+  userId: string;
+  name: string;
+  identifier: string;
+  password?: string;               // Legacy plaintext (erased upon first successful login)
+  passwordHash?: PasswordHashRecord; // Cryptographically salted PBKDF2-SHA256 hash
+  profile?: any;
+  purchased?: boolean;
+}
+
+// Development mock memory (Only used in dev when explicitly configured)
+const mockUsers = new Map<string, User>();
 
 function userKey(identifier: string): string {
   return identifier.trim().toLowerCase();
@@ -24,32 +42,15 @@ function userKey(identifier: string): string {
 
 function upsertUser(identifier: string, name?: string): User {
   const key = userKey(identifier);
-  const existing = users.get(key);
+  const existing = mockUsers.get(key);
   const user: User = {
     id: `u-${key}`,
     identifier: identifier.trim(),
     name: name ?? existing?.name ?? key.split('@')[0] ?? key,
   };
-  users.set(key, user);
+  mockUsers.set(key, user);
   return user;
 }
-
-const mockAuthApi: AuthApi = {
-  async updateAccount(user, input) {
-    await simulateLatency();
-    const updated: User = { ...user, name: input.name.trim(), identifier: input.identifier.trim() };
-    users.set(userKey(updated.identifier), updated);
-    return updated;
-  },
-  async login({ identifier }) {
-    await simulateLatency();
-    return { user: upsertUser(identifier), token: 'mock-token' };
-  },
-  async register({ identifier, name }) {
-    await simulateLatency();
-    return { user: upsertUser(identifier, name), token: 'mock-token' };
-  },
-};
 
 export const realAuthApi: AuthApi = {
   async login(input) {
@@ -90,78 +91,138 @@ export const realAuthApi: AuthApi = {
   },
 };
 
-export interface PendingStudentSync {
-  userId: string;
-  name: string;
-  identifier: string;
-  password: string;
-  profile?: any;
-  purchased?: boolean;
+/**
+ * Verify account password offline:
+ * Supports modern salted PBKDF2-SHA256 and migrates legacy plaintext passwords on successful login.
+ */
+async function verifyOfflineAccountPassword(
+  inputPassword: string,
+  account: PendingStudentSync,
+  onMigrated?: () => Promise<void>,
+): Promise<boolean> {
+  // Case 1: Modern salted PBKDF2 hash
+  if (account.passwordHash) {
+    return verifyPassword(inputPassword, account.passwordHash);
+  }
+
+  // Case 2: Legacy plaintext password migration
+  if (account.password && typeof account.password === 'string') {
+    if (account.password === inputPassword) {
+      // Migrate immediately to salted PBKDF2 hash and erase plaintext password permanently
+      account.passwordHash = await hashPassword(inputPassword);
+      delete account.password;
+      if (onMigrated) {
+        await onMigrated();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  return false;
 }
 
 export const authApi: AuthApi = {
   login: async (input) => {
     const norm = input.identifier.trim().toLowerCase();
 
-    // 1. Check local offline accounts registry
+    // 1. Enforce attempt lockout with backoff
+    const { locked, remainingSeconds } = await checkLockout(input.identifier);
+    if (locked) {
+      throw new ApiError(
+        ERROR_CODES.UNAUTHORIZED,
+        `Too many failed login attempts. Please wait ${remainingSeconds} seconds before trying again.`,
+      );
+    }
+
+    // 2. Check local offline accounts registry
     const registry =
       (await secureStorage.getJson<Record<string, PendingStudentSync>>(STORAGE_KEYS.offlineUsers)) || {};
     const localAccount = registry[norm];
 
     // If student registered offline and has not yet purchased content
     if (localAccount && !localAccount.purchased) {
-      if (localAccount.password === input.password) {
+      const isValid = await verifyOfflineAccountPassword(input.password, localAccount, async () => {
+        // Save migrated account back to secure storage with plaintext erased
+        registry[norm] = localAccount;
+        await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
+        await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, localAccount);
+      });
+
+      if (isValid) {
+        await clearLockout(input.identifier);
         const user = upsertUser(localAccount.identifier, localAccount.name);
         await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, localAccount);
         return { user, token: 'local-offline-token' };
       }
-      throw new ApiError(ERROR_CODES.UNAUTHORIZED);
+
+      await recordFailedAttempt(input.identifier);
+      throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Invalid credentials');
     }
 
-    // 2. Also check pendingRemoteSync directly
-    const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
-    if (pendingSync && pendingSync.identifier.trim().toLowerCase() === norm && !pendingSync.purchased) {
-      if (pendingSync.password === input.password) {
-        const user = upsertUser(pendingSync.identifier, pendingSync.name);
-        return { user, token: 'local-offline-token' };
-      }
-      throw new ApiError(ERROR_CODES.UNAUTHORIZED);
-    }
-
-    // 3. Central database login (for purchased accounts or online checks)
+    // 3. Central database login via TLS (online check)
     if (!env.useMocks) {
       try {
-        return await realAuthApi.login(input);
+        const result = await realAuthApi.login(input);
+        await clearLockout(input.identifier);
+        return result;
       } catch (err) {
         if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
-          // If offline, check last cached session or offline registry
-          if (localAccount && localAccount.password === input.password) {
-            const user = upsertUser(localAccount.identifier, localAccount.name);
-            return { user, token: 'cached-offline-token' };
+          // If network is offline, check cached session with verified offline account
+          if (localAccount) {
+            const isValid = await verifyOfflineAccountPassword(input.password, localAccount, async () => {
+              registry[norm] = localAccount;
+              await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
+            });
+
+            if (isValid) {
+              await clearLockout(input.identifier);
+              const user = upsertUser(localAccount.identifier, localAccount.name);
+              return { user, token: 'cached-offline-token' };
+            }
           }
+
+          // Check cached session
           const session = await secureStorage.getJson<{ user: User }>(STORAGE_KEYS.session);
           if (session?.user && session.user.identifier.trim().toLowerCase() === norm) {
-            return { user: session.user, token: 'cached-offline-token' };
+            // Note: If no hashed offline credentials match, offline login must NOT succeed
+            await recordFailedAttempt(input.identifier);
+            throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Invalid offline credentials');
           }
-          return mockAuthApi.login(input);
+
+          // NO mockAuthApi fallback when offline!
+          await recordFailedAttempt(input.identifier);
+          throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Offline credentials verification failed');
         }
+
+        // If online error (e.g. wrong password from server), record failure
+        await recordFailedAttempt(input.identifier);
         throw err;
       }
     }
 
-    return mockAuthApi.login(input);
+    // Dev mock mode only (only when env.useMocks is explicitly true in development)
+    if (__DEV__ && env.useMocks) {
+      return { user: upsertUser(input.identifier), token: 'mock-token' };
+    }
+
+    throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Invalid credentials');
   },
+
   register: async (input) => {
     const norm = input.identifier.trim().toLowerCase();
     const user = upsertUser(input.identifier, input.name);
 
-    // Store credentials locally for lazy database sync when student buys paid courses.
-    // In accordance with policy, student details are not pushed to central DB until purchase.
+    // Compute cryptographically secure salted PBKDF2 hash
+    const passwordHash = await hashPassword(input.password);
+
+    // Store credentials locally with NO plaintext password.
+    // When the student purchases, the password is provided over TLS to server directly.
     const record: PendingStudentSync = {
       userId: user.id,
       name: input.name.trim(),
       identifier: input.identifier.trim(),
-      password: input.password,
+      passwordHash,
       purchased: false,
     };
 
@@ -174,6 +235,7 @@ export const authApi: AuthApi = {
 
     return { user, token: 'offline-registered-token' };
   },
+
   updateAccount: async (user, input) => {
     const norm = user.identifier.trim().toLowerCase();
     const updatedUser = {
@@ -199,9 +261,11 @@ export const authApi: AuthApi = {
       return updatedUser;
     }
 
-    if (env.useMocks) {
-      return mockAuthApi.updateAccount(user, input);
+    if (__DEV__ && env.useMocks) {
+      mockUsers.set(userKey(updatedUser.identifier), updatedUser);
+      return updatedUser;
     }
+
     return realAuthApi.updateAccount(user, input);
   },
 };
