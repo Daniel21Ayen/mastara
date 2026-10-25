@@ -112,3 +112,52 @@ test('parseBulkQuestions: parses JSON array of questions', () => {
   assert.strictEqual(result.questions[0]!.id, 'CHEM-01');
   assert.strictEqual(result.questions[0]!.correctOption, 0);
 });
+
+test('parseBulkQuestions: FR-G50 rejects files starting with %PDF or PK (zip/xlsx)', () => {
+  const fakePdf = '%PDF-1.4\n1 0 obj\n<< /Title (Renamed PDF) >>\nendobj';
+  const pdfResult = parseBulkQuestions(fakePdf);
+  assert.strictEqual(pdfResult.totalRows, 0);
+  assert.strictEqual(pdfResult.validRows, 0);
+  assert.strictEqual(pdfResult.errorRows, 1);
+  assert.ok(pdfResult.errors[0]!.message.includes('PDF, Excel (.xlsx) and binary files are rejected'));
+
+  const fakeXlsx = 'PK\x03\x04\x14\x00\x06\x00...';
+  const xlsxResult = parseBulkQuestions(fakeXlsx);
+  assert.strictEqual(xlsxResult.validRows, 0);
+  assert.strictEqual(xlsxResult.errorRows, 1);
+  assert.ok(xlsxResult.errors[0]!.message.includes('PDF, Excel (.xlsx) and binary files are rejected'));
+});
+
+test('parseBulkQuestions: FR-G54 neutralizes spreadsheet formula injection (=, +, -, @)', () => {
+  const csv = [
+    'id,form,topic,prompt,option_a,option_b,correct',
+    'SEC-1,MULTIPLE_CHOICE,"=1+1","+cmd|"" /C calc""!A0","@SUM(1,2)","-alert(1)",A',
+  ].join('\n');
+
+  const result = parseBulkQuestions(csv);
+  assert.strictEqual(result.validRows, 1);
+  const q = result.questions[0]!;
+  assert.strictEqual(q.topic, "'=1+1");
+  assert.strictEqual(q.prompt, "'+cmd|\" /C calc\"!A0");
+  assert.strictEqual(q.options[0], "'@SUM(1,2)");
+  assert.strictEqual(q.options[1], "'-alert(1)");
+});
+
+test('parseBulkQuestions: FR-G55 handles Amharic Unicode, LaTeX with commas and quotes', () => {
+  const csv = [
+    'id,form,topic,prompt,option_a,option_b,correct,explanation',
+    'ETH-01,MULTIPLE_CHOICE,ፊዚክስ,"የኃይል አሃድ (SI unit of force) ምንድን ነው? ቀመሩ $F = m \\cdot a, a \\ge 0$ ነው እና ""ኒውተን"" ይባላል።",ጁል,ኒውተን,B,"ትክክለኛው መልስ ኒውተን (N) ሲሆን $1\\text{ N} = 1\\text{ kg}\\cdot\\text{m/s}^2$ ነው።"',
+  ].join('\n');
+
+  const result = parseBulkQuestions(csv);
+  assert.strictEqual(result.validRows, 1);
+  assert.strictEqual(result.errorRows, 0);
+  const q = result.questions[0]!;
+  assert.strictEqual(q.id, 'ETH-01');
+  assert.strictEqual(q.topic, 'ፊዚክስ');
+  assert.ok(q.prompt.includes('የኃይል አሃድ'));
+  assert.ok(q.prompt.includes('$F = m \\cdot a, a \\ge 0$'));
+  assert.ok(q.prompt.includes('"ኒውተን"'));
+  assert.strictEqual(q.options[1], 'ኒውተን');
+  assert.strictEqual(q.correctOption, 1);
+});

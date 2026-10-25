@@ -33,16 +33,4 @@ export const MOCK_ADMIN_ACCOUNTS: readonly MockAdminAccount[] = [
     },
     password: 'admin123',
   },
-  {
-    user: {
-      id: 'admin-ops-1',
-      name: 'Operations Officer',
-      identifier: 'ops@mastara.demo',
-      role: 'ADMIN',
-      adminRole: 'OPERATIONS_ADMIN',
-      permissions: [...ROLE_PERMISSIONS.OPERATIONS_ADMIN],
-      scopes: [],
-    },
-    password: 'admin123',
-  },
 ];

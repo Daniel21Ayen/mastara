@@ -133,6 +133,27 @@ function parseTrueFalse(val: string | boolean | undefined): boolean | null {
 }
 
 /**
+ * Neutralizes potential CSV formula injection in string cells (FR-G54).
+ * Cells starting with =, +, -, @, or tabs are escaped with a leading single quote.
+ */
+export function neutralizeFormulaInjection(val: string): string {
+  if (!val) return val;
+  const trimmed = val.trim();
+  // Do not neutralize negative numbers if they are strictly numeric values
+  if (/^-[0-9.]+$/.test(trimmed)) {
+    return val;
+  }
+  const firstChar = trimmed[0];
+  if (
+    firstChar &&
+    ('=+@\t\r'.includes(firstChar) || (firstChar === '-' && !/^[0-9]/.test(trimmed.slice(1))))
+  ) {
+    return `'${val}`;
+  }
+  return val;
+}
+
+/**
  * Parses raw CSV text or structured JSON into validated questions.
  */
 export function parseBulkQuestions(input: string | unknown[]): BulkQuestionParseResult {
@@ -144,6 +165,29 @@ export function parseBulkQuestions(input: string | unknown[]): BulkQuestionParse
     const trimmed = input.trim();
     if (!trimmed) {
       return { totalRows: 0, validRows: 0, errorRows: 0, errors: [], questions: [] };
+    }
+
+    // FR-G50: Only CSV is accepted. The server checks content, not extension/MIME.
+    // Content beginning with %PDF or PK (zip, xlsx, docx) is rejected.
+    if (
+      trimmed.startsWith('%PDF') ||
+      trimmed.startsWith('PK\x03\x04') ||
+      trimmed.startsWith('PK')
+    ) {
+      return {
+        totalRows: 0,
+        validRows: 0,
+        errorRows: 1,
+        errors: [
+          {
+            row: 0,
+            field: 'file',
+            message:
+              'Invalid file content: PDF, Excel (.xlsx) and binary files are rejected. Upload UTF-8 CSV only.',
+          },
+        ],
+        questions: [],
+      };
     }
 
     // Try parsing as JSON first if it begins with [ or {
@@ -541,13 +585,13 @@ function validateAndPush(params: ValidateAndPushParams): void {
     questions.push({
       id: rawId,
       form,
-      topic,
-      prompt,
-      options,
+      topic: neutralizeFormulaInjection(topic),
+      prompt: neutralizeFormulaInjection(prompt),
+      options: options.map(neutralizeFormulaInjection),
       correctOption,
       trueIsCorrect,
-      acceptedAnswers,
-      answerDescription: explanation || undefined,
+      acceptedAnswers: acceptedAnswers.map(neutralizeFormulaInjection),
+      answerDescription: explanation ? neutralizeFormulaInjection(explanation) : undefined,
     });
   }
 }

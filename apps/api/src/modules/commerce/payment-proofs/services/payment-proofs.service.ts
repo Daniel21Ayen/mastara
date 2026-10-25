@@ -21,6 +21,8 @@ import {
   PaymentDecisionDto,
   PaymentListQueryDto,
   PaymentListResultDto,
+  RefundDecisionDto,
+  RefundRequestDto,
   SubmitProofDto,
 } from "../dto";
 import { AuditService } from "../../../platform/audit/services/audit.service";
@@ -550,6 +552,161 @@ export class PaymentProofsService {
     }
 
     return this.getAdminPaymentById(proof.id);
+  }
+
+  /**
+   * Operations Admin initiates a refund request with a reason (SRS 5.5, FR-G64).
+   */
+  async requestRefund(
+    adminId: string,
+    id: string,
+    dto: RefundRequestDto,
+  ): Promise<{ success: boolean; status: string; orderId: string; reason: string }> {
+    const proof = await this.prisma.paymentProof.findFirst({
+      where: { OR: [{ id }, { order_id: id }] },
+      include: { order: true },
+    });
+
+    if (!proof || !proof.order) {
+      throw new NotFoundException(`Payment or order not found for ID: ${id}`);
+    }
+
+    if (proof.order.status !== OrderStatus.APPROVED) {
+      throw new ConflictException("Refund can only be requested for APPROVED orders");
+    }
+
+    await this.auditService.log({
+      actorId: adminId,
+      actorRole: Role.ADMIN,
+      action: "REFUND_REQUESTED",
+      targetType: "Order",
+      targetId: proof.order.id,
+      metadata: { reason: dto.reason, requestedBy: adminId },
+    });
+
+    return {
+      success: true,
+      status: "REQUESTED",
+      orderId: proof.order.id,
+      reason: dto.reason,
+    };
+  }
+
+  /**
+   * Super Admin approves or rejects refund (SRS 5.5, FR-G64).
+   * Approval revokes all entitlements for the order, records payout ref, and logs audit events.
+   */
+  async decideRefund(
+    adminId: string,
+    id: string,
+    dto: RefundDecisionDto,
+  ): Promise<{
+    success: boolean;
+    status: string;
+    orderId: string;
+    revokedEntitlementsCount?: number;
+    payoutReference?: string;
+    reason?: string;
+  }> {
+    const proof = await this.prisma.paymentProof.findFirst({
+      where: { OR: [{ id }, { order_id: id }] },
+      include: {
+        order: {
+          include: {
+            entitlements: true,
+            student: true,
+          },
+        },
+      },
+    });
+
+    if (!proof || !proof.order) {
+      throw new NotFoundException(`Payment or order not found for ID: ${id}`);
+    }
+
+    if (proof.order.status !== OrderStatus.APPROVED) {
+      throw new ConflictException("Refund can only be processed for APPROVED orders");
+    }
+
+    if (dto.action === "REJECT") {
+      await this.auditService.log({
+        actorId: adminId,
+        actorRole: Role.ADMIN,
+        action: "REFUND_REJECTED",
+        targetType: "Order",
+        targetId: proof.order.id,
+        metadata: { reason: dto.reason, rejectedBy: adminId },
+      });
+
+      return {
+        success: true,
+        status: "REJECTED",
+        orderId: proof.order.id,
+        reason: dto.reason,
+      };
+    }
+
+    // Approval: revoke all entitlements linked to this order, audit every step
+    const payoutRef = dto.payoutReference || `MANUAL-${Date.now()}`;
+    const reason = dto.reason || "Refund approved";
+
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Revoke entitlements
+      await tx.entitlement.updateMany({
+        where: { order_id: proof.order.id },
+        data: {
+          status: EntitlementStatus.REVOKED,
+          revoked_by: adminId,
+          revoke_reason: reason,
+        },
+      });
+
+      // 2. Mark order as cancelled/refunded
+      await tx.order.update({
+        where: { id: proof.order.id },
+        data: {
+          status: OrderStatus.CANCELLED,
+        },
+      });
+    });
+
+    // Audit logs for refund approval and entitlement revocation
+    await this.auditService.log({
+      actorId: adminId,
+      actorRole: Role.ADMIN,
+      action: "REFUND_APPROVED",
+      targetType: "Order",
+      targetId: proof.order.id,
+      metadata: {
+        payoutReference: payoutRef,
+        reason,
+        studentId: proof.order.student_id,
+      },
+    });
+
+    for (const ent of proof.order.entitlements) {
+      await this.auditService.log({
+        actorId: adminId,
+        actorRole: Role.ADMIN,
+        action: "ENTITLEMENT_REVOKED",
+        targetType: "Entitlement",
+        targetId: ent.id,
+        metadata: {
+          orderId: proof.order.id,
+          courseId: ent.course_id,
+          reason,
+        },
+      });
+    }
+
+    return {
+      success: true,
+      status: "ENTITLEMENT_REVOKED",
+      orderId: proof.order.id,
+      revokedEntitlementsCount: proof.order.entitlements.length,
+      payoutReference: payoutRef,
+      reason,
+    };
   }
 
   // --------------------------------------------------------------------------

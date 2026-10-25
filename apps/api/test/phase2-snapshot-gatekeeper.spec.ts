@@ -18,6 +18,7 @@ import { AttemptsService } from "../src/modules/assessment/attempts/services/att
 import { LearningModule } from "../src/modules/learning/learning.module";
 import { LearningService } from "../src/modules/learning/services/learning.service";
 import { AssessmentModule } from "../src/modules/assessment/assessment.module";
+import { CommonModule } from "../src/common/common.module";
 import { ForbiddenException, HttpStatus } from "@nestjs/common";
 import {
   EntitlementStatus,
@@ -53,6 +54,7 @@ async function runPhase2Tests() {
         envFilePath: [".env", "../../.env"],
       }),
       DatabaseModule,
+      CommonModule,
       RedisModule,
       PushModule,
       CatalogModule,

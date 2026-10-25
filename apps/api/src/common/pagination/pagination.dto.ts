@@ -12,7 +12,7 @@ export class PaginationQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page: number = 1;
+  page?: number = 1;
 
   @ApiPropertyOptional({
     description: "Number of items per page (1 to 100)",
@@ -25,7 +25,7 @@ export class PaginationQueryDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  pageSize: number = 10;
+  pageSize?: number = 10;
 }
 
 export interface PaginatedResult<T> {

@@ -83,49 +83,7 @@ async function main() {
   });
   console.log("  ✅ Demo Academic Admin verified: academic@mastara.demo (admin123)");
 
-  // 1c. Operations Admin: ops@mastara.demo with password admin123
-  await prisma.student.upsert({
-    where: { email: "ops@mastara.demo" },
-    update: {
-      role: Role.ADMIN,
-      admin_role: AdminRole.OPERATIONS_ADMIN,
-      status: StudentStatus.ACTIVE,
-      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
-    },
-    create: {
-      email: "ops@mastara.demo",
-      phone: "+251911000003",
-      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
-      role: Role.ADMIN,
-      admin_role: AdminRole.OPERATIONS_ADMIN,
-      status: StudentStatus.ACTIVE,
-      first_name: "Operations",
-      last_name: "Officer",
-    },
-  });
-  console.log("  ✅ Demo Operations Admin verified: ops@mastara.demo (admin123)");
-
-  // 1d. Enterprise Super admin account: admin@mastara.edu.et with password password123
-  await prisma.student.upsert({
-    where: { email: "admin@mastara.edu.et" },
-    update: {
-      role: Role.ADMIN,
-      admin_role: AdminRole.SUPER_ADMIN,
-      status: StudentStatus.ACTIVE,
-      password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123
-    },
-    create: {
-      email: "admin@mastara.edu.et",
-      phone: "+251911000000",
-      password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123
-      role: Role.ADMIN,
-      admin_role: AdminRole.SUPER_ADMIN,
-      status: StudentStatus.ACTIVE,
-      first_name: "Mastara",
-      last_name: "Super Admin",
-    },
-  });
-  console.log("  ✅ Enterprise admin verified: admin@mastara.edu.et");
+  // Note: Only Super Admin (admin@mastara.demo) and Academic Admin (academic@mastara.demo) are retained per SRS v3.2 configuration.
 
   // ==========================================================================
   // 2. Universities (All 6 National Public Universities)

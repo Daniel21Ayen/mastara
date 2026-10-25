@@ -23,6 +23,8 @@ import {
   PaymentDecisionDto,
   PaymentListQueryDto,
   PaymentListResultDto,
+  RefundDecisionDto,
+  RefundRequestDto,
 } from "../dto";
 
 import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
@@ -63,5 +65,33 @@ export class AdminPaymentsController {
     @Body() decision: PaymentDecisionDto,
   ): Promise<AdminPaymentDto> {
     return this.paymentProofsService.decidePayment(adminId, id, decision);
+  }
+
+  @Post(":id/refund-request")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermission("refunds.request")
+  @ApiOperation({ summary: "Request a refund for an approved order (FR-G64)" })
+  @ApiParam({ name: "id", description: "Payment proof ID or Order ID" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Refund request initiated" })
+  async requestRefund(
+    @CurrentUser("id") adminId: string,
+    @Param("id") id: string,
+    @Body() dto: RefundRequestDto,
+  ) {
+    return this.paymentProofsService.requestRefund(adminId, id, dto);
+  }
+
+  @Post(":id/refund-decide")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermission("refunds.approve")
+  @ApiOperation({ summary: "Approve or reject a refund, revoking entitlements on approval (FR-G64)" })
+  @ApiParam({ name: "id", description: "Payment proof ID or Order ID" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Refund decided" })
+  async decideRefund(
+    @CurrentUser("id") adminId: string,
+    @Param("id") id: string,
+    @Body() dto: RefundDecisionDto,
+  ) {
+    return this.paymentProofsService.decideRefund(adminId, id, dto);
   }
 }

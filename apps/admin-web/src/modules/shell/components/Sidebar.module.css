@@ -55,21 +55,21 @@
 }
 
 .roleSuper {
-  background: rgba(251, 191, 36, 0.18);
-  color: #FBBF24;
-  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
 }
 
 .roleAcademic {
-  background: rgba(59, 130, 246, 0.18);
-  color: #60A5FA;
-  border: 1px solid rgba(59, 130, 246, 0.35);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
 }
 
 .roleOperations {
-  background: rgba(16, 185, 129, 0.18);
-  color: #34D399;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border: 1px solid var(--color-border);
 }
 
 .list {

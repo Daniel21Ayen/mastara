@@ -59,6 +59,7 @@ async function runAdminStudentsTests() {
   const mockStudents: any[] = [
     {
       id: "student-uuid-1",
+      student_code: "MS0001",
       first_name: "Abebe",
       last_name: "Kebede",
       phone: "+251911000001",
@@ -100,6 +101,7 @@ async function runAdminStudentsTests() {
     },
     {
       id: "student-uuid-2",
+      student_code: "MS0002",
       first_name: "Tigist",
       last_name: "Alemu",
       phone: "+251911000002",
@@ -163,7 +165,12 @@ async function runAdminStudentsTests() {
             ) || null
           );
         }
-        return mockStudents.find((s) => s.id === where.id) || null;
+        return (
+          mockStudents.find((s) =>
+            (where?.id && s.id === where.id) ||
+            (where?.student_code && (s.student_code === where.student_code || s.id === where.student_code)),
+          ) || null
+        );
       },
       create: async ({ data }: any) => {
         const created: any = {

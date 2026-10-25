@@ -653,6 +653,23 @@ export class ContentService {
       });
     }
 
+    // Maker–checker policy (FR-G62): A user cannot publish their own work
+    if (beforeStatus !== "PUBLISHED" && input.status === "PUBLISHED" && adminId) {
+      const createLog = await this.prisma.auditLog.findFirst({
+        where: {
+          target_type: "Module",
+          target_id: id,
+          action: "MODULE_CREATED",
+        },
+        orderBy: { created_at: "asc" },
+      });
+      if (createLog && createLog.actor_id === adminId) {
+        throw new ForbiddenException(
+          "Maker–checker policy violation: A user cannot publish their own work (FR-G62).",
+        );
+      }
+    }
+
     const updated = await this.prisma.module.update({
       where: { id },
       data: {
@@ -953,6 +970,23 @@ export class ContentService {
 
     const currentVersion = latest?.version ?? 0;
     const newVersion = nextVersion(currentVersion, input.status);
+
+    // Maker–checker policy (FR-G62): A user cannot publish their own work
+    if (beforeStatus !== "PUBLISHED" && input.status === "PUBLISHED" && adminId) {
+      const createLog = await this.prisma.auditLog.findFirst({
+        where: {
+          target_type: "Note",
+          target_id: id,
+          action: "NOTE_CREATED",
+        },
+        orderBy: { created_at: "asc" },
+      });
+      if (createLog && createLog.actor_id === adminId) {
+        throw new ForbiddenException(
+          "Maker–checker policy violation: A user cannot publish their own work (FR-G62).",
+        );
+      }
+    }
 
     await this.prisma.topic.update({
       where: { id },

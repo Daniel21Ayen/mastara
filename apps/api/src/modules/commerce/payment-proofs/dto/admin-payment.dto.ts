@@ -161,3 +161,26 @@ export class PaymentDecisionDto {
   @IsEnum(["MISMATCH", "UNREADABLE", "DUPLICATE"])
   reason?: "MISMATCH" | "UNREADABLE" | "DUPLICATE";
 }
+
+export class RefundRequestDto {
+  @ApiProperty({ example: "Duplicate payment requested refund within 24h" })
+  @IsString()
+  reason!: string;
+}
+
+export class RefundDecisionDto {
+  @ApiProperty({ enum: ["APPROVE", "REJECT"], example: "APPROVE" })
+  @IsEnum(["APPROVE", "REJECT"])
+  action!: "APPROVE" | "REJECT";
+
+  @ApiPropertyOptional({ example: "Approved per policy" })
+  @IsOptional()
+  @IsString()
+  reason?: string;
+
+  @ApiPropertyOptional({ example: "REF-CBE-98231", description: "Manual bank payout transaction reference" })
+  @IsOptional()
+  @IsString()
+  payoutReference?: string;
+}
+
