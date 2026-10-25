@@ -65,3 +65,30 @@ export function useIsItemDownloaded(unitId: string, courseId?: string): boolean 
   return ids.has(unitId) || (courseId ? ids.has(`COURSE:${courseId}`) : false);
 }
 
+export interface CourseDownloadItem {
+  courseId: string;
+  title: string;
+  bytes: number;
+  count: number;
+}
+
+/** Course downloads with size breakdown per course. */
+export function useCourseDownloads(): CourseDownloadItem[] {
+  const [courses, setCourses] = useState<CourseDownloadItem[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const load = () =>
+      void downloadStore.listCourseDownloads().then((list) => active && setCourses(list));
+    load();
+    const unsubscribe = downloadStore.subscribe(load);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  return courses;
+}
+
+

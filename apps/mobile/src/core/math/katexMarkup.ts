@@ -11,10 +11,27 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-/** One formula to HTML. A formula KaTeX cannot parse is shown as its source text, never as a crash. */
+const formulaCache = new Map<string, string>();
+const MAX_FORMULA_CACHE = 500;
+
+export function clearFormulaCache(): void {
+  formulaCache.clear();
+}
+
+export function getFormulaCacheSize(): number {
+  return formulaCache.size;
+}
+
+
+/** One formula to HTML with in-memory caching for instant first paint and re-renders. */
 export function renderFormula(latex: string, display: boolean): string {
+  const key = `${display ? 'D' : 'I'}:${latex}`;
+  const cached = formulaCache.get(key);
+  if (cached !== undefined) return cached;
+
+  let markup: string;
   try {
-    return renderToString(latex, {
+    markup = renderToString(latex, {
       displayMode: display,
       output: 'html', // no MathML copy: smaller markup, and screen readers use the native label instead
       throwOnError: false,
@@ -23,8 +40,15 @@ export function renderFormula(latex: string, display: boolean): string {
       maxExpand: 1000,
     });
   } catch {
-    return `<span class="m-error">${escapeHtml(latex)}</span>`;
+    markup = `<span class="m-error">${escapeHtml(latex)}</span>`;
   }
+
+  if (formulaCache.size >= MAX_FORMULA_CACHE) {
+    const oldest = formulaCache.keys().next().value;
+    if (oldest !== undefined) formulaCache.delete(oldest);
+  }
+  formulaCache.set(key, markup);
+  return markup;
 }
 
 /** A paragraph (text and formulas) to HTML. Text is escaped; a newline becomes a line break. */

@@ -7,12 +7,14 @@ import { ActivityIndicator, FlatList } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { createStyles, useTheme } from '@/core/theme';
+import { contentApi } from '@/modules/courses/api/content.api';
 import { useScrollList, useVisibleIndex } from '@/shared/hooks';
 import { AppText, ErrorNotice, Screen, TopBar } from '@/shared/ui';
 
 import { LessonPage } from '../components/LessonPage';
 import type { LessonEntry } from '../hooks/useLessonFeed';
 import { useLessonFeed } from '../hooks/useLessonFeed';
+import { readerMemoryCache } from '../store/readerMemoryCache';
 
 /** The tab the student came from decides the language. Anything else falls back to English. */
 function asLang(value: string | undefined): ContentLang {
@@ -40,6 +42,13 @@ export function ReaderScreen() {
     if (settled.current) setCurrent(index);
   });
 
+  // Ephemeral memory: clear body cache when reader unmounts (never written to disk silently)
+  useEffect(() => {
+    return () => {
+      readerMemoryCache.clear();
+    };
+  }, []);
+
   // Start at the lesson the student tapped; the lessons before it are above, one scroll away.
   useEffect(() => {
     if (!data) return;
@@ -61,6 +70,18 @@ export function ReaderScreen() {
 
   const near = current ?? data?.startIndex ?? 0;
 
+  // Prefetch the next chapter body into memory when the current one finishes rendering
+  const handleRendered = useCallback(
+    (renderedIndex: number) => {
+      if (!data) return;
+      const nextLesson = data.lessons[renderedIndex + 1];
+      if (nextLesson && nextLesson.canOpen && !readerMemoryCache.has(nextLesson.topic.id)) {
+        void contentApi.getTopic(nextLesson.topic.id);
+      }
+    },
+    [data],
+  );
+
   const renderItem = useCallback(
     ({ item, index }: { item: LessonEntry; index: number }) => (
       <LessonPage
@@ -71,9 +92,10 @@ export function ReaderScreen() {
         load={Math.abs(index - near) <= 2}
         preloaded={data && item.topic.id === data.first.id ? data.first : null}
         onNext={scrollTo}
+        onRendered={handleRendered}
       />
     ),
-    [data, lang, near, scrollTo],
+    [data, handleRendered, lang, near, scrollTo],
   );
 
   const title = data ? (data.lessons[near]?.topic.title[lang] ?? '') : '';

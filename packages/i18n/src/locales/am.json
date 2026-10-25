@@ -407,6 +407,8 @@
   "downloads.section.exams": "ፈተናዎች (የቀድሞ)",
   "downloads.section.coc": "COC",
   "downloads.kind.note": "ማስታወሻ",
+  "downloads.lowStorage": "የማከማቻ ማስጠንቀቂያ፡ የወረዱ ይዘቶች ከ40 ሜባ አልፈዋል። መተግበሪያውን ከ50 ሜባ በታች ለማቆየት የተጠናቀቁ ኮርሶችን ይሰርዙ።",
+  "downloads.courseSection": "የኮርስ ይዘቶች",
   "profile.downloads": "ውርዶች",
   "error.notDownloaded": "መስመር ላይ አይደሉም እና ይህ አልወረደም። ከበይነመረብ ጋር ይገናኙ፣ ወይም መስመር ላይ ሳሉ ከዝርዝሩ መጀመሪያ ያውርዱት።",
   "material.tab.amharic": "አማርኛ ማስታወሻ",

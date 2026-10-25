@@ -134,6 +134,46 @@ export const downloadStore = {
     }
   },
 
+  /** Total bytes used by downloads for a specific course. */
+  async courseBytes(courseId: string): Promise<number> {
+    try {
+      const db = await getDb();
+      const row = await db.getFirstAsync<{ total: number | null }>(
+        'SELECT SUM(bytes) AS total FROM downloads WHERE user_id = ? AND (course_id = ? OR unit_id = ?)',
+        [dbUser(), courseId, `COURSE:${courseId}`],
+      );
+      return row?.total ?? 0;
+    } catch {
+      return 0;
+    }
+  },
+
+  /** Download sizes grouped by course for storage management. */
+  async listCourseDownloads(): Promise<{ courseId: string; title: string; bytes: number; count: number }[]> {
+    try {
+      const db = await getDb();
+      const rows = await db.getAllAsync<{ course_id: string; title: string; total_bytes: number; count: number }>(
+        `SELECT
+           COALESCE(course_id, REPLACE(unit_id, 'COURSE:', '')) AS course_id,
+           title,
+           SUM(bytes) AS total_bytes,
+           COUNT(*) AS count
+         FROM downloads
+         WHERE user_id = ? AND (course_id IS NOT NULL OR unit_id LIKE 'COURSE:%')
+         GROUP BY COALESCE(course_id, REPLACE(unit_id, 'COURSE:', ''))`,
+        [dbUser()],
+      );
+      return rows.map((r) => ({
+        courseId: r.course_id,
+        title: r.title,
+        bytes: r.total_bytes,
+        count: r.count,
+      }));
+    } catch {
+      return [];
+    }
+  },
+
 
   async remove(unitId: string): Promise<void> {
     const db = await getDb();

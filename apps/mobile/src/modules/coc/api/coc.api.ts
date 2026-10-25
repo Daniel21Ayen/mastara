@@ -33,7 +33,7 @@ export const realCocApi: CocApi = {
 /** The real remote server API. Used to download a COC set. */
 export const cocRemote: CocApi = realCocApi;
 
-import { getLocalCatalogCocSets, parseCatalogMeta } from '@/core/sync';
+import { getLocalCatalogCocSets, parseCatalogMeta } from '@/core/sync/catalogSync';
 
 /**
  * Online first with local catalog SQLite. A COC set session opens offline when downloaded.

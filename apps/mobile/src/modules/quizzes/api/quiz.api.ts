@@ -32,7 +32,7 @@ export const realQuizApi: QuizApi = {
 /** The real remote server API. Used to download a quiz chapter. */
 export const quizRemote: QuizApi = realQuizApi;
 
-import { getLocalCatalogQuizChapters, parseCatalogMeta } from '@/core/sync';
+import { getLocalCatalogQuizChapters, parseCatalogMeta } from '@/core/sync/catalogSync';
 
 /** Online first with local catalog SQLite. A chapter body opens offline when downloaded. */
 export const quizApi = gatewayReads('quiz', quizRemote, {

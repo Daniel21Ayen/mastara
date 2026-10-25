@@ -1,10 +1,12 @@
 // apps/mobile/src/modules/courses/api/content.api.ts
 import type { Topic } from '@mastara/contracts';
-import type { ContentKind } from '@mastara/domain';
+import { ERROR_CODES, type ContentKind } from '@mastara/domain';
 
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { httpClient } from '@/core/network';
-import { getLocalCatalogTopics, parseCatalogMeta } from '@/core/sync';
+import { ApiError, httpClient, isApiError, isOnline } from '@/core/network';
+import { getLocalCatalogTopics, parseCatalogMeta } from '@/core/sync/catalogSync';
+import { myCoursesApi } from '@/modules/my-courses/api/myCourses.api';
+import { readerMemoryCache } from '@/modules/reader/store/readerMemoryCache';
 
 export interface ContentApi {
   /** Modules or notes of a course, in order. */
@@ -18,8 +20,16 @@ export const realContentApi: ContentApi = {
   },
   async getTopic(topicId: string): Promise<Topic | null> {
     try {
-      return await httpClient.get<Topic>(`/content/topics/${encodeURIComponent(topicId)}`);
-    } catch {
+      return await httpClient.get<Topic>(
+        `/content/topics/${encodeURIComponent(topicId)}?fields=id,courseId,kind,number,title,summary,body,isFree`,
+        {
+          headers: { 'Accept-Encoding': 'gzip' },
+        },
+      );
+    } catch (err) {
+      if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
+        throw err;
+      }
       return null;
     }
   },
@@ -28,12 +38,10 @@ export const realContentApi: ContentApi = {
 /** The real remote server API. Used to download lessons. */
 export const contentRemote: ContentApi = realContentApi;
 
-/**
- * Online first with local catalog SQLite: lists come from catalog_item,
- * and individual lesson bodies open offline when saved.
- */
-export const contentApi = gatewayReads('content', contentRemote, {
-  details: ['getTopic'],
+export const topicKey = (topicId: string): string => contentKey('content', 'getTopic', [topicId]);
+
+const baseCatalogGateway = gatewayReads('content', contentRemote, {
+  details: [],
   lists: {
     getTopics: async (courseId: string, kind: ContentKind) => {
       const [localRows, saved] = await Promise.all([
@@ -79,4 +87,57 @@ export const contentApi = gatewayReads('content', contentRemote, {
   },
 });
 
-export const topicKey = (topicId: string): string => contentKey('content', 'getTopic', [topicId]);
+/**
+ * Online first with ephemeral in-memory reader cache:
+ * Online: fetches live from API, keeps in RAM only while reader is open (never writes silent copies to disk).
+ * Offline: reads from downloadStore.getContent. Paid bodies re-check access via offlineAccess & trusted clock.
+ */
+export const contentApi: ContentApi = {
+  getTopics: (courseId: string, kind: ContentKind) => baseCatalogGateway.getTopics(courseId, kind),
+
+  getTopic: async (topicId: string): Promise<Topic | null> => {
+    // 1. In-memory cache hit (0ms latency, RAM-only)
+    const inMemory = readerMemoryCache.get(topicId);
+    if (inMemory) return inMemory;
+
+    // 2. Online: fetch from server, keep in RAM only while reader is open
+    if (isOnline()) {
+      try {
+        const remote = await contentRemote.getTopic(topicId);
+        if (remote) {
+          readerMemoryCache.set(topicId, remote);
+          return remote;
+        }
+      } catch (err) {
+        if (!isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
+          throw err;
+        }
+      }
+    }
+
+    // 3. Offline (or network offline): check downloadStore
+    const key = topicKey(topicId);
+    const saved = await downloadStore.getContent<Topic>(key);
+    if (!saved.found) {
+      if (!isOnline()) {
+        throw new ApiError(ERROR_CODES.CONTENT_NOT_DOWNLOADED);
+      }
+      return null;
+    }
+
+    const topic = saved.value;
+
+    // 4. Offline access verification for paid bodies:
+    // Before showing a paid body, re-check access with offlineAccess and the trusted clock
+    if (!topic.isFree) {
+      const courses = await myCoursesApi.getMyCourses([topic.courseId]);
+      const access = courses[0]?.access ?? 'LOCKED';
+      if (access !== 'PAID') {
+        throw new ApiError(ERROR_CODES.ENTITLEMENT_EXPIRED);
+      }
+    }
+
+    readerMemoryCache.set(topicId, topic);
+    return topic;
+  },
+};

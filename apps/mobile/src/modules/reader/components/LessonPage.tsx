@@ -1,7 +1,7 @@
 // apps/mobile/src/modules/reader/components/LessonPage.tsx
 import type { Topic } from '@mastara/contracts';
 import type { ContentLang } from '@mastara/domain';
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { ActivityIndicator } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
@@ -11,6 +11,7 @@ import { useAsync } from '@/shared/hooks';
 import { AppButton, AppText, Card, ErrorNotice, RichText } from '@/shared/ui';
 
 import type { LessonEntry } from '../hooks/useLessonFeed';
+import { readerMemoryCache } from '../store/readerMemoryCache';
 
 interface LessonPageProps {
   entry: LessonEntry;
@@ -23,19 +24,38 @@ interface LessonPageProps {
   /** The lesson the student tapped is already loaded. */
   preloaded: Topic | null;
   onNext: (index: number) => void;
+  onRendered?: (index: number) => void;
 }
 
 /** One lesson in the continuous reader: its text in this tab's language, then a Next button under it. */
-export const LessonPage = memo(function LessonPage({ entry, index, total, lang, load, preloaded, onNext }: LessonPageProps) {
+export const LessonPage = memo(function LessonPage({
+  entry,
+  index,
+  total,
+  lang,
+  load,
+  preloaded,
+  onNext,
+  onRendered,
+}: LessonPageProps) {
   const theme = useTheme();
   const { t } = useI18n();
   const isLast = index === total - 1;
 
+  const inMemory = readerMemoryCache.get(entry.topic.id);
+  const initialTopic = preloaded ?? inMemory ?? null;
+
   const body = useAsync(
-    !preloaded && load && entry.canOpen ? () => contentApi.getTopic(entry.topic.id) : null,
-    [entry.topic.id, load, entry.canOpen, Boolean(preloaded)],
+    !initialTopic && load && entry.canOpen ? () => contentApi.getTopic(entry.topic.id) : null,
+    [entry.topic.id, load, entry.canOpen, Boolean(initialTopic)],
   );
-  const topic = preloaded ?? body.data;
+  const topic = initialTopic ?? body.data;
+
+  useEffect(() => {
+    if (topic) {
+      onRendered?.(index);
+    }
+  }, [topic, index, onRendered]);
 
   return (
     <Card>

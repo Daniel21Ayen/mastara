@@ -38,7 +38,7 @@ export const realExamApi: ExamApi = {
 /** The real remote server API. Used to download an exam. */
 export const examRemote: ExamApi = realExamApi;
 
-import { getLocalCatalogExams, parseCatalogMeta } from '@/core/sync';
+import { getLocalCatalogExams, parseCatalogMeta } from '@/core/sync/catalogSync';
 
 /** Online first with local catalog SQLite. An exam session opens offline when downloaded. */
 export const examApi = gatewayReads('exam', examRemote, {

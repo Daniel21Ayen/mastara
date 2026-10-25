@@ -13,7 +13,8 @@ import { useTimeAgo } from '@/shared/hooks';
 import { AppButton, AppText, BottomSheet, Card, Icon, IconTile, ProgressBar, Screen, TopBar } from '@/shared/ui';
 import type { IconName } from '@/shared/ui';
 
-import { useDownloadList } from '../hooks/useDownloads';
+import type { CourseDownloadItem } from '../hooks/useDownloads';
+import { useCourseDownloads, useDownloadList } from '../hooks/useDownloads';
 
 const SECTIONS: readonly { kind: DownloadKind; icon: IconName; title: Parameters<ReturnType<typeof useI18n>['t']>[0] }[] = [
   { kind: 'COURSE', icon: 'course', title: 'mycourses.title' },
@@ -31,7 +32,19 @@ export function DownloadsScreen() {
   const router = useRouter();
   const timeAgo = useTimeAgo();
   const { units, totalBytes, loaded } = useDownloadList();
+  const courseDownloads = useCourseDownloads();
   const [deleting, setDeleting] = useState<DownloadedUnit | 'ALL' | null>(null);
+  const [deletingCourse, setDeletingCourse] = useState<CourseDownloadItem | null>(null);
+
+  const LOW_STORAGE_BYTES = 40 * 1024 * 1024; // 40 MB warning threshold
+
+  async function confirmDeleteCourse() {
+    const target = deletingCourse;
+    setDeletingCourse(null);
+    if (target) {
+      await downloadStore.removeCourse(target.courseId);
+    }
+  }
 
   /** The name shown, in the student's language, built from the saved list entry. */
   function nameOf(unit: DownloadedUnit): { title: string; subtitle: string } {
@@ -93,6 +106,19 @@ export function DownloadsScreen() {
     <Screen scroll>
       <TopBar title={t('downloads.title')} onBack={() => router.back()} />
 
+      {totalBytes >= LOW_STORAGE_BYTES ? (
+        <View style={styles.warningCard}>
+          <View style={styles.warningRow}>
+            <Icon name="flag" size={24} color={theme.colors.danger} />
+            <View style={styles.flex}>
+              <AppText bold color={theme.colors.danger}>
+                {t('downloads.lowStorage')}
+              </AppText>
+            </View>
+          </View>
+        </View>
+      ) : null}
+
       <Card>
         <View style={styles.summary}>
           <IconTile icon="download" accent="blue" solid size={48} />
@@ -110,6 +136,35 @@ export function DownloadsScreen() {
           <AppButton label={t('downloads.deleteAll')} variant="danger" onPress={() => setDeleting('ALL')} />
         ) : null}
       </Card>
+
+      {courseDownloads.length > 0 ? (
+        <View style={styles.section}>
+          <AppText bold accessibilityRole="header">
+            {t('downloads.courseSection')}
+          </AppText>
+          {courseDownloads.map((course) => (
+            <View key={course.courseId} style={styles.row}>
+              <IconTile icon="course" accent="blue" />
+              <View style={styles.flex}>
+                <AppText bold>{course.title}</AppText>
+                <AppText variant="caption" muted>
+                  {`${formatBytes(course.bytes)} · ${course.count} ${course.count === 1 ? 'item' : 'items'}`}
+                </AppText>
+              </View>
+              <Icon name="check" size={20} color={theme.colors.primary} />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('downloads.delete')}
+                hitSlop={8}
+                onPress={() => setDeletingCourse(course)}
+                style={styles.trash}
+              >
+                <Icon name="trash" size={22} color={theme.colors.danger} />
+              </Pressable>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       {loaded && units.length === 0 ? <AppText muted>{t('downloads.empty')}</AppText> : null}
 
@@ -153,6 +208,16 @@ export function DownloadsScreen() {
       })}
 
       <BottomSheet
+        visible={deletingCourse !== null}
+        title={deletingCourse ? `${t('download.delete.title')} (${deletingCourse.title})` : ''}
+        onClose={() => setDeletingCourse(null)}
+      >
+        <AppText muted>{t('download.delete.body')}</AppText>
+        <AppButton label={t('download.delete.confirm')} variant="danger" onPress={() => void confirmDeleteCourse()} />
+        <AppButton label={t('common.cancel')} variant="outline" onPress={() => setDeletingCourse(null)} />
+      </BottomSheet>
+
+      <BottomSheet
         visible={deleting !== null}
         title={deleting === 'ALL' ? t('downloads.deleteAll.title') : t('download.delete.title')}
         onClose={() => setDeleting(null)}
@@ -169,6 +234,19 @@ const useStyles = createStyles((theme) => ({
   flex: { flex: 1, gap: 2 },
   summary: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
   section: { gap: theme.spacing.sm },
+  warningCard: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.danger,
+    borderWidth: 1,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
+  },
+  warningRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
   row: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
