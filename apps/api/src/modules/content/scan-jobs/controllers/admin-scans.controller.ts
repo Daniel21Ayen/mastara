@@ -20,9 +20,6 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { RolesGuard } from "../../../../common/guards/roles.guard";
-import { Roles } from "../../../../common/decorators/roles.decorator";
 import { Public } from "../../../../common/decorators/public.decorator";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
 import { AdminScansService } from "../services/admin-scans.service";
@@ -37,10 +34,11 @@ import type {
   ScanListResult,
 } from "@mastara/contracts";
 
+import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
+
 @ApiTags("Admin Scan to PDF Management")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@RequirePermission("scans.write")
 @Controller("content/admin/scans")
 export class AdminScansController {
   constructor(private readonly scansService: AdminScansService) {}

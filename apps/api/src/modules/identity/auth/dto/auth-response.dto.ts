@@ -22,6 +22,20 @@ export class AuthResponseDto {
   token!: string;
 }
 
+export class AdminScopeDto {
+  @ApiProperty({ example: "e305e9fa-7e5c-4d54-a3f2-10f76378e901" })
+  id?: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  universityId?: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  programId?: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  courseId?: string | null;
+}
+
 export class AdminUserDto {
   @ApiProperty({ example: "e305e9fa-7e5c-4d54-a3f2-10f76378e901", description: "Unique admin UUID" })
   id!: string;
@@ -34,6 +48,15 @@ export class AdminUserDto {
 
   @ApiProperty({ example: "ADMIN", description: "Role, always ADMIN for admin portal" })
   role!: "ADMIN";
+
+  @ApiProperty({ example: "SUPER_ADMIN", enum: ["SUPER_ADMIN", "ACADEMIC_ADMIN", "OPERATIONS_ADMIN"] })
+  adminRole!: "SUPER_ADMIN" | "ACADEMIC_ADMIN" | "OPERATIONS_ADMIN";
+
+  @ApiProperty({ example: ["*"], description: "List of granted permissions" })
+  permissions!: string[];
+
+  @ApiProperty({ type: [AdminScopeDto], required: false })
+  scopes?: AdminScopeDto[];
 }
 
 export class AdminAuthResponseDto {

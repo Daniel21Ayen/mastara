@@ -9,6 +9,7 @@ import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
 import { Role, StudentStatus, SecurityEventType } from "@mastara/database";
+import { getPermissionsForRole } from "@mastara/domain";
 import { RegisterDto, LoginDto, AuthResponseDto, AdminAuthResponseDto } from "../dto";
 
 export interface NormalizedIdentifier {
@@ -257,6 +258,9 @@ export class AuthService {
           { phone: dto.identifier.trim() },
         ],
       },
+      include: {
+        admin_scopes: true,
+      },
     });
 
     if (!user) {
@@ -323,12 +327,23 @@ export class AuthService {
       identifier,
     });
 
+    const adminRole = (user.admin_role || "SUPER_ADMIN") as "SUPER_ADMIN" | "ACADEMIC_ADMIN" | "OPERATIONS_ADMIN";
+    const permissions = [...getPermissionsForRole(adminRole)];
+
     return {
       user: {
         id: user.id,
         name: `${user.first_name} ${user.last_name}`.trim(),
         identifier,
         role: "ADMIN",
+        adminRole,
+        permissions,
+        scopes: user.admin_scopes?.map((s) => ({
+          id: s.id,
+          universityId: s.university_id,
+          programId: s.program_id,
+          courseId: s.course_id,
+        })) ?? [],
       },
       token,
     };

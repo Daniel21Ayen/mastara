@@ -7,12 +7,22 @@ import { loginSchema } from './auth';
 /** Admin sign-in uses the same email-or-phone and password rules as the student app. */
 export const adminLoginSchema = loginSchema;
 
+export const adminScopeSchema = z.object({
+  id: z.string().optional(),
+  universityId: z.string().nullable().optional(),
+  programId: z.string().nullable().optional(),
+  courseId: z.string().nullable().optional(),
+});
+
 export const adminUserSchema = z.object({
   id: z.string(),
   name: z.string(),
   identifier: z.string(),
   /** Always ADMIN: the server decides the role, the client only displays it. */
   role: z.literal('ADMIN'),
+  adminRole: z.enum(['SUPER_ADMIN', 'ACADEMIC_ADMIN', 'OPERATIONS_ADMIN']),
+  permissions: z.array(z.string()),
+  scopes: z.array(adminScopeSchema).optional(),
 });
 
 export const adminAuthResultSchema = z.object({

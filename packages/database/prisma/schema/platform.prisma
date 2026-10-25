@@ -75,11 +75,12 @@ model SupportMessage {
 }
 
 model AuditLog {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  actor_id    String   @db.Uuid
-  actor_role  Role
-  action      String
-  target_type String
+  id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actor_id         String     @db.Uuid
+  actor_role       Role
+  actor_admin_role AdminRole?
+  action           String
+  target_type      String
   target_id   String
   metadata    Json?    @db.JsonB
   ip_address  String?

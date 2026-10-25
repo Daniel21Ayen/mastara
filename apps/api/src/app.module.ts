@@ -10,6 +10,7 @@ import { PushModule } from "./infrastructure/push/push.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
 import { RedisModule } from "./infrastructure/redis/redis.module";
 import { MonitoringModule } from "./common/monitoring/monitoring.module";
+import { CommonModule } from "./common/common.module";
 import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { HealthModule } from "./modules/platform/health/health.module";
 import { AuditModule } from "./modules/platform/audit/audit.module";
@@ -25,9 +26,11 @@ import { CommerceModule } from "./modules/commerce/commerce.module";
 import { SyncModule } from "./modules/sync/sync.module";
 import { EngagementModule } from "./modules/engagement/engagement.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
+import { PermissionsGuard } from "./common/guards/permissions.guard";
 import { CsrfMutationGuard } from "./common/guards/csrf-mutation.guard";
 import { ThrottlerUserGuard } from "./common/guards/throttler-user.guard";
 import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
+import { ScopeService } from "./common/services/scope.service";
 
 @Module({
   imports: [
@@ -44,6 +47,7 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     ]),
 
     MonitoringModule,
+    CommonModule,
     DatabaseModule,
     RedisModule,
     StorageModule,
@@ -82,6 +86,10 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     },
     {
       provide: APP_GUARD,
+      useClass: PermissionsGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: CsrfMutationGuard,
     },
     {
@@ -92,6 +100,7 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
+    ScopeService,
   ],
 })
 export class AppModule {}

@@ -1,5 +1,6 @@
 import {
   Role,
+  AdminRole,
   Stream,
   ProductType,
   StreamScope,
@@ -34,15 +35,16 @@ async function main() {
   console.log("🌱 Starting Comprehensive Mastara Seed Enrichment for All System Pages...\n");
 
   // ==========================================================================
-  // 1. System Users (Admin Accounts & Demo Students)
+  // 1. System Users (Admin Accounts & Demo Students per SRS v3.2 D20)
   // ==========================================================================
   console.log("--- 1. Seeding Admin & Student Users ---");
 
-  // Primary demo admin account: admin@mastara.demo with password admin123
+  // 1a. Super Admin: admin@mastara.demo with password admin123
   const adminDemo = await prisma.student.upsert({
     where: { email: "admin@mastara.demo" },
     update: {
       role: Role.ADMIN,
+      admin_role: AdminRole.SUPER_ADMIN,
       status: StudentStatus.ACTIVE,
       password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
     },
@@ -51,18 +53,64 @@ async function main() {
       phone: "+251911000001",
       password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
       role: Role.ADMIN,
+      admin_role: AdminRole.SUPER_ADMIN,
       status: StudentStatus.ACTIVE,
-      first_name: "Mastara",
+      first_name: "Super",
       last_name: "Admin",
     },
   });
-  console.log("  ✅ Demo admin verified: admin@mastara.demo (admin123 / password123)");
+  console.log("  ✅ Demo Super Admin verified: admin@mastara.demo (admin123)");
 
-  // Super admin account: admin@mastara.edu.et with password password123
-  const adminEdu = await prisma.student.upsert({
+  // 1b. Academic Admin: academic@mastara.demo with password admin123
+  await prisma.student.upsert({
+    where: { email: "academic@mastara.demo" },
+    update: {
+      role: Role.ADMIN,
+      admin_role: AdminRole.ACADEMIC_ADMIN,
+      status: StudentStatus.ACTIVE,
+      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
+    },
+    create: {
+      email: "academic@mastara.demo",
+      phone: "+251911000002",
+      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
+      role: Role.ADMIN,
+      admin_role: AdminRole.ACADEMIC_ADMIN,
+      status: StudentStatus.ACTIVE,
+      first_name: "Academic",
+      last_name: "Coordinator",
+    },
+  });
+  console.log("  ✅ Demo Academic Admin verified: academic@mastara.demo (admin123)");
+
+  // 1c. Operations Admin: ops@mastara.demo with password admin123
+  await prisma.student.upsert({
+    where: { email: "ops@mastara.demo" },
+    update: {
+      role: Role.ADMIN,
+      admin_role: AdminRole.OPERATIONS_ADMIN,
+      status: StudentStatus.ACTIVE,
+      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
+    },
+    create: {
+      email: "ops@mastara.demo",
+      phone: "+251911000003",
+      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
+      role: Role.ADMIN,
+      admin_role: AdminRole.OPERATIONS_ADMIN,
+      status: StudentStatus.ACTIVE,
+      first_name: "Operations",
+      last_name: "Officer",
+    },
+  });
+  console.log("  ✅ Demo Operations Admin verified: ops@mastara.demo (admin123)");
+
+  // 1d. Enterprise Super admin account: admin@mastara.edu.et with password password123
+  await prisma.student.upsert({
     where: { email: "admin@mastara.edu.et" },
     update: {
       role: Role.ADMIN,
+      admin_role: AdminRole.SUPER_ADMIN,
       status: StudentStatus.ACTIVE,
       password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123
     },
@@ -71,6 +119,7 @@ async function main() {
       phone: "+251911000000",
       password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123
       role: Role.ADMIN,
+      admin_role: AdminRole.SUPER_ADMIN,
       status: StudentStatus.ACTIVE,
       first_name: "Mastara",
       last_name: "Super Admin",

@@ -1,20 +1,17 @@
-import { Controller, Get, HttpCode, HttpStatus, Query, UseGuards } from "@nestjs/common";
+import { Controller, Get, HttpCode, HttpStatus, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { Roles } from "../../../../common/decorators/roles.decorator";
-import { RolesGuard } from "../../../../common/guards/roles.guard";
+import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
 import { AuditService } from "../services/audit.service";
 import { AuditEntryDto, QueryAuditLogsDto } from "../dto";
 
 @ApiTags("Platform: Audit Logs")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
+@RequirePermission("audit.read")
 @Controller("platform/admin/audit")
 export class AdminAuditController {
   constructor(private readonly auditService: AuditService) {}
 
   @Get()
-  @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Get attention-required audit logs with filtering (database storage conserved)",
@@ -29,7 +26,6 @@ export class AdminAuditController {
   }
 
   @Get("attention")
-  @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Get top recent attention-required audit entries for profile drawer and quick alerts",

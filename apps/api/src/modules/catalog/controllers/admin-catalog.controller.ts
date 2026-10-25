@@ -9,7 +9,6 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -18,10 +17,9 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { Roles } from "../../../common/decorators/roles.decorator";
-import { RolesGuard } from "../../../common/guards/roles.guard";
+import { RequirePermission } from "../../../common/decorators/require-permission.decorator";
 import { CurrentUser } from "../../../common/decorators/current-user.decorator";
+import { ScopeService } from "../../../common/services/scope.service";
 import { CatalogService } from "../services/catalog.service";
 import {
   AdminCourseDto,
@@ -41,15 +39,17 @@ import { PaginationQueryDto } from "../../../common/pagination";
 
 @ApiTags("Admin: Academic Catalog")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
 @Controller("catalog/admin")
 export class AdminCatalogController {
-  constructor(private readonly catalogService: CatalogService) {}
+  constructor(
+    private readonly catalogService: CatalogService,
+    private readonly scopeService: ScopeService,
+  ) {}
 
   // ---- Universities ----
 
   @Get("universities")
+  @RequirePermission("catalog.read")
   @ApiOperation({ summary: "List all universities for admin catalog with optional pagination" })
   @ApiResponse({ status: HttpStatus.OK, type: [AdminUniversityDto] })
   async listUniversities(@Query() query?: PaginationQueryDto) {
@@ -57,8 +57,9 @@ export class AdminCatalogController {
   }
 
   @Post("universities")
+  @RequirePermission("catalog.write")
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: "Create a new university" })
+  @ApiOperation({ summary: "Create a new university (Super Admin only)" })
   @ApiResponse({ status: HttpStatus.CREATED, type: AdminUniversityDto })
   async createUniversity(
     @CurrentUser("id") adminId: string,
@@ -68,7 +69,8 @@ export class AdminCatalogController {
   }
 
   @Put("universities/:id")
-  @ApiOperation({ summary: "Update university details or publish status" })
+  @RequirePermission("catalog.write")
+  @ApiOperation({ summary: "Update university details or publish status (Super Admin only)" })
   @ApiParam({ name: "id", description: "University UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminUniversityDto })
   async updateUniversity(
@@ -80,7 +82,8 @@ export class AdminCatalogController {
   }
 
   @Delete("universities/:id")
-  @ApiOperation({ summary: "Delete an unused university" })
+  @RequirePermission("catalog.write")
+  @ApiOperation({ summary: "Delete an unused university (Super Admin only)" })
   @ApiParam({ name: "id", description: "University UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminUniversityDto })
   async deleteUniversity(
@@ -93,6 +96,7 @@ export class AdminCatalogController {
   // ---- Programs ----
 
   @Get("programs")
+  @RequirePermission("catalog.read")
   @ApiOperation({ summary: "List all programs for admin catalog with optional pagination" })
   @ApiResponse({ status: HttpStatus.OK, type: [AdminProgramDto] })
   async listPrograms(@Query() query?: PaginationQueryDto) {
@@ -100,8 +104,9 @@ export class AdminCatalogController {
   }
 
   @Post("programs")
+  @RequirePermission("catalog.write")
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: "Create a new program and generate its freshman semesters" })
+  @ApiOperation({ summary: "Create a new program and generate its freshman semesters (Super Admin only)" })
   @ApiResponse({ status: HttpStatus.CREATED, type: AdminProgramDto })
   async createProgram(
     @CurrentUser("id") adminId: string,
@@ -111,7 +116,8 @@ export class AdminCatalogController {
   }
 
   @Put("programs/:id")
-  @ApiOperation({ summary: "Update program name or publish status" })
+  @RequirePermission("catalog.write")
+  @ApiOperation({ summary: "Update program name or publish status (Super Admin only)" })
   @ApiParam({ name: "id", description: "Program UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminProgramDto })
   async updateProgram(
@@ -123,7 +129,8 @@ export class AdminCatalogController {
   }
 
   @Delete("programs/:id")
-  @ApiOperation({ summary: "Delete an unused program" })
+  @RequirePermission("catalog.write")
+  @ApiOperation({ summary: "Delete an unused program (Super Admin only)" })
   @ApiParam({ name: "id", description: "Program UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminProgramDto })
   async deleteProgram(
@@ -136,6 +143,7 @@ export class AdminCatalogController {
   // ---- Semesters ----
 
   @Get("semesters")
+  @RequirePermission("catalog.read")
   @ApiOperation({ summary: "List all semesters for admin catalog with optional pagination" })
   @ApiResponse({ status: HttpStatus.OK, type: [AdminSemesterDto] })
   async listSemesters(@Query() query?: PaginationQueryDto) {
@@ -143,7 +151,8 @@ export class AdminCatalogController {
   }
 
   @Put("semesters/:id")
-  @ApiOperation({ summary: "Update semester publish status" })
+  @RequirePermission("catalog.write")
+  @ApiOperation({ summary: "Update semester publish status (Super Admin only)" })
   @ApiParam({ name: "id", description: "Semester UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminSemesterDto })
   async updateSemester(
@@ -155,7 +164,8 @@ export class AdminCatalogController {
   }
 
   @Delete("semesters/:id")
-  @ApiOperation({ summary: "Delete an unused semester" })
+  @RequirePermission("catalog.write")
+  @ApiOperation({ summary: "Delete an unused semester (Super Admin only)" })
   @ApiParam({ name: "id", description: "Semester UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminSemesterDto })
   async deleteSemester(
@@ -168,15 +178,20 @@ export class AdminCatalogController {
   // ---- Courses ----
 
   @Get("courses")
+  @RequirePermission("catalog.read")
   @ApiOperation({ summary: "List courses with search, filters and pagination" })
   @ApiResponse({ status: HttpStatus.OK, type: CourseListResultDto })
-  async listCourses(@Query() query: CourseListQueryDto): Promise<CourseListResultDto> {
+  async listCourses(
+    @CurrentUser() adminUser: any,
+    @Query() query: CourseListQueryDto,
+  ): Promise<CourseListResultDto> {
     return this.catalogService.listAdminCourses(query);
   }
 
   @Post("courses")
+  @RequirePermission("catalog.write")
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: "Create a new catalog course" })
+  @ApiOperation({ summary: "Create a new catalog course (Super Admin only)" })
   @ApiResponse({ status: HttpStatus.CREATED, type: AdminCourseDto })
   async createCourse(
     @CurrentUser("id") adminId: string,
@@ -186,19 +201,22 @@ export class AdminCatalogController {
   }
 
   @Put("courses/:id")
+  @RequirePermission("course.edit", "catalog.write")
   @ApiOperation({ summary: "Update course metadata, trial items or publish status" })
   @ApiParam({ name: "id", description: "Course UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminCourseDto })
   async updateCourse(
-    @CurrentUser("id") adminId: string,
+    @CurrentUser() adminUser: any,
     @Param("id") id: string,
     @Body() dto: UpdateCourseDto,
   ): Promise<AdminCourseDto> {
-    return this.catalogService.updateAdminCourse(adminId, id, dto);
+    await this.scopeService.assertCourseInScope(adminUser, id);
+    return this.catalogService.updateAdminCourse(adminUser?.id || adminUser, id, dto);
   }
 
   @Delete("courses/:id")
-  @ApiOperation({ summary: "Delete an unused course" })
+  @RequirePermission("catalog.write")
+  @ApiOperation({ summary: "Delete an unused course (Super Admin only)" })
   @ApiParam({ name: "id", description: "Course UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminCourseDto })
   async deleteCourse(

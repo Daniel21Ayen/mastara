@@ -26,9 +26,7 @@ import {
 } from "@nestjs/swagger";
 import type { Response } from "express";
 import * as path from "path";
-import { Role } from "@mastara/database";
-import { RolesGuard } from "../../../common/guards/roles.guard";
-import { Roles } from "../../../common/decorators/roles.decorator";
+import { RequirePermission } from "../../../common/decorators/require-permission.decorator";
 import { CurrentUser } from "../../../common/decorators/current-user.decorator";
 import { StorageService } from "../storage.service";
 import {
@@ -126,8 +124,7 @@ export class StorageController {
    */
   @Post("document")
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @RequirePermission("content.write")
   @UseInterceptors(FileInterceptor("file"))
   @ApiOperation({
     summary: "Upload course document or lecture PDF (Admin only)",
@@ -186,8 +183,7 @@ export class StorageController {
    */
   @Post("scan")
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @RequirePermission("scans.write", "questions.write")
   @UseInterceptors(FileInterceptor("file"))
   @ApiOperation({
     summary: "Upload scanned test paper or question asset (Admin only)",

@@ -42,6 +42,36 @@
   color: var(--color-on-sidebar-subtle);
 }
 
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  width: fit-content;
+}
+
+.roleSuper {
+  background: rgba(251, 191, 36, 0.18);
+  color: #FBBF24;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.roleAcademic {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.roleOperations {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
 .list {
   display: flex;
   flex-direction: column;

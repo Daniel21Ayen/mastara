@@ -18,9 +18,6 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { RolesGuard } from "../../../common/guards/roles.guard";
-import { Roles } from "../../../common/decorators/roles.decorator";
 import { CurrentUser } from "../../../common/decorators/current-user.decorator";
 import { ContentService } from "../services/content.service";
 import {
@@ -37,12 +34,12 @@ import type {
   AdminNote,
 } from "@mastara/contracts";
 
+import { RequirePermission } from "../../../common/decorators/require-permission.decorator";
 import { PaginationQueryDto } from "../../../common/pagination";
 
 @ApiTags("Admin Content Management")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@RequirePermission("content.write")
 @Controller("content/admin")
 export class AdminContentController {
   constructor(private readonly contentService: ContentService) {}

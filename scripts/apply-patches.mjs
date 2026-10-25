@@ -131,3 +131,16 @@ if (fs.existsSync(sqliteSrcFile)) {
     console.log('[apply-patches] Applied patch to expo-sqlite SQLiteStatement.ts');
   }
 }
+
+// 3. @prisma/config skip c12 when no config file
+const prismaConfigDist = path.join(root, 'node_modules/@prisma/config/dist/index.js');
+if (fs.existsSync(prismaConfigDist)) {
+  let content = fs.readFileSync(prismaConfigDist, 'utf8');
+  const target = 'const selectedConfigFile = configFile ?? findPrisma7ConfigFile(configRoot) ?? void 0;\n    const { configModule, resolvedPath, error } = await loadConfigTsOrJs(configRoot, selectedConfigFile);';
+  const replacement = 'const selectedConfigFile = configFile ?? findPrismaConfigFile(configRoot);\n    if (!selectedConfigFile) {\n      return { resolvedPath: null, config: defaultConfig(), diagnostics };\n    }\n    const { configModule, resolvedPath, error } = await loadConfigTsOrJs(configRoot, selectedConfigFile);';
+  if (content.includes(target)) {
+    fs.writeFileSync(prismaConfigDist, content.replace(target, replacement));
+    console.log('[apply-patches] Applied patch to @prisma/config');
+  }
+}
+

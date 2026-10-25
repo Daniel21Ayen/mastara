@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
-import { Role } from "@mastara/database";
+import { Role, AdminRole } from "@mastara/database";
 import {
   ATTENTION_AUDIT_ACTIONS,
   isAttentionAuditAction,
@@ -13,6 +13,7 @@ import { QueryAuditLogsDto } from "../dto/query-audit-logs.dto";
 export interface WriteAuditLogInput {
   actorId: string;
   actorRole: Role;
+  actorAdminRole?: AdminRole | null;
   action: string;
   targetType: string;
   targetId: string;
@@ -51,6 +52,7 @@ export class AuditService {
         data: {
           actor_id: input.actorId,
           actor_role: input.actorRole,
+          actor_admin_role: input.actorAdminRole ?? null,
           action: input.action,
           target_type: input.targetType,
           target_id: input.targetId,

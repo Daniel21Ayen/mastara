@@ -1,20 +1,17 @@
-import { Controller, Get, HttpCode, HttpStatus, UseGuards } from "@nestjs/common";
+import { Controller, Get, HttpCode, HttpStatus } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { Roles } from "../../../../common/decorators/roles.decorator";
-import { RolesGuard } from "../../../../common/guards/roles.guard";
+import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
 import { DashboardService } from "../services/dashboard.service";
 import { DashboardSummaryDto } from "../dto/dashboard-summary.dto";
 
 @ApiTags("Platform: Dashboard")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
 @Controller("dashboard")
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get("summary")
-  @Roles(Role.ADMIN)
+  @RequirePermission("reports.academic", "reports.ops", "audit.read")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: "Get administrator dashboard KPI cards, registration trends, and activity feed",

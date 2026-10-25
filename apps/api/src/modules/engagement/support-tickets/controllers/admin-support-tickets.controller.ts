@@ -18,9 +18,6 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { Roles } from "../../../../common/decorators/roles.decorator";
-import { RolesGuard } from "../../../../common/guards/roles.guard";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
 import { SupportTicketsService } from "../services/support-tickets.service";
 import {
@@ -29,10 +26,11 @@ import {
   SetTicketStatusDto,
 } from "../dto";
 
+import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
+
 @ApiTags("Admin: Support Tickets")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@RequirePermission("support.reply")
 @Controller("support/admin/tickets")
 export class AdminSupportTicketsController {
   constructor(private readonly ticketsService: SupportTicketsService) {}

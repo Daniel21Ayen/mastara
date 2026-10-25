@@ -26,9 +26,6 @@ import {
   ApiConsumes,
 } from "@nestjs/swagger";
 
-import { Role } from "@mastara/database";
-import { RolesGuard } from "../../../../common/guards/roles.guard";
-import { Roles } from "../../../../common/decorators/roles.decorator";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
 import { AdminTestsService } from "../services/admin-tests.service";
 
@@ -52,10 +49,11 @@ import type {
 
 import type { QuizNumber } from "@mastara/domain";
 
+import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
+
 @ApiTags("Admin Tests Management")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@RequirePermission("questions.write")
 @Controller("assessment/admin")
 export class AdminTestsController {
   constructor(private readonly adminTestsService: AdminTestsService) {}

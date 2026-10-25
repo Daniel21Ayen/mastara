@@ -16,9 +16,6 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { Roles } from "../../../../common/decorators/roles.decorator";
-import { RolesGuard } from "../../../../common/guards/roles.guard";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
 import { PaymentProofsService } from "../services/payment-proofs.service";
 import {
@@ -28,10 +25,11 @@ import {
   PaymentListResultDto,
 } from "../dto";
 
+import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
+
 @ApiTags("Admin: Payments")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@RequirePermission("payments.review")
 @Controller("commerce/payments")
 export class AdminPaymentsController {
   constructor(private readonly paymentProofsService: PaymentProofsService) {}

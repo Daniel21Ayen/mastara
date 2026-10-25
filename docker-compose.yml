@@ -40,7 +40,7 @@ services:
 
   # MinIO Object Storage (S3-compatible) for receipt & scan uploads
   minio:
-    image: quay.io/minio/minio:RELEASE.2024-10-02T01-58-21Z
+    image: pgsty/minio:latest
     container_name: mastara-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -53,7 +53,7 @@ services:
     volumes:
       - mastara_minio_data:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

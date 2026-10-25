@@ -10,6 +10,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "dev": "turbo run dev",
     "dev:mobile": "npm run start --workspace @mastara/mobile",
     "dev:mobile:web": "npm run web --workspace @mastara/mobile",
     "dev:mobile:tunnel": "npm run start:tunnel --workspace @mastara/mobile",
@@ -34,5 +35,11 @@
     "turbo": "^2.0.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.0.0"
+  },
+  "dependencies": {
+    "c12": "^4.0.0-rc.3",
+    "exsolve": "^1.1.3",
+    "node-emoji": "^2.2.0",
+    "picomatch": "^4.0.7"
   }
 }

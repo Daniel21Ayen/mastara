@@ -3,11 +3,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { adminText } from '@/core/i18n';
-import { activeNavId, activeSubNavId, ADMIN_NAV } from '@/core/navigation';
-import type { AdminNavGroup } from '@/core/navigation';
+import { activeNavId, activeSubNavId, ADMIN_NAV, filterAdminNav } from '@/core/navigation';
+import type { AdminNavGroup, AdminNavItem, AdminNavLeaf } from '@/core/navigation';
+import { usePermissions } from '@/core/permissions';
 import { Icon } from '@/shared/ui';
 
 import styles from './Sidebar.module.css';
@@ -21,6 +22,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const activeId = activeNavId(pathname);
   const activeSub = activeSubNavId(pathname);
+  const { can, adminRole } = usePermissions();
+
+  // Dynamic dashboard sidebar: Filter navigation items based on current role permissions
+  const visibleNav = useMemo(() => filterAdminNav(ADMIN_NAV, can), [can]);
+
   // Explicit open/close state. When not explicitly toggled, items default to open when active.
   const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
 
@@ -30,6 +36,20 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const toggle = (id: string, currentlyOpen: boolean) => {
     setExpandedMap((prev) => ({ ...prev, [id]: !currentlyOpen }));
   };
+
+  const roleLabel =
+    adminRole === 'SUPER_ADMIN'
+      ? 'Super Admin'
+      : adminRole === 'ACADEMIC_ADMIN'
+        ? 'Academic Admin'
+        : 'Operations Admin';
+
+  const roleBadgeClass =
+    adminRole === 'SUPER_ADMIN'
+      ? styles.roleSuper
+      : adminRole === 'ACADEMIC_ADMIN'
+        ? styles.roleAcademic
+        : styles.roleOperations;
 
   function renderGroup(group: AdminNavGroup, itemActive: boolean) {
     const open = isItemOpen(group.id, itemActive);
@@ -89,11 +109,14 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <div className={styles.brandText}>
           <p className={styles.name}>{adminText('admin.app.name')}</p>
           <p className={styles.portal}>{adminText('admin.app.portal')}</p>
+          <span className={`${styles.roleBadge} ${roleBadgeClass}`}>
+            {roleLabel}
+          </span>
         </div>
       </div>
       <nav aria-label={adminText('admin.nav.label')}>
         <ul className={styles.list}>
-          {ADMIN_NAV.map((item) => {
+          {visibleNav.map((item: AdminNavItem) => {
             const active = item.id === activeId;
             const hasChildren =
               (item.items && item.items.length > 0) ||
@@ -131,7 +154,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                 {/* Flat direct sub-items (e.g. Questions -> Mid, Final, Mock, COC Exams) */}
                 {item.items && isOpen ? (
                   <ul className={styles.subDirect}>
-                    {item.items.map((leaf) => {
+                    {item.items.map((leaf: AdminNavLeaf) => {
                       const isLeafActive = leaf.id === activeSub;
                       return (
                         <li key={leaf.id}>
@@ -153,7 +176,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                 {/* Grouped sub-items (e.g. Content -> Material, Tests) */}
                 {item.groups && isOpen ? (
                   <ul className={styles.groups}>
-                    {item.groups.map((group) => renderGroup(group, active))}
+                    {item.groups.map((group: AdminNavGroup) => renderGroup(group, active))}
                   </ul>
                 ) : null}
               </li>

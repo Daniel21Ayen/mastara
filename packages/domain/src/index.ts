@@ -38,3 +38,4 @@ export * from './text/bytes';
 export * from './time/timeAgo';
 export * from './uuid/uuidv7';
 export * from './adminExports';
+export * from './permissions';

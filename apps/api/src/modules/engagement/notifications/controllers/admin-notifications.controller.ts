@@ -17,17 +17,14 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { Roles } from "../../../../common/decorators/roles.decorator";
-import { RolesGuard } from "../../../../common/guards/roles.guard";
+import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
 import { CurrentUser, CurrentUserPayload } from "../../../../common/decorators/current-user.decorator";
 import { NotificationsService } from "../services/notifications.service";
 import { SendBroadcastDto } from "../dto";
 
 @ApiTags("Admin: Notifications & Broadcasts")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@RequirePermission("announce.course", "announce.ops")
 @Controller("notifications/admin")
 export class AdminNotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}

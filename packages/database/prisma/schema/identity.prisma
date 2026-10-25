@@ -8,6 +8,12 @@ enum Role {
   ADMIN
 }
 
+enum AdminRole {
+  SUPER_ADMIN
+  ACADEMIC_ADMIN
+  OPERATIONS_ADMIN
+}
+
 enum StudentStatus {
   ACTIVE
   SUSPENDED
@@ -49,6 +55,7 @@ model Student {
   email              String?           @unique
   password_hash      String
   role               Role              @default(STUDENT)
+  admin_role         AdminRole?
   status             StudentStatus     @default(ACTIVE)
   first_name         String
   last_name          String
@@ -81,12 +88,26 @@ model Student {
   support_tickets  SupportTicket[]
   support_messages SupportMessage[]
   security_logs    SecurityEventLog[]
+  admin_scopes     AdminScope[]
 
   @@index([phone])
   @@index([email])
   @@index([role, status])
+  @@index([admin_role])
   @@index([university_id, program_id, semester_id])
   @@map("students")
+}
+
+model AdminScope {
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  admin_id      String  @db.Uuid
+  university_id String? @db.Uuid
+  program_id    String? @db.Uuid
+  course_id     String? @db.Uuid
+  admin         Student @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@index([admin_id])
+  @@map("admin_scopes")
 }
 
 model DeviceBinding {

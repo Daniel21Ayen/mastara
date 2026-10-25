@@ -1,15 +1,48 @@
-// apps/admin-web/src/core/mock/data/adminAccounts.ts
+// apps/admin-web/dev-mocks/data/adminAccounts.ts
 import type { AdminUser } from '@mastara/contracts';
+import { ROLE_PERMISSIONS } from '@mastara/domain';
 
 export interface MockAdminAccount {
   user: AdminUser;
   password: string;
 }
 
-/** The only mock account. Real admin accounts are created on the server in backend phase B2. */
+/** Demo admin accounts matching the three SRS v3.2 D20 roles. */
 export const MOCK_ADMIN_ACCOUNTS: readonly MockAdminAccount[] = [
   {
-    user: { id: 'admin-1', name: 'Admin', identifier: 'admin@mastara.demo', role: 'ADMIN' },
+    user: {
+      id: 'admin-super-1',
+      name: 'Super Admin',
+      identifier: 'admin@mastara.demo',
+      role: 'ADMIN',
+      adminRole: 'SUPER_ADMIN',
+      permissions: [...ROLE_PERMISSIONS.SUPER_ADMIN],
+      scopes: [],
+    },
+    password: 'admin123',
+  },
+  {
+    user: {
+      id: 'admin-academic-1',
+      name: 'Academic Coordinator',
+      identifier: 'academic@mastara.demo',
+      role: 'ADMIN',
+      adminRole: 'ACADEMIC_ADMIN',
+      permissions: [...ROLE_PERMISSIONS.ACADEMIC_ADMIN],
+      scopes: [],
+    },
+    password: 'admin123',
+  },
+  {
+    user: {
+      id: 'admin-ops-1',
+      name: 'Operations Officer',
+      identifier: 'ops@mastara.demo',
+      role: 'ADMIN',
+      adminRole: 'OPERATIONS_ADMIN',
+      permissions: [...ROLE_PERMISSIONS.OPERATIONS_ADMIN],
+      scopes: [],
+    },
     password: 'admin123',
   },
 ];

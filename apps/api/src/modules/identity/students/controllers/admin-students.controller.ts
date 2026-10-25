@@ -7,7 +7,6 @@ import {
   Param,
   Post,
   Query,
-  UseGuards,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -16,9 +15,7 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { Role } from "@mastara/database";
-import { Roles } from "../../../../common/decorators/roles.decorator";
-import { RolesGuard } from "../../../../common/guards/roles.guard";
+import { RequirePermission } from "../../../../common/decorators/require-permission.decorator";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
 import { StudentsService } from "../services/students.service";
 import {
@@ -33,13 +30,13 @@ import {
 
 @ApiTags("Admin: Students")
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Roles(Role.ADMIN)
+@RequirePermission("students.read", "students.support")
 @Controller("identity/students")
 export class AdminStudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
   @Get()
+  @RequirePermission("students.read", "students.support")
   @ApiOperation({ summary: "List students with search, filters and pagination" })
   @ApiResponse({ status: HttpStatus.OK, type: StudentListResultDto })
   async listStudents(@Query() query: StudentListQueryDto): Promise<StudentListResultDto> {
@@ -47,6 +44,7 @@ export class AdminStudentsController {
   }
 
   @Get("options")
+  @RequirePermission("students.read", "students.support")
   @ApiOperation({ summary: "Get published universities, programs and semesters for student filters and creation" })
   @ApiResponse({ status: HttpStatus.OK, type: StudentOptionsDto })
   async getOptions(): Promise<StudentOptionsDto> {
@@ -54,6 +52,7 @@ export class AdminStudentsController {
   }
 
   @Get(":id")
+  @RequirePermission("students.read", "students.support")
   @ApiOperation({ summary: "Get detailed student profile with enrolled courses, device and access state" })
   @ApiParam({ name: "id", description: "Student UUID" })
   @ApiResponse({ status: HttpStatus.OK, type: AdminStudentDetailDto })
@@ -63,6 +62,7 @@ export class AdminStudentsController {
   }
 
   @Post()
+  @RequirePermission("students.support")
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: "Add a new student account" })
   @ApiResponse({ status: HttpStatus.CREATED, type: AdminStudentDetailDto })
@@ -76,6 +76,7 @@ export class AdminStudentsController {
   }
 
   @Post(":id/suspend")
+  @RequirePermission("students.support")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Suspend an active student account" })
   @ApiParam({ name: "id", description: "Student UUID" })
@@ -90,6 +91,7 @@ export class AdminStudentsController {
   }
 
   @Post(":id/reactivate")
+  @RequirePermission("students.support")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Reactivate a suspended student account" })
   @ApiParam({ name: "id", description: "Student UUID" })
@@ -104,6 +106,7 @@ export class AdminStudentsController {
   }
 
   @Post(":id/revoke-device")
+  @RequirePermission("devices.release", "students.support")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Revoke student bound device" })
   @ApiParam({ name: "id", description: "Student UUID" })
@@ -118,6 +121,7 @@ export class AdminStudentsController {
   }
 
   @Post(":id/grant-access")
+  @RequirePermission("entitlements.grantLimited", "students.support")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Grant or extend course access days for a student" })
   @ApiParam({ name: "id", description: "Student UUID" })
