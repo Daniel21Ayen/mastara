@@ -1,4 +1,3 @@
-// packages/domain/src/content/publish.ts
 import type { CatalogStatus } from '../constants/admin';
 
 export interface BilingualParts {

@@ -25,6 +25,12 @@ import {
 import { prisma } from "./client";
 
 async function main() {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_PROD_SEED !== "true") {
+    console.error("🛑 FATAL: Database seeding with default dev passwords is blocked in PRODUCTION.");
+    console.error("To seed in production, set ALLOW_PROD_SEED=true and supply custom hashed credentials via env.");
+    process.exit(1);
+  }
+
   console.log("🌱 Starting Comprehensive Mastara Seed Enrichment for All System Pages...\n");
 
   // ==========================================================================

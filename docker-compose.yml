@@ -25,7 +25,7 @@ services:
     image: docker.io/library/redis:7-alpine
     container_name: mastara-redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-mastara_redis_pass_2026}"]
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "volatile-lru", "--requirepass", "${REDIS_PASSWORD:-mastara_redis_pass_2026}"]
     ports:
       - "${REDIS_HOST_PORT:-6380}:6379"
     volumes:

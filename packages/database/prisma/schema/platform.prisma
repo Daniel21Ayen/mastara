@@ -35,24 +35,24 @@ model Notification {
   data       Json?            @db.JsonB
   created_at DateTime         @default(now()) @db.Timestamptz(6)
 
-  student    Student          @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
   @@index([student_id, is_read, created_at])
   @@map("notifications")
 }
 
 model SupportTicket {
-  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  student_id String           @db.Uuid
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id String       @db.Uuid
   subject    String
-  category   String           @default("GENERAL")
-  priority   String           @default("NORMAL")
-  status     TicketStatus     @default(OPEN)
-  created_at DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at DateTime         @updatedAt @db.Timestamptz(6)
+  category   String       @default("GENERAL")
+  priority   String       @default("NORMAL")
+  status     TicketStatus @default(OPEN)
+  created_at DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at DateTime     @updatedAt @db.Timestamptz(6)
 
-  student    Student          @relation(fields: [student_id], references: [id], onDelete: Cascade)
-  messages   SupportMessage[]
+  student  Student          @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  messages SupportMessage[]
 
   @@index([student_id, status])
   @@index([status, created_at])
@@ -60,15 +60,15 @@ model SupportTicket {
 }
 
 model SupportMessage {
-  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ticket_id   String        @db.Uuid
-  sender_id   String?       @db.Uuid
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticket_id   String   @db.Uuid
+  sender_id   String?  @db.Uuid
   sender_role Role
-  body        String        @db.Text
-  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+  body        String   @db.Text
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
 
-  ticket      SupportTicket @relation(fields: [ticket_id], references: [id], onDelete: Cascade)
-  student     Student?      @relation(fields: [sender_id], references: [id], onDelete: SetNull)
+  ticket  SupportTicket @relation(fields: [ticket_id], references: [id], onDelete: Cascade)
+  student Student?      @relation(fields: [sender_id], references: [id], onDelete: SetNull)
 
   @@index([ticket_id, created_at])
   @@map("support_messages")
@@ -117,4 +117,3 @@ model Broadcast {
   @@index([created_at])
   @@map("broadcasts")
 }
-

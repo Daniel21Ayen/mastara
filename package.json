@@ -21,6 +21,7 @@
     "test": "npm test --workspaces --if-present",
     "dev:admin": "npm run dev --workspace @mastara/admin-web",
     "dev:worker": "npm run dev --workspace=@mastara/worker",
+    "db:migrate:deploy": "npm run migrate:deploy --workspace=@mastara/database",
     "check:mocks": "node scripts/ci-check-mocks.mjs",
     "postinstall": "node scripts/apply-patches.mjs"
   },

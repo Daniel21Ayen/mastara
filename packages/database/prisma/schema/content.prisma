@@ -31,8 +31,8 @@ model Module {
   updated_at     DateTime          @updatedAt @db.Timestamptz(6)
 
   // Relations
-  course         Course            @relation(fields: [course_id], references: [id], onDelete: Cascade)
-  topics         Topic[]
+  course Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  topics Topic[]
 
   @@unique([course_id, code])
   @@index([course_id, status, sort_order])
@@ -40,15 +40,15 @@ model Module {
 }
 
 model Topic {
-  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  module_id        String            @db.Uuid
-  chapter_number   Int
-  title_en         String
-  title_am         String
-  is_free_trial    Boolean           @default(false)
-  sort_order       Int               @default(0)
-  created_at       DateTime          @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime          @updatedAt @db.Timestamptz(6)
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  module_id      String   @db.Uuid
+  chapter_number Int
+  title_en       String
+  title_am       String
+  is_free_trial  Boolean  @default(false)
+  sort_order     Int      @default(0)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @updatedAt @db.Timestamptz(6)
 
   // Relations
   module           Module            @relation(fields: [module_id], references: [id], onDelete: Cascade)
@@ -86,7 +86,7 @@ model Content {
   created_at    DateTime          @default(now()) @db.Timestamptz(6)
   updated_at    DateTime          @updatedAt @db.Timestamptz(6)
 
-  topic         Topic             @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topic_id], references: [id], onDelete: Cascade)
 
   @@unique([topic_id, kind, version])
   @@index([topic_id, status])
@@ -110,7 +110,7 @@ model DocumentAsset {
   created_at      DateTime       @default(now()) @db.Timestamptz(6)
   updated_at      DateTime       @updatedAt @db.Timestamptz(6)
 
-  topic           Topic?         @relation(fields: [topic_id], references: [id], onDelete: SetNull)
+  topic Topic? @relation(fields: [topic_id], references: [id], onDelete: SetNull)
 
   @@index([topic_id, status])
   @@map("document_assets")
@@ -129,9 +129,9 @@ model ScanJob {
   created_at      DateTime      @default(now()) @db.Timestamptz(6)
   updated_at      DateTime      @updatedAt @db.Timestamptz(6)
 
-  course          Course?       @relation(fields: [course_id], references: [id], onDelete: Cascade)
-  topic           Topic?        @relation(fields: [topic_id], references: [id], onDelete: SetNull)
-  pages           ScanPage[]
+  course Course?    @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  topic  Topic?     @relation(fields: [topic_id], references: [id], onDelete: SetNull)
+  pages  ScanPage[]
 
   @@index([course_id, status])
   @@map("scan_jobs")
@@ -147,7 +147,7 @@ model ScanPage {
   checksum_sha256 String?
   created_at      DateTime @default(now()) @db.Timestamptz(6)
 
-  job             ScanJob  @relation(fields: [job_id], references: [id], onDelete: Cascade)
+  job ScanJob @relation(fields: [job_id], references: [id], onDelete: Cascade)
 
   @@unique([job_id, page_no])
   @@index([job_id])
@@ -163,8 +163,8 @@ model ReadingProgress {
   completed_at    DateTime? @db.Timestamptz(6)
   last_read_at    DateTime  @default(now()) @db.Timestamptz(6)
 
-  student         Student   @relation(fields: [student_id], references: [id], onDelete: Cascade)
-  topic           Topic     @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  topic   Topic   @relation(fields: [topic_id], references: [id], onDelete: Cascade)
 
   @@unique([student_id, topic_id])
   @@index([student_id, is_completed])
