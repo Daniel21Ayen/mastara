@@ -38,31 +38,37 @@ services:
     networks:
       - mastara-network
 
-# MinIO is optional for local development (STORAGE_DRIVER=local is active).
-# Uncomment if using S3 object storage driver with custom built image.
-#  minio:
-#    image: quay.io/minio/minio:RELEASE.2024-10-02T01-58-21Z
-#    container_name: mastara-minio
-#    restart: unless-stopped
-#    command: server /data --console-address ":9001"
-#    environment:
-#      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mastara_admin}
-#      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mastara_minio_pass_2026}
-#    ports:
-#      - "${MINIO_API_HOST_PORT:-9002}:9000"
-#      - "${MINIO_CONSOLE_HOST_PORT:-9003}:9001"
-#    volumes:
-#      - mastara_minio_data:/data
-#    networks:
-#      - mastara-network
+  # MinIO Object Storage (S3-compatible) for receipt & scan uploads
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-10-02T01-58-21Z
+    container_name: mastara-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mastara_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mastara_minio_pass_2026}
+    ports:
+      - "${MINIO_API_HOST_PORT:-9002}:9000"
+      - "${MINIO_CONSOLE_HOST_PORT:-9003}:9001"
+    volumes:
+      - mastara_minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mastara-network
 
 volumes:
   mastara_pg_data:
     name: mastara_pg_data
   mastara_redis_data:
     name: mastara_redis_data
-#  mastara_minio_data:
-#    name: mastara_minio_data
+  mastara_minio_data:
+    name: mastara_minio_data
+  mastara_uploads_data:
+    name: mastara_uploads_data
 
 networks:
   mastara-network:

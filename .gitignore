@@ -11,3 +11,6 @@ uploads/
 *.tsbuildinfo
 apps/mobile/src/core/math/katexAssets.generated.ts
 .next/
+infra/backups/
+*.dump
+*.dump.sha256

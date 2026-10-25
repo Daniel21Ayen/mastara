@@ -3,10 +3,12 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   Logger,
+  Optional,
 } from "@nestjs/common";
 import { PrismaClient } from "@mastara/database";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import { AlertsService } from "../../common/monitoring/alerts.service";
 
 @Injectable()
 export class PrismaService
@@ -16,7 +18,9 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
   private pool: Pool;
 
-  constructor() {
+  constructor(
+    @Optional() private readonly alertsService?: AlertsService,
+  ) {
     const connectionString =
       process.env.DATABASE_URL ||
       "postgresql://mastara:mastara_secure_pass_2026@localhost:5433/mastara?schema=public";
@@ -32,18 +36,11 @@ export class PrismaService
 
     super({
       adapter,
-      log:
-        process.env.NODE_ENV === "development"
-          ? [
-              { emit: "event", level: "query" },
-              { emit: "stdout", level: "error" },
-              { emit: "stdout", level: "info" },
-              { emit: "stdout", level: "warn" },
-            ]
-          : [
-              { emit: "stdout", level: "error" },
-              { emit: "stdout", level: "warn" },
-            ],
+      log: [
+        { emit: "event", level: "query" },
+        { emit: "stdout", level: "error" },
+        { emit: "stdout", level: "warn" },
+      ],
     });
 
     this.pool = pool;
@@ -54,11 +51,17 @@ export class PrismaService
       await this.$connect();
       this.logger.log("Successfully connected to PostgreSQL database via Prisma.");
 
-      if (process.env.PRISMA_LOG_QUERIES === "true" || process.env.NODE_ENV === "development") {
-        (this as any).$on?.("query", (e: any) => {
+      (this as any).$on?.("query", (e: any) => {
+        if (process.env.PRISMA_LOG_QUERIES === "true" || process.env.NODE_ENV === "development") {
           this.logger.debug(`Prisma Query [${e.duration}ms]: ${e.query}`);
-        });
-      }
+        }
+
+        if (this.alertsService) {
+          this.alertsService.recordQuery(e.query, e.duration, e.params);
+        } else if (e.duration >= 150) {
+          this.logger.warn(`[SLOW_QUERY_ALERT] Database query exceeded latency threshold: ${e.duration}ms - ${e.query}`);
+        }
+      });
     } catch (error) {
       this.logger.error("Failed to connect to database during onModuleInit:", error);
       throw error;

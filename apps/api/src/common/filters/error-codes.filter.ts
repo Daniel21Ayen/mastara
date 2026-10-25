@@ -5,12 +5,18 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  Optional,
 } from "@nestjs/common";
 import { Request, Response } from "express";
+import { ErrorTrackingService } from "../monitoring/error-tracking.service";
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
+
+  constructor(
+    @Optional() private readonly errorTracking?: ErrorTrackingService,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -20,6 +26,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let errorCode = "INTERNAL_SERVER_ERROR";
     let message: string | string[] = "An unexpected error occurred";
+    let errorId: string | undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -41,6 +48,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message = exception.message;
     }
 
+    if (status >= 500 && this.errorTracking) {
+      errorId = this.errorTracking.captureException(exception, {
+        route: request.url,
+        method: request.method,
+        statusCode: status,
+      });
+    }
+
     if (Array.isArray(message)) {
       message = message.join(", ");
     }
@@ -49,6 +64,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       statusCode: status,
       errorCode,
       message,
+      errorId,
       timestamp: new Date().toISOString(),
       path: request.url,
     });

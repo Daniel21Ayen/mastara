@@ -7,9 +7,37 @@ import { ApiError } from './ApiError';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-interface RequestOptions extends Omit<RequestInit, 'body' | 'method'> {
+export interface RequestOptions extends Omit<RequestInit, 'body' | 'method'> {
   headers?: Record<string, string>;
   timeoutMs?: number;
+  retries?: number;
+  retryDelayMs?: number;
+}
+
+const DEFAULT_TIMEOUT_MS = 6000;
+const DEFAULT_RETRY_DELAY_MS = 500;
+const MAX_RETRY_BACKOFF_MS = 5000;
+
+function isTransientNetworkError(err: unknown, statusCode?: number): boolean {
+  if (statusCode && [502, 503, 504].includes(statusCode)) return true;
+  if (err instanceof ApiError && err.code === ERROR_CODES.NETWORK_OFFLINE) return true;
+  if (err instanceof Error) {
+    const msg = err.message.toLowerCase();
+    return (
+      err.name === 'AbortError' ||
+      msg.includes('timeout') ||
+      msg.includes('network') ||
+      msg.includes('connection') ||
+      msg.includes('econnrefused')
+    );
+  }
+  return false;
+}
+
+function calculateBackoffDelay(attempt: number, baseDelay: number): number {
+  const exp = Math.min(MAX_RETRY_BACKOFF_MS, baseDelay * Math.pow(2, attempt));
+  const jitter = exp * (0.8 + Math.random() * 0.4);
+  return Math.round(jitter);
 }
 
 async function request<T>(
@@ -53,70 +81,105 @@ async function request<T>(
     }
   }
 
-  const timeoutMs = options.timeoutMs ?? 6000;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const maxRetries = options.retries ?? (method === 'GET' ? 2 : 0);
+  const baseRetryDelay = options.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
 
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: options.signal ?? controller.signal,
-      method,
-      headers,
-      body: requestBody,
-    });
+  let lastError: unknown = null;
 
-    if (response.status === 304) {
-      return null as unknown as T;
-    }
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    if (!response.ok) {
-      let errorJson: { errorCode?: string; message?: string } | null = null;
-      try {
-        errorJson = await response.json();
-      } catch {
-        // Not a JSON response
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: options.signal ?? controller.signal,
+        method,
+        headers,
+        body: requestBody,
+      });
+
+      if (response.status === 304) {
+        return null as unknown as T;
       }
 
-      const backendCode = errorJson?.errorCode;
-      let mappedCode: ErrorCode = ERROR_CODES.VALIDATION_FAILED;
+      if (!response.ok) {
+        if ([502, 503, 504].includes(response.status) && attempt < maxRetries) {
+          const delay = calculateBackoffDelay(attempt, baseRetryDelay);
+          await new Promise((res) => setTimeout(res, delay));
+          continue;
+        }
 
-      if (backendCode && Object.values(ERROR_CODES).includes(backendCode as ErrorCode)) {
-        mappedCode = backendCode as ErrorCode;
-      } else if (response.status === 401) {
-        mappedCode = ERROR_CODES.UNAUTHORIZED;
-      } else if (response.status === 403) {
-        mappedCode = ERROR_CODES.ENTITLEMENT_REQUIRED;
-      } else if (response.status === 409) {
-        mappedCode = ERROR_CODES.TRANSACTION_REFERENCE_DUPLICATE;
+        let errorJson: { errorCode?: string; message?: string } | null = null;
+        try {
+          errorJson = await response.json();
+        } catch {
+          // Not a JSON response
+        }
+
+        const backendCode = errorJson?.errorCode;
+        let mappedCode: ErrorCode = ERROR_CODES.VALIDATION_FAILED;
+
+        if (backendCode && Object.values(ERROR_CODES).includes(backendCode as ErrorCode)) {
+          mappedCode = backendCode as ErrorCode;
+        } else if (response.status === 401) {
+          mappedCode = ERROR_CODES.UNAUTHORIZED;
+        } else if (response.status === 403) {
+          mappedCode = ERROR_CODES.ENTITLEMENT_REQUIRED;
+        } else if (response.status === 409) {
+          mappedCode = ERROR_CODES.TRANSACTION_REFERENCE_DUPLICATE;
+        } else if ([502, 503, 504].includes(response.status)) {
+          mappedCode = ERROR_CODES.NETWORK_OFFLINE;
+        }
+
+        const message = errorJson?.message ?? `Request failed with status ${response.status}`;
+        throw new ApiError(mappedCode, message);
       }
 
-      const message = errorJson?.message ?? `Request failed with status ${response.status}`;
-      throw new ApiError(mappedCode, message);
-    }
+      if (response.status === 204) {
+        return undefined as unknown as T;
+      }
 
-    if (response.status === 204) {
-      return undefined as unknown as T;
-    }
+      const text = await response.text();
+      if (!text) {
+        return undefined as unknown as T;
+      }
 
-    const text = await response.text();
-    if (!text) {
-      return undefined as unknown as T;
-    }
+      return JSON.parse(text) as T;
+    } catch (error) {
+      lastError = error;
+      if (error instanceof ApiError) {
+        throw error;
+      }
 
-    return JSON.parse(text) as T;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
+      const isTransient = isTransientNetworkError(error);
+      if (isTransient && attempt < maxRetries) {
+        const delay = calculateBackoffDelay(attempt, baseRetryDelay);
+        await new Promise((res) => setTimeout(res, delay));
+        continue;
+      }
+
+      const isTimeout =
+        error instanceof Error &&
+        (error.name === 'AbortError' || error.message.includes('abort'));
+      throw new ApiError(
+        ERROR_CODES.NETWORK_OFFLINE,
+        isTimeout
+          ? 'Network request timed out'
+          : error instanceof Error
+            ? error.message
+            : 'Network request failed',
+      );
+    } finally {
+      clearTimeout(timer);
     }
-    const isTimeout = error instanceof Error && (error.name === 'AbortError' || error.message.includes('abort'));
-    throw new ApiError(
-      ERROR_CODES.NETWORK_OFFLINE,
-      isTimeout ? 'Network request timed out' : (error instanceof Error ? error.message : 'Network request failed'),
-    );
-  } finally {
-    clearTimeout(timer);
   }
+
+  throw (
+    lastError ??
+    new ApiError(ERROR_CODES.NETWORK_OFFLINE, 'Network request failed after retries')
+  );
 }
 
 export const httpClient = {

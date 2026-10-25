@@ -101,6 +101,7 @@ export const contentApi: ContentApi = {
     if (inMemory) return inMemory;
 
     // 2. Online: fetch from server, keep in RAM only while reader is open
+    let remoteFailed = false;
     if (isOnline()) {
       try {
         const remote = await contentRemote.getTopic(topicId);
@@ -109,17 +110,23 @@ export const contentApi: ContentApi = {
           return remote;
         }
       } catch (err) {
-        if (!isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
+        // Only re-throw if server explicitly denied access (e.g. 401 / 403)
+        if (
+          isApiError(err, ERROR_CODES.ENTITLEMENT_REQUIRED) ||
+          isApiError(err, ERROR_CODES.UNAUTHORIZED)
+        ) {
           throw err;
         }
+        // For network outages, API downtime (502/503/timeout), fall through to local downloaded copy
+        remoteFailed = true;
       }
     }
 
-    // 3. Offline (or network offline): check downloadStore
+    // 3. Offline (or API down): check downloadStore
     const key = topicKey(topicId);
     const saved = await downloadStore.getContent<Topic>(key);
     if (!saved.found) {
-      if (!isOnline()) {
+      if (!isOnline() || remoteFailed) {
         throw new ApiError(ERROR_CODES.CONTENT_NOT_DOWNLOADED);
       }
       return null;
@@ -130,10 +137,17 @@ export const contentApi: ContentApi = {
     // 4. Offline access verification for paid bodies:
     // Before showing a paid body, re-check access with offlineAccess and the trusted clock
     if (!topic.isFree) {
-      const courses = await myCoursesApi.getMyCourses([topic.courseId]);
-      const access = courses[0]?.access ?? 'LOCKED';
-      if (access !== 'PAID') {
-        throw new ApiError(ERROR_CODES.ENTITLEMENT_EXPIRED);
+      try {
+        const courses = await myCoursesApi.getMyCourses([topic.courseId]);
+        const access = courses[0]?.access ?? 'LOCKED';
+        if (access !== 'PAID') {
+          throw new ApiError(ERROR_CODES.ENTITLEMENT_EXPIRED);
+        }
+      } catch (err) {
+        if (err instanceof ApiError && err.code === ERROR_CODES.ENTITLEMENT_EXPIRED) {
+          throw err;
+        }
+        // If myCourses verification experienced a network error, keep using saved entitlement
       }
     }
 

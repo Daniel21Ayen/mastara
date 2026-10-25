@@ -8,7 +8,7 @@ import { getAccountState } from '@/modules/auth/api/auth.api';
 import { outbox } from './outbox';
 import { flushOutbox } from './syncWorker';
 import { syncDownstreamContent } from './contentSync';
-import { syncCatalog } from './catalogSync';
+import { getLocalCatalogState, syncCatalog } from './catalogSync';
 
 const isNative =
   typeof navigator !== 'undefined' &&
@@ -123,11 +123,24 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     });
   }, [refresh, syncNow]);
 
+  // Restore lastSyncAt from persisted catalog state
+  useEffect(() => {
+    void getLocalCatalogState(user?.id).then((state) => {
+      if (state.synced_at) {
+        setLastSyncAt(state.synced_at);
+      }
+    });
+  }, [user?.id]);
+
   const lastForegroundSync = useRef(0);
 
   const syncCatalogNow = useCallback(async (force = false) => {
     try {
       await syncCatalog(user?.id, force);
+      const state = await getLocalCatalogState(user?.id);
+      if (state.synced_at) {
+        setLastSyncAt(state.synced_at);
+      }
     } catch {
       // ignore
     }

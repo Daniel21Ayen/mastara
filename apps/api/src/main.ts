@@ -57,8 +57,10 @@ async function bootstrap() {
   // Enable graceful shutdown hooks for Prisma & database connections
   app.enableShutdownHooks();
 
-  // Global API Prefix
-  app.setGlobalPrefix("api/v1");
+  // Global API Prefix with exclusion for health endpoints
+  app.setGlobalPrefix("api/v1", {
+    exclude: ["health", "health/(.*)"],
+  });
 
   // Global Validation Pipe with strict security rules
   app.useGlobalPipes(
@@ -88,6 +90,12 @@ async function bootstrap() {
   await app.listen(port, "0.0.0.0");
   logger.log(`Mastara API server is running on: http://localhost:${port}/api/v1`);
   logger.log(`API Swagger documentation available at: http://localhost:${port}/api/docs`);
+
+  // Signal PM2 cluster mode that instance is ready for zero-downtime traffic cutover
+  if (typeof process.send === "function") {
+    process.send("ready");
+    logger.log("Dispatched zero-downtime 'ready' signal to PM2 process manager.");
+  }
 }
 
 bootstrap();

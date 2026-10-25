@@ -184,7 +184,7 @@ test('Mobile Integration: Content & Assessments Flow', async (t) => {
     const courseId = courses[0].id;
 
     // Content: Topics
-    const topics = await contentApi.getTopics(courseId, 'TOPIC');
+    const topics = await contentApi.getTopics(courseId, 'MODULE');
     assert.ok(Array.isArray(topics));
 
     // Quizzes: Chapters

@@ -11,11 +11,14 @@ module.exports = {
       name: 'mastara-api',
       script: './apps/api/dist/main.js',
       cwd: '/srv/mastara',
-      instances: 'max',       // one per CPU core
+      instances: 2,           // Run at least 2 API instances behind load balancer
       exec_mode: 'cluster',
       autorestart: true,
       watch: false,
       max_memory_restart: '512M',
+      wait_ready: true,       // Wait for process.send('ready') before routing traffic
+      listen_timeout: 10000,  // Max wait for bootstrap ready signal
+      kill_timeout: 5000,     // Graceful shutdown time for in-flight requests
       env: {
         NODE_ENV: 'development',
         PORT: 4001,

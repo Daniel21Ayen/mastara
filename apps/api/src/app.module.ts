@@ -3,12 +3,14 @@ import { ConfigModule } from "@nestjs/config";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { validateEnv } from "./config/env.validation";
 
-import { APP_GUARD, APP_FILTER } from "@nestjs/core";
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from "@nestjs/core";
 import { DatabaseModule } from "./infrastructure/database/database.module";
 import { StorageModule } from "./infrastructure/storage/storage.module";
 import { PushModule } from "./infrastructure/push/push.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
 import { RedisModule } from "./infrastructure/redis/redis.module";
+import { MonitoringModule } from "./common/monitoring/monitoring.module";
+import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { HealthModule } from "./modules/platform/health/health.module";
 import { AuditModule } from "./modules/platform/audit/audit.module";
 import { DashboardModule } from "./modules/platform/dashboard/dashboard.module";
@@ -41,6 +43,7 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
       },
     ]),
 
+    MonitoringModule,
     DatabaseModule,
     RedisModule,
     StorageModule,
@@ -69,6 +72,10 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     EngagementModule,
   ],
   providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

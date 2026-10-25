@@ -38,14 +38,14 @@ export async function readContentList<T>(
   try {
     return await load();
   } catch (error) {
-    if (isOffline(error)) {
-      try {
-        return await catalogFallback();
-      } catch {
+    try {
+      return await catalogFallback();
+    } catch {
+      if (isOffline(error)) {
         return [];
       }
+      throw error;
     }
-    throw error;
   }
 }
 

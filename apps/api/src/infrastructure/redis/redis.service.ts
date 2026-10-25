@@ -55,6 +55,16 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async isHealthy(): Promise<boolean> {
+    if (!this.client || !this.isConnected) return false;
+    try {
+      const pong = await this.client.ping();
+      return pong === 'PONG';
+    } catch {
+      return false;
+    }
+  }
+
   async get(key: string): Promise<string | null> {
     if (this.isConnected && this.client) {
       try {
