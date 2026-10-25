@@ -28,7 +28,7 @@
   margin: 0;
   font-size: 1.75rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   letter-spacing: -0.02em;
 }
 
@@ -36,9 +36,9 @@
   display: inline-flex;
   align-items: center;
   padding: 3px 12px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1a56db;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft);
+  color: var(--color-primary);
   font-size: 0.8rem;
   font-weight: 600;
   border-radius: 9999px;
@@ -55,10 +55,10 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #ffffff;
-  color: #1a56db;
+  background: var(--color-surface);
+  color: var(--color-primary);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -66,8 +66,8 @@
 }
 
 .actionBtnOutline:hover {
-  background: #f8fafc;
-  border-color: #1a56db;
+  background: var(--color-surface-subtle);
+  border-color: var(--color-primary);
 }
 
 .actionBtnPrimary {
@@ -77,8 +77,8 @@
   padding: 8px 18px;
   border: 0;
   border-radius: 8px;
-  background: #1a56db;
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -87,7 +87,7 @@
 }
 
 .actionBtnPrimary:hover {
-  background: #1e40af;
+  background: var(--color-primary-hover);
 }
 
 /* Workspace Grid (2 Columns) */
@@ -106,8 +106,8 @@
 
 /* Left Column: Course & Chapters */
 .sidebarCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 22px 18px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -117,7 +117,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin-bottom: 8px;
 }
 
@@ -125,7 +125,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin-top: 24px;
   margin-bottom: 12px;
 }
@@ -139,7 +139,7 @@
 .courseSelectIcon {
   position: absolute;
   left: 12px;
-  color: #1a56db;
+  color: var(--color-primary);
   pointer-events: none;
 }
 
@@ -147,13 +147,13 @@
   width: 100%;
   height: 42px;
   padding: 0 12px 0 38px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--color-surface);
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--color-text);
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230066ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -164,7 +164,7 @@
 }
 
 .courseSelect:focus {
-  border-color: #1a56db;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -183,9 +183,9 @@
   gap: 10px;
   padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #334155;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -194,21 +194,21 @@
 }
 
 .chapterItem:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--color-surface-subtle);
+  border-color: var(--color-border-subtle);
 }
 
 .chapterItemActiveBlue {
-  background: #1a56db !important;
-  color: #ffffff !important;
-  border-color: #1a56db !important;
+  background: var(--color-primary) !important;
+  color: var(--color-surface) !important;
+  border-color: var(--color-primary) !important;
   box-shadow: 0 2px 6px rgba(26, 86, 219, 0.28);
 }
 
 .chapterItemActiveLight {
-  background: #eff6ff !important;
-  color: #1a56db !important;
-  border-color: #bfdbfe !important;
+  background: var(--color-primary-soft) !important;
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary-soft) !important;
 }
 
 .chapterIcon {
@@ -224,8 +224,8 @@
   height: 40px;
   border: 0;
   border-radius: 8px;
-  background: #1a56db;
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -237,13 +237,13 @@
 }
 
 .addChapterBtn:hover {
-  background: #1e40af;
+  background: var(--color-primary-hover);
 }
 
 /* Right Column: Editor Card */
 .editorCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 24px 28px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -254,7 +254,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 24px;
   padding-bottom: 2px;
 }
@@ -272,18 +272,18 @@
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-muted);
   cursor: pointer;
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
 .tabBtn:hover {
-  color: #1a56db;
+  color: var(--color-primary);
 }
 
 .tabBtnActive {
-  color: #1a56db !important;
+  color: var(--color-primary) !important;
   font-weight: 700;
 }
 
@@ -294,7 +294,7 @@
   left: 0;
   right: 0;
   height: 2.5px;
-  background: #1a56db;
+  background: var(--color-primary);
   border-radius: 2px;
 }
 
@@ -303,7 +303,7 @@
   align-items: center;
   gap: 8px;
   font-size: 0.875rem;
-  color: #334155;
+  color: var(--color-text);
   font-weight: 500;
   cursor: pointer;
 }
@@ -311,7 +311,7 @@
 .freeTrialCheckbox {
   width: 16px;
   height: 16px;
-  accent-color: #1a56db;
+  accent-color: var(--color-primary);
   cursor: pointer;
 }
 
@@ -339,26 +339,26 @@
 .fieldLabel {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 .textInput {
   width: 100%;
   height: 42px;
   padding: 0 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   font-family: inherit;
   font-size: 0.9rem;
-  color: #0f172a;
-  background: #ffffff;
+  color: var(--color-text);
+  background: var(--color-surface);
   outline: none;
   transition: border-color 0.15s ease;
   box-sizing: border-box;
 }
 
 .textInput:focus {
-  border-color: #1a56db;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -366,12 +366,12 @@
   width: 100%;
   height: 42px;
   padding: 0 32px 0 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   font-family: inherit;
   font-size: 0.9rem;
-  color: #0f172a;
-  background: #ffffff;
+  color: var(--color-text);
+  background: var(--color-surface);
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230066ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -383,7 +383,7 @@
 }
 
 .selectInput:focus {
-  border-color: #1a56db;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -391,12 +391,12 @@
   width: 100%;
   min-height: 110px;
   padding: 12px 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   font-family: inherit;
   font-size: 0.9rem;
-  color: #0f172a;
-  background: #ffffff;
+  color: var(--color-text);
+  background: var(--color-surface);
   resize: vertical;
   outline: none;
   line-height: 1.5;
@@ -405,14 +405,14 @@
 }
 
 .textareaInput:focus {
-  border-color: #1a56db;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
 .materialNote {
   margin: 6px 0 0;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   line-height: 1.4;
 }
 
@@ -428,10 +428,10 @@
   align-items: center;
   gap: 8px;
   padding: 9px 18px;
-  border: 1.5px solid #1a56db;
+  border: 1.5px solid var(--color-primary);
   border-radius: 8px;
-  background: #ffffff;
-  color: #1a56db;
+  background: var(--color-surface);
+  color: var(--color-primary);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -460,7 +460,7 @@
 .answerRadio {
   width: 18px;
   height: 18px;
-  accent-color: #1a56db;
+  accent-color: var(--color-primary);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -469,24 +469,24 @@
   flex: 1;
   height: 40px;
   padding: 0 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   font-family: inherit;
   font-size: 0.875rem;
-  color: #0f172a;
+  color: var(--color-text);
   outline: none;
   transition: border-color 0.15s ease;
 }
 
 .answerInput:focus {
-  border-color: #1a56db;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
 .answerDeleteBtn {
   border: 0;
   background: transparent;
-  color: #1a56db;
+  color: var(--color-primary);
   padding: 6px;
   border-radius: 6px;
   cursor: pointer;
@@ -497,7 +497,7 @@
 }
 
 .answerDeleteBtn:hover {
-  background: #f1f5f9;
+  background: var(--color-surface-subtle);
 }
 
 .addAnswerBtn {
@@ -507,10 +507,10 @@
   align-self: flex-start;
   margin-top: 6px;
   padding: 6px 14px;
-  border: 1px solid #1a56db;
+  border: 1px solid var(--color-primary);
   border-radius: 6px;
-  background: #ffffff;
-  color: #1a56db;
+  background: var(--color-surface);
+  color: var(--color-primary);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -529,8 +529,8 @@
   padding: 10px 20px;
   border: 0;
   border-radius: 8px;
-  background: #1a56db;
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -538,7 +538,7 @@
 }
 
 .addQuestionBtn:hover {
-  background: #1e40af;
+  background: var(--color-primary-hover);
 }
 
 .fieldHeaderRow {
@@ -552,9 +552,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1a56db;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft);
+  color: var(--color-primary);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 8px;
@@ -567,8 +567,8 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
-  background: #f8fafc;
-  border: 1.5px solid #dbeafe;
+  background: var(--color-surface-subtle);
+  border: 1.5px solid var(--color-primary-soft);
   border-radius: 10px;
   margin-top: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
@@ -584,9 +584,9 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1a56db;
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft);
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -597,9 +597,9 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #16a34a;
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success-soft);
+  color: var(--color-success);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -615,12 +615,12 @@
 .attachedFileName {
   font-size: 0.84rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .attachedFileSize {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .attachedPillActions {
@@ -634,9 +634,9 @@
   align-items: center;
   gap: 5px;
   padding: 5px 10px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #1a56db;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-primary);
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -645,17 +645,17 @@
 }
 
 .attachedPreviewBtn:hover {
-  background: #eff6ff;
-  border-color: #1a56db;
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
 }
 
 .removeAttachedBtn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid #fecaca;
-  background: #fff5f5;
-  color: #dc2626;
+  border: 1px solid var(--color-danger-soft);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -665,7 +665,7 @@
 }
 
 .removeAttachedBtn:hover {
-  background: #fee2e2;
-  border-color: #f87171;
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-soft);
 }
 

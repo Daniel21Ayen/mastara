@@ -16,7 +16,7 @@
   margin: 0;
   font-size: 1.75rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 /* Stepper Tabs Bar */
@@ -36,8 +36,8 @@
   padding: 0 16px;
   border: 0;
   border-radius: var(--radius-sm);
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--color-surface-subtle);
+  color: var(--color-text-muted);
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -45,8 +45,8 @@
 }
 
 .stepTabActive {
-  background: #1a56db !important;
-  color: #ffffff !important;
+  background: var(--color-primary) !important;
+  color: var(--color-surface) !important;
 }
 
 .stepTabDisabled {
@@ -56,7 +56,7 @@
 
 /* Step 1: Import Dropzone */
 .dropzoneCard {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-xl);
@@ -70,7 +70,7 @@
   justify-content: center;
   text-align: center;
   padding: 56px 24px;
-  border: 2px dashed #1a56db;
+  border: 2px dashed var(--color-primary);
   border-radius: var(--radius-md);
   background: rgba(26, 86, 219, 0.03);
   transition: background-color 0.2s ease;
@@ -80,13 +80,13 @@
   margin: 0 0 8px;
   font-size: 1.2rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .dropzoneSubtitle {
   margin: 0 0 24px;
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .dropzoneButtons {
@@ -108,7 +108,7 @@
 .countText {
   margin: 0;
   font-size: 0.95rem;
-  color: #475569;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -128,7 +128,7 @@
 
 .leftCard,
 .rightCard {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-xl);
@@ -146,14 +146,14 @@
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .subHeading {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 .toolsBar {
@@ -167,10 +167,10 @@
   align-items: center;
   justify-content: center;
   padding: 6px 14px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
-  background: #ffffff;
-  color: #334155;
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -178,8 +178,8 @@
 }
 
 .toolBtn:hover:not(:disabled) {
-  border-color: #1a56db;
-  color: #1a56db;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .toolBtn:disabled {
@@ -204,9 +204,9 @@
 .thumbCard {
   position: relative;
   aspect-ratio: 3 / 4;
-  border: 1.5px dashed #1a56db;
+  border: 1.5px dashed var(--color-primary);
   border-radius: var(--radius-sm);
-  background: #f8fafc;
+  background: var(--color-surface-subtle);
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
@@ -218,14 +218,14 @@
 }
 
 .thumbCardSelected {
-  border: 2px solid #1a56db !important;
+  border: 2px solid var(--color-primary) !important;
   box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.2);
 }
 
 .thumbCardDragging {
   opacity: 0.45;
   border-style: solid;
-  border-color: #1a56db !important;
+  border-color: var(--color-primary) !important;
   transform: scale(0.96);
 }
 
@@ -236,8 +236,8 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #1a56db;
-  color: #ffffff;
+  background: var(--color-primary);
+  color: var(--color-surface);
   font-size: 11px;
   font-weight: 700;
   display: flex;
@@ -264,7 +264,7 @@
 .addMoreBtn {
   border: 0;
   background: transparent;
-  color: #1a56db;
+  color: var(--color-primary);
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -300,12 +300,12 @@
 .answerLabel {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 .answerToggleGroup {
   display: inline-flex;
-  background: #f1f5f9;
+  background: var(--color-surface-subtle);
   border-radius: 6px;
   padding: 2px;
   gap: 2px;
@@ -318,14 +318,14 @@
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .answerToggleBtnActive {
-  background: #ffffff;
-  color: #1a56db;
+  background: var(--color-surface);
+  color: var(--color-primary);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
@@ -333,12 +333,12 @@
   width: 100%;
   min-height: 80px;
   padding: 10px 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 0.875rem;
-  color: #0f172a;
-  background: #ffffff;
+  color: var(--color-text);
+  background: var(--color-surface);
   resize: vertical;
   outline: none;
   transition: border-color 0.15s ease;
@@ -346,7 +346,7 @@
 }
 
 .answerTextarea:focus {
-  border-color: #1a56db;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.15);
 }
 
@@ -357,7 +357,7 @@
   justify-content: center;
   gap: 6px;
   padding: 16px;
-  border: 1.5px dashed #1a56db;
+  border: 1.5px dashed var(--color-primary);
   border-radius: var(--radius-sm);
   background: rgba(26, 86, 219, 0.03);
   cursor: pointer;
@@ -371,7 +371,7 @@
 
 .answerFileDropText {
   font-size: 0.8rem;
-  color: #475569;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -380,8 +380,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  border: 1px solid #bfdbfe;
-  background: #eff6ff;
+  border: 1px solid var(--color-primary-soft);
+  background: var(--color-primary-soft);
   border-radius: var(--radius-sm);
 }
 
@@ -390,7 +390,7 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: #1a56db;
+  color: var(--color-primary);
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -399,14 +399,14 @@
 
 .answerFileSize {
   font-size: 0.75rem;
-  color: #1a56db;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
 .answerFileRemoveBtn {
   border: 0;
   background: transparent;
-  color: var(--color-danger, #b91c1c);
+  color: var(--color-danger, var(--color-danger));
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -421,7 +421,7 @@
 .pagesSummaryNote {
   margin: var(--space-sm) 0 0;
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .convertBtn {
@@ -433,7 +433,7 @@
 
 /* Step 3: Convert Ready */
 .convertCard {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-xl);
@@ -451,9 +451,9 @@
 }
 
 .pagesBadge {
-  background: #eff6ff;
-  color: #1a56db;
-  border: 1px solid #bfdbfe;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-soft);
   font-size: 0.85rem;
   font-weight: 600;
   padding: 4px 14px;
@@ -461,9 +461,9 @@
 }
 
 .sizeBadge {
-  background: #eff6ff;
-  color: #1a56db;
-  border: 1px solid #bfdbfe;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-soft);
   font-size: 0.85rem;
   font-weight: 600;
   padding: 4px 14px;
@@ -473,10 +473,10 @@
 .previewPdfBtn {
   width: 100%;
   padding: 14px;
-  border: 1.5px solid #1a56db;
+  border: 1.5px solid var(--color-primary);
   border-radius: var(--radius-sm);
   background: transparent;
-  color: #1a56db;
+  color: var(--color-primary);
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -497,7 +497,7 @@
 
 /* Step 4: Publish */
 .publishCard {
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-xl);
@@ -519,18 +519,18 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-surface-subtle);
 }
 
 .metaLabel {
   font-size: 0.95rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
 .metaValue {
   font-size: 0.95rem;
-  color: #0f172a;
+  color: var(--color-text);
   font-weight: 600;
   text-align: right;
 }
@@ -538,7 +538,7 @@
 .publishHint {
   margin: var(--space-lg) 0 var(--space-xl);
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   line-height: 1.5;
 }
 
@@ -567,7 +567,7 @@
 }
 
 .modalContent {
-  background: #1e293b;
+  background: var(--color-text);
   border-radius: var(--radius-md);
   width: 100%;
   max-width: 900px;
@@ -583,8 +583,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--color-text);
+  color: var(--color-surface);
 }
 
 .modalBarLeft {
@@ -608,7 +608,7 @@
   flex-direction: column;
   align-items: center;
   gap: 24px;
-  background: #334155;
+  background: var(--color-text);
 }
 
 .modalPageSheet {
@@ -617,7 +617,7 @@
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--color-surface);
 }
 
 .modalPageSheet img {
@@ -628,7 +628,7 @@
 .closeBtn {
   border: 0;
   background: transparent;
-  color: #ffffff;
+  color: var(--color-surface);
   font-size: 1.25rem;
   cursor: pointer;
   padding: 4px 8px;
@@ -648,9 +648,9 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #eff6ff;
-  color: #1a56db;
-  border: 1px solid #bfdbfe;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-soft);
   display: inline-flex;
   align-items: center;
   justify-content: center;

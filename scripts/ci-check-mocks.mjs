@@ -56,8 +56,29 @@ function scanDirectory(dir) {
       }
 
       checkFile(fullPath);
+    } else if (entry.isFile() && entry.name.endsWith('.css')) {
+      checkCssFile(fullPath);
     }
   }
+}
+
+function checkCssFile(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const lines = content.split('\n');
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('/*') || trimmed.startsWith('*')) return;
+    const matches = line.match(/#[0-9a-fA-F]{3,8}\b/g);
+    if (matches && matches.length > 0) {
+      violations.push({
+        file: path.relative(rootDir, filePath),
+        line: index + 1,
+        content: line.trim(),
+        reason: `Raw hex color ${matches.join(', ')} detected outside packages/ui-tokens; use var(--color-*)`,
+      });
+    }
+  });
 }
 
 function checkFile(filePath) {
@@ -90,7 +111,7 @@ function checkFile(filePath) {
   });
 }
 
-console.log('🔍 CI Mock Gate: Scanning production code for mock imports and useMocks branches...');
+console.log('🔍 CI Gate: Scanning production code for mock imports and enforcing color token consistency...');
 for (const dir of PRODUCTION_DIRS) {
   scanDirectory(dir);
 }

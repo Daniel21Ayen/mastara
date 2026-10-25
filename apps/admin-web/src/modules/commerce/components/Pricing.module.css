@@ -21,7 +21,7 @@
 .title {
   font-size: 26px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   letter-spacing: -0.02em;
   margin: 0;
 }
@@ -31,8 +31,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background-color: #1a56db;
-  color: #ffffff;
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   font-size: 14px;
   font-weight: 600;
   padding: 10px 24px;
@@ -44,7 +44,7 @@
 }
 
 .saveButton:hover:not(:disabled) {
-  background-color: #1e40af;
+  background-color: var(--color-primary-hover);
   box-shadow: 0 4px 12px rgba(26, 86, 219, 0.3);
 }
 
@@ -55,11 +55,11 @@
 
 /* Birr Paid Revenue Banner */
 .revenueBanner {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 24px 28px;
-  color: #0f172a;
+  color: var(--color-text);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
@@ -88,9 +88,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #1a56db;
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft);
   padding: 4px 10px;
   border-radius: 20px;
   width: fit-content;
@@ -105,20 +105,20 @@
 .revenueCurrency {
   font-size: 22px;
   font-weight: 700;
-  color: #1a56db;
+  color: var(--color-primary);
 }
 
 .revenueValue {
   font-size: 38px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #0f172a;
+  color: var(--color-text);
   line-height: 1;
 }
 
 .revenueLabel {
   font-size: 13.5px;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -132,9 +132,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background-color: #f8fafc;
-  color: #1e293b;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   font-size: 13px;
   font-weight: 600;
   padding: 9px 16px;
@@ -144,9 +144,9 @@
 }
 
 .viewAuditBtn:hover {
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1a56db;
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 /* Revenue Stats Inside Cards Grid */
@@ -154,7 +154,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 14px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-surface-subtle);
   padding-top: 20px;
 }
 
@@ -162,16 +162,16 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 12px 16px;
   transition: all 0.15s ease;
 }
 
 .statItem:hover {
-  background-color: #ffffff;
-  border-color: #cbd5e1;
+  background-color: var(--color-surface);
+  border-color: var(--color-border-subtle);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -183,7 +183,7 @@
 
 .statLabel {
   font-size: 11.5px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -192,13 +192,13 @@
 .statValue {
   font-size: 19px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--color-text);
   letter-spacing: -0.02em;
 }
 
 .statSubtext {
   font-size: 11.5px;
-  color: #94a3b8;
+  color: var(--color-text-faint);
 }
 
 /* 3-Column Pricing Grid */
@@ -215,8 +215,8 @@
 }
 
 .pricingCard {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
@@ -228,30 +228,30 @@
 
 .pricingCard:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border-color: #cbd5e1;
+  border-color: var(--color-border-subtle);
 }
 
 .cardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-surface-subtle);
   padding-bottom: 14px;
 }
 
 .cardTitle {
   font-size: 17px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin: 0;
 }
 
 .cardBadge {
   font-size: 11px;
   font-weight: 600;
-  color: #1a56db;
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft);
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -271,7 +271,7 @@
 .fieldLabel {
   font-size: 13px;
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-muted);
 }
 
 .inputWrapper {
@@ -283,35 +283,35 @@
 .textInput {
   width: 100%;
   height: 44px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--color-border);
   border-radius: 10px;
   padding: 8px 14px;
   font-size: 15px;
   font-weight: 600;
-  color: #0f172a;
-  background-color: #ffffff;
+  color: var(--color-text);
+  background-color: var(--color-surface);
   transition: all 0.15s ease;
   outline: none;
 }
 
 .textInput:hover {
-  border-color: #cbd5e1;
+  border-color: var(--color-border-subtle);
 }
 
 .textInput:focus {
-  border-color: #1a56db;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
 }
 
 .textInput::placeholder {
-  color: #94a3b8;
+  color: var(--color-text-faint);
   font-weight: 400;
 }
 
 /* Bottom Card: Free trial default */
 .trialCard {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 18px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
@@ -329,16 +329,16 @@
 .trialTitle {
   font-size: 17px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin: 0;
 }
 
 .trialBadge {
   font-size: 11px;
   font-weight: 600;
-  color: #1a56db;
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft);
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -354,8 +354,8 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background-color: #f8fafc;
-  border: 1.5px solid #e2e8f0;
+  background-color: var(--color-surface-subtle);
+  border: 1.5px solid var(--color-border);
   border-radius: 12px;
   cursor: pointer;
   user-select: none;
@@ -363,22 +363,22 @@
 }
 
 .checkboxCard:hover {
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary-soft);
 }
 
 .checkboxCardActive {
-  background-color: #eff6ff;
-  border-color: #bfdbfe;
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary-soft);
 }
 
 .customCheckbox {
   appearance: none;
   width: 18px;
   height: 18px;
-  border: 2px solid #94a3b8;
+  border: 2px solid var(--color-text-faint);
   border-radius: 5px;
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   cursor: pointer;
   position: relative;
   display: grid;
@@ -388,15 +388,15 @@
 }
 
 .customCheckbox:checked {
-  background-color: #1a56db;
-  border-color: #1a56db;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .customCheckbox:checked::after {
   content: '';
   width: 5px;
   height: 9px;
-  border: solid #ffffff;
+  border: solid var(--color-surface);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
   position: relative;
@@ -406,17 +406,17 @@
 .checkboxText {
   font-size: 14px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 /* Subtext Footer */
 .footerNotice {
   font-size: 13px;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 4px 0 0 0;
   line-height: 1.5;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 10px 16px;
 }
@@ -426,8 +426,8 @@
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background-color: #0f172a;
-  color: #ffffff;
+  background-color: var(--color-text);
+  color: var(--color-surface);
   padding: 14px 22px;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
@@ -441,7 +441,7 @@
 }
 
 .toastSuccess {
-  border-left: 4px solid #1a56db;
+  border-left: 4px solid var(--color-primary);
 }
 
 @keyframes slideIn {
@@ -472,7 +472,7 @@
 }
 
 .modalContent {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 20px;
   width: 100%;
   max-width: 880px;
@@ -485,7 +485,7 @@
 
 .modalHeader {
   padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -494,7 +494,7 @@
 .modalTitle {
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin: 0;
 }
 
@@ -502,15 +502,15 @@
   background: transparent;
   border: none;
   font-size: 20px;
-  color: #64748b;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
 }
 
 .modalCloseBtn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--color-surface-subtle);
+  color: var(--color-text);
 }
 
 .modalBody {
@@ -530,25 +530,25 @@
 .auditTable th {
   text-align: left;
   padding: 10px 14px;
-  background: #f8fafc;
-  color: #475569;
+  background: var(--color-surface-subtle);
+  color: var(--color-text-muted);
   font-weight: 600;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .auditTable td {
   padding: 12px 14px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
+  border-bottom: 1px solid var(--color-surface-subtle);
+  color: var(--color-text);
 }
 
 .auditTable tr:hover td {
-  background-color: #f8fafc;
+  background-color: var(--color-surface-subtle);
 }
 
 .amountHighlight {
   font-weight: 700;
-  color: #1a56db;
+  color: var(--color-primary);
 }
 
 .badgePaid {
@@ -557,7 +557,7 @@
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
-  background: #eff6ff;
-  color: #1a56db;
-  border: 1px solid #bfdbfe;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-soft);
 }

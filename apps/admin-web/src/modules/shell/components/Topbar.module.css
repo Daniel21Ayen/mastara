@@ -6,7 +6,7 @@
   min-height: var(--topbar-height);
   padding: 0 var(--space-xl);
   border-bottom: 1px solid var(--color-border);
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   position: relative;
   z-index: 50;
 }
@@ -32,9 +32,9 @@
   width: 100%;
   min-height: 40px;
   padding: 0 var(--space-md);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--color-surface);
   color: var(--color-text);
   font-size: var(--font-size-body);
   transition: all 0.15s ease;
@@ -42,7 +42,7 @@
 }
 
 .input:focus {
-  border-color: #1a56db;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
 }
 
@@ -62,9 +62,9 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background-color: #ffffff;
-  color: #475569;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,17 +75,17 @@
 
 .notifBtn:hover,
 .notifBtnActive {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
-  color: #1a56db;
+  background-color: var(--color-surface-subtle);
+  border-color: var(--color-border-subtle);
+  color: var(--color-primary);
 }
 
 .notifBadge {
   position: absolute;
   top: -4px;
   right: -4px;
-  background-color: var(--color-danger, #b91c1c);
-  color: #ffffff;
+  background-color: var(--color-danger, var(--color-danger));
+  color: var(--color-surface);
   font-size: 10.5px;
   font-weight: 700;
   min-width: 18px;
@@ -95,7 +95,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 4px;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--color-surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
@@ -110,16 +110,16 @@
   gap: 10px;
   padding: 5px 12px 5px 6px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .profileBtn:hover,
 .profileBtnActive {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
+  background-color: var(--color-surface-subtle);
+  border-color: var(--color-border-subtle);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
@@ -127,8 +127,8 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--color-primary, #1a56db);
-  color: #ffffff;
+  background: var(--color-primary, var(--color-primary));
+  color: var(--color-surface);
   font-weight: 700;
   font-size: 12.5px;
   display: flex;
@@ -146,18 +146,18 @@
 .profileName {
   font-size: 13.5px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   line-height: 1.2;
 }
 
 .profileRole {
   font-size: 11px;
-  color: #64748b;
+  color: var(--color-text-muted);
   line-height: 1.2;
 }
 
 .profileChevron {
-  color: #94a3b8;
+  color: var(--color-text-faint);
   transition: transform 0.15s ease;
 }
 

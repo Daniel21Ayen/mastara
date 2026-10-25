@@ -7,7 +7,7 @@
   margin: 0 0 16px;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   overflow-wrap: anywhere;
 }
 
@@ -17,7 +17,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 16px 0 8px;
 }
 
@@ -40,8 +40,8 @@
   padding: 10px 14px;
   border: 1px solid transparent;
   border-radius: 10px;
-  background: #f8fafc;
-  color: #1e293b;
+  background: var(--color-surface-subtle);
+  color: var(--color-text);
   font-family: inherit;
   text-align: start;
   cursor: pointer;
@@ -49,14 +49,14 @@
 }
 
 .chapterItem:hover {
-  background: #eff6ff;
-  border-color: #bfdbfe;
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-soft);
 }
 
 .chapterItemActive {
-  background: #1a56db;
-  color: #ffffff;
-  border-color: #1a56db;
+  background: var(--color-primary);
+  color: var(--color-surface);
+  border-color: var(--color-primary);
   box-shadow: 0 2px 4px rgba(26, 86, 219, 0.25);
 }
 
@@ -102,9 +102,9 @@
   margin-top: 14px;
   padding: 10px 14px;
   border-radius: 8px;
-  border: 1.5px dashed #cbd5e1;
-  background: #ffffff;
-  color: #1a56db;
+  border: 1.5px dashed var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-primary);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 600;
@@ -113,12 +113,12 @@
 }
 
 .addChapterBtn:hover {
-  background: #eff6ff;
-  border-color: #1a56db;
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
 }
 
 .empty {
   margin: 16px 0;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
 }

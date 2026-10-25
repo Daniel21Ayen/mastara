@@ -15,7 +15,7 @@
 }
 
 .modal {
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 20px;
   width: 100%;
   max-width: 580px;
@@ -39,7 +39,7 @@
 
 .header {
   padding: 24px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-surface-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,8 +55,8 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: var(--color-primary, #1a56db);
-  color: #ffffff;
+  background: var(--color-primary, var(--color-primary));
+  color: var(--color-surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,7 +68,7 @@
 .name {
   font-size: 20px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin: 0 0 4px 0;
 }
 
@@ -76,9 +76,9 @@
   display: inline-block;
   font-size: 11.5px;
   font-weight: 600;
-  color: #1a56db;
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-soft);
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -87,7 +87,7 @@
   background: transparent;
   border: none;
   font-size: 18px;
-  color: #64748b;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 6px 10px;
   border-radius: 8px;
@@ -95,8 +95,8 @@
 }
 
 .closeBtn:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text);
 }
 
 .body {
@@ -119,7 +119,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -127,8 +127,8 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 16px;
 }
@@ -142,19 +142,19 @@
 .label {
   font-size: 11.5px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .value {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .statusActive {
   font-size: 13px;
   font-weight: 700;
-  color: var(--color-primary, #1a56db);
+  color: var(--color-primary, var(--color-primary));
 }
 
 .permissionList {
@@ -168,14 +168,14 @@
   align-items: flex-start;
   gap: 12px;
   padding: 10px 14px;
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
 }
 
 .permIconCheck {
-  color: #1a56db;
-  background-color: #eff6ff;
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
   border-radius: 50%;
   padding: 4px;
   display: flex;
@@ -187,25 +187,25 @@
 .permissionItem strong {
   font-size: 13.5px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .permissionItem p {
   font-size: 12px;
-  color: #64748b;
+  color: var(--color-text-muted);
   margin: 2px 0 0 0;
 }
 
 .footer {
   padding: 16px 24px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--color-surface-subtle);
   display: flex;
   justify-content: flex-end;
 }
 
 .doneBtn {
-  background-color: #1a56db;
-  color: #ffffff;
+  background-color: var(--color-primary);
+  color: var(--color-surface);
   border: none;
   font-size: 13.5px;
   font-weight: 600;
@@ -216,7 +216,7 @@
 }
 
 .doneBtn:hover {
-  background-color: #1e40af;
+  background-color: var(--color-primary-hover);
 }
 
 /* ---- Audit · Needs Attention panel ---- */
@@ -230,8 +230,8 @@
 .auditBadge {
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-danger, #b91c1c);
-  background-color: var(--color-danger-soft, #fee2e2);
+  color: var(--color-danger, var(--color-danger));
+  background-color: var(--color-danger-soft, var(--color-danger-soft));
   border: 1px solid rgba(185, 28, 28, 0.25);
   padding: 1px 7px;
   border-radius: 20px;
@@ -253,8 +253,8 @@
   justify-content: space-between;
   gap: 10px;
   padding: 10px 14px;
-  background-color: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  background-color: var(--color-surface, var(--color-surface));
+  border: 1px solid var(--color-border-subtle, var(--color-border));
   border-radius: 10px;
   flex-wrap: wrap;
 }
@@ -271,13 +271,13 @@
 .auditAction {
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text, #0f172a);
+  color: var(--color-text, var(--color-text));
   white-space: nowrap;
 }
 
 .auditTarget {
   font-size: 12px;
-  color: var(--color-text-muted, #64748b);
+  color: var(--color-text-muted, var(--color-text-muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -285,7 +285,7 @@
 
 .auditTime {
   font-size: 11.5px;
-  color: var(--color-text-muted, #94a3b8);
+  color: var(--color-text-muted, var(--color-text-faint));
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -295,11 +295,11 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background-color: var(--color-primary-soft, #eff6ff);
-  border: 1px solid var(--color-border, #bfdbfe);
+  background-color: var(--color-primary-soft, var(--color-primary-soft));
+  border: 1px solid var(--color-border, var(--color-primary-soft));
   border-radius: 10px;
   font-size: 13px;
-  color: var(--color-primary, #1a56db);
+  color: var(--color-primary, var(--color-primary));
   font-weight: 500;
 }
 
@@ -309,8 +309,8 @@
   align-items: center;
   font-size: 10.5px;
   font-weight: 700;
-  color: var(--color-danger, #b91c1c);
-  background-color: var(--color-danger-soft, #fee2e2);
+  color: var(--color-danger, var(--color-danger));
+  background-color: var(--color-danger-soft, var(--color-danger-soft));
   border: 1px solid rgba(185, 28, 28, 0.25);
   padding: 2px 7px;
   border-radius: 20px;
@@ -322,9 +322,9 @@
   align-items: center;
   font-size: 10.5px;
   font-weight: 700;
-  color: var(--color-primary, #1a56db);
-  background-color: var(--color-primary-soft, #eff6ff);
-  border: 1px solid var(--color-border, #bfdbfe);
+  color: var(--color-primary, var(--color-primary));
+  background-color: var(--color-primary-soft, var(--color-primary-soft));
+  border: 1px solid var(--color-border, var(--color-primary-soft));
   padding: 2px 7px;
   border-radius: 20px;
   white-space: nowrap;
@@ -335,9 +335,9 @@
   align-items: center;
   font-size: 10.5px;
   font-weight: 700;
-  color: var(--color-text, #0f172a);
-  background-color: var(--color-surface-subtle, #f1f5f9);
-  border: 1px solid var(--color-border-subtle, #e2e8f0);
+  color: var(--color-text, var(--color-text));
+  background-color: var(--color-surface-subtle, var(--color-surface-subtle));
+  border: 1px solid var(--color-border-subtle, var(--color-border));
   padding: 2px 7px;
   border-radius: 20px;
   white-space: nowrap;

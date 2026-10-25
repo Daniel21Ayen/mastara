@@ -19,7 +19,7 @@
 }
 
 .modalWindow {
-  background-color: #f8fafc;
+  background-color: var(--color-surface-subtle);
   border-radius: 14px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -44,8 +44,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem 1.25rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .titleArea {
@@ -55,20 +55,20 @@
 }
 
 .badge {
-  background-color: #eff6ff;
-  color: #1d4ed8;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary-hover);
   font-size: 0.725rem;
   font-weight: 700;
   text-transform: uppercase;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--color-primary-soft);
 }
 
 .titleText {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .controlsArea {
@@ -80,10 +80,10 @@
 /* Viewport Toggle */
 .viewportToggle {
   display: flex;
-  background-color: #f1f5f9;
+  background-color: var(--color-surface-subtle);
   padding: 2px;
   border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
 }
 
 .viewportBtn {
@@ -96,14 +96,14 @@
   border-radius: 6px;
   font-size: 0.775rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .viewportBtnActive {
-  background-color: #ffffff;
-  color: #0f172a;
+  background-color: var(--color-surface);
+  color: var(--color-text);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -112,7 +112,7 @@
   border: none;
   font-size: 1.25rem;
   line-height: 1;
-  color: #94a3b8;
+  color: var(--color-text-faint);
   cursor: pointer;
   padding: 0.3rem;
   border-radius: 6px;
@@ -120,8 +120,8 @@
 }
 
 .closeBtn:hover {
-  color: #0f172a;
-  background-color: #f1f5f9;
+  color: var(--color-text);
+  background-color: var(--color-surface-subtle);
 }
 
 /* Content Container */
@@ -133,8 +133,8 @@
 
 /* Mobile Frame Shell */
 .mobileFrame {
-  background: #ffffff;
-  border: 10px solid #1e293b;
+  background: var(--color-surface);
+  border: 10px solid var(--color-text);
   border-radius: 36px;
   overflow: hidden;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -145,8 +145,8 @@
 
 .statusBar {
   height: 28px;
-  background-color: #1e293b;
-  color: #ffffff;
+  background-color: var(--color-text);
+  color: var(--color-surface);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -158,7 +158,7 @@
 .mobileNotch {
   width: 90px;
   height: 12px;
-  background-color: #0f172a;
+  background-color: var(--color-text);
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   margin: 0 auto;
@@ -167,14 +167,14 @@
 .mobileContent {
   padding: 1rem;
   flex: 1;
-  background-color: #f8fafc;
+  background-color: var(--color-surface-subtle);
 }
 
 /* Desktop Frame */
 .desktopFrame {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   padding: 1.5rem;
 }
 
@@ -185,7 +185,7 @@
 
 .categoryTag {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-weight: 600;
   margin-bottom: 0.25rem;
 }
@@ -193,14 +193,14 @@
 .promptCard {
   font-size: 1rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text);
   line-height: 1.5;
   margin-bottom: 1.25rem;
 }
 
 .simulationNotice {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-style: italic;
   margin-bottom: 1rem;
   display: flex;
@@ -224,30 +224,30 @@
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  background-color: #ffffff;
-  border: 1px solid #cbd5e1;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 }
 
 .optionCard:hover {
-  border-color: #3b82f6;
-  background-color: #f8fafc;
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-subtle);
 }
 
 .optionCardActive {
-  border-color: #2563eb;
-  background-color: #eff6ff;
-  box-shadow: 0 0 0 1px #2563eb;
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 .letterBadge {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background-color: #e2e8f0;
-  color: #334155;
+  background-color: var(--color-border);
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,13 +256,13 @@
 }
 
 .letterBadgeActive {
-  background-color: #2563eb;
-  color: #ffffff;
+  background-color: var(--color-primary);
+  color: var(--color-surface);
 }
 
 .optionText {
   font-size: 0.9rem;
-  color: #1e293b;
+  color: var(--color-text);
   flex: 1;
 }
 
@@ -276,53 +276,53 @@
 .tfButton {
   padding: 0.85rem;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background-color: #ffffff;
+  border: 1px solid var(--color-border-subtle);
+  background-color: var(--color-surface);
   font-size: 0.95rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--color-text);
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: center;
 }
 
 .tfButton:hover {
-  background-color: #f8fafc;
-  border-color: #3b82f6;
+  background-color: var(--color-surface-subtle);
+  border-color: var(--color-primary);
 }
 
 .tfButtonActive {
-  border-color: #2563eb;
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  box-shadow: 0 0 0 1px #2563eb;
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  box-shadow: 0 0 0 1px var(--color-primary);
 }
 
 /* Short answer input */
 .shortAnswerInput {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   font-size: 0.9rem;
   outline: none;
 }
 
 .shortAnswerInput:focus {
-  border-color: #2563eb;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
 /* Content Reader Preview */
 .readerArticle {
   line-height: 1.7;
-  color: #1e293b;
+  color: var(--color-text);
 }
 
 .readerTitle {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
   margin-top: 0;
   margin-bottom: 0.75rem;
 }
@@ -335,8 +335,8 @@
 /* Footer */
 .footer {
   padding: 0.75rem 1.25rem;
-  background-color: #ffffff;
-  border-top: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   display: flex;
   justify-content: flex-end;
 }
@@ -344,8 +344,8 @@
 .dismissBtn {
   padding: 0.45rem 1rem;
   border-radius: 6px;
-  background-color: #e2e8f0;
-  color: #334155;
+  background-color: var(--color-border);
+  color: var(--color-text);
   border: none;
   font-weight: 600;
   font-size: 0.85rem;
@@ -354,5 +354,5 @@
 }
 
 .dismissBtn:hover {
-  background-color: #cbd5e1;
+  background-color: var(--color-border-subtle);
 }

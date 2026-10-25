@@ -24,9 +24,9 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.15rem 0.4rem;
-  background-color: #fef2f2;
-  color: #b91c1c;
-  border: 1px dashed #f87171;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px dashed var(--color-danger-soft);
   border-radius: 4px;
   font-family: monospace;
   font-size: 0.85em;
@@ -35,8 +35,8 @@
 
 .mathErrorBadge {
   font-size: 0.7em;
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
   padding: 0.1rem 0.3rem;
   border-radius: 3px;
   text-transform: uppercase;
@@ -55,7 +55,7 @@
   gap: 0.4rem;
   background: none;
   border: none;
-  color: #2563eb;
+  color: var(--color-primary);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -65,14 +65,14 @@
 }
 
 .helperTrigger:hover {
-  background-color: #eff6ff;
+  background-color: var(--color-primary-soft);
 }
 
 .syntaxBar {
   margin-top: 0.4rem;
   padding: 0.6rem 0.8rem;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -88,27 +88,27 @@
 
 .syntaxLabel {
   font-weight: 600;
-  color: #475569;
+  color: var(--color-text-muted);
   font-size: 0.75rem;
   min-width: 80px;
 }
 
 .syntaxChip {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 4px;
   padding: 0.15rem 0.45rem;
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.75rem;
-  color: #0f172a;
+  color: var(--color-text);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .syntaxChip:hover {
-  background-color: #f1f5f9;
-  border-color: #94a3b8;
-  color: #2563eb;
+  background-color: var(--color-surface-subtle);
+  border-color: var(--color-text-faint);
+  color: var(--color-primary);
   transform: translateY(-1px);
 }
 
@@ -119,8 +119,8 @@
 }
 
 .symbolBtn {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 4px;
   padding: 0.15rem 0.4rem;
   font-size: 0.8rem;
@@ -129,18 +129,18 @@
 }
 
 .symbolBtn:hover {
-  background-color: #eff6ff;
-  border-color: #3b82f6;
-  color: #1d4ed8;
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary-hover);
 }
 
 /* Real-time Live Preview */
 .livePreviewCard {
   margin-top: 0.5rem;
   padding: 0.6rem 0.8rem;
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-left: 3px solid #3b82f6;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
   border-radius: 0 6px 6px 0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
@@ -155,19 +155,19 @@
 .previewTitle {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 .previewBody {
   font-size: 0.9rem;
-  color: #1e293b;
+  color: var(--color-text);
   min-height: 1.5rem;
 }
 
 .previewEmpty {
-  color: #94a3b8;
+  color: var(--color-text-faint);
   font-style: italic;
   font-size: 0.825rem;
 }

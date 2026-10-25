@@ -270,8 +270,8 @@
 }
 
 .buildSection {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -283,7 +283,7 @@
   margin: 0;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   display: flex;
@@ -330,7 +330,7 @@
   flex-shrink: 0;
   font-size: 0.725rem;
   color: var(--color-primary);
-  background: var(--color-primary-soft, #eff6ff);
+  background: var(--color-primary-soft, var(--color-primary-soft));
   padding: 1px 6px;
   border-radius: var(--radius-sm, 4px);
   font-weight: 700;

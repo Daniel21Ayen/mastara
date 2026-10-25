@@ -15,26 +15,26 @@ export type AccentName = CycleAccent | 'danger';
 
 const LIGHT_MAIN: Record<AccentName, string> = {
   blue: palette.primary,
-  violet: '#7c3aed',
-  emerald: '#047857',
-  orange: '#ea580c',
-  cyan: '#0e7490',
-  amber: '#b45309',
-  fuchsia: '#c026d3',
-  lime: '#4d7c0f',
+  violet: palette.primary,
+  emerald: palette.primary,
+  orange: palette.primary,
+  cyan: palette.primary,
+  amber: palette.primary,
+  fuchsia: palette.primary,
+  lime: palette.primary,
   danger: palette.danger,
 };
 
-/** Dark mode: the same hues, lightened. Dark ink on top of them stays readable. */
+/** Dark mode: unified blue palette, lightened for contrast. */
 const DARK_MAIN: Record<AccentName, string> = {
   blue: darkPalette.primary,
-  violet: '#a78bfa',
-  emerald: '#34d399',
-  orange: '#fb923c',
-  cyan: '#22d3ee',
-  amber: '#fbbf24',
-  fuchsia: '#e879f9',
-  lime: '#a3e635',
+  violet: darkPalette.primary,
+  emerald: darkPalette.primary,
+  orange: darkPalette.primary,
+  cyan: darkPalette.primary,
+  amber: darkPalette.primary,
+  fuchsia: darkPalette.primary,
+  lime: darkPalette.primary,
   danger: darkPalette.danger,
 };
 

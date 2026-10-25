@@ -93,7 +93,7 @@
   padding: var(--space-lg);
   border: 2px dashed var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-surface-hover, #f8fafc);
+  background: var(--color-surface-hover, var(--color-surface-subtle));
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -143,7 +143,7 @@
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-md);
-  background: var(--color-surface-hover, #f8fafc);
+  background: var(--color-surface-hover, var(--color-surface-subtle));
   border: 1px solid var(--color-border);
 }
 
@@ -159,8 +159,8 @@
   gap: 4px;
   padding: 3px 10px;
   border-radius: var(--radius-full);
-  background: #dcfce7;
-  color: #166534;
+  background: var(--color-success-soft);
+  color: var(--color-success);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -171,8 +171,8 @@
   gap: 4px;
   padding: 3px 10px;
   border-radius: var(--radius-full);
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -183,10 +183,10 @@
   gap: 4px;
   padding: var(--space-sm);
   border-radius: var(--radius-md);
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--color-danger-soft);
+  border: 1px solid var(--color-danger-soft);
   font-size: 0.8rem;
-  color: #991b1b;
+  color: var(--color-danger);
   max-height: 120px;
   overflow-y: auto;
 }
@@ -221,7 +221,7 @@
 .previewTable th {
   position: sticky;
   top: 0;
-  background: var(--color-surface-hover, #f1f5f9);
+  background: var(--color-surface-hover, var(--color-surface-subtle));
   padding: 6px 10px;
   font-weight: 600;
   border-bottom: 1px solid var(--color-border);

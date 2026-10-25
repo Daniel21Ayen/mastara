@@ -28,9 +28,6 @@ export function buildCssVariables(): string {
   const lines = [
     ...group('color', colors),
     `--color-text-soft: ${withAlpha(palette.ink, 0.1)};`,
-    '--color-primary-hover: #1e40af;',
-    '--color-surface-subtle: #f8fafc;',
-    '--color-border-subtle: #e2e8f0;',
     ...group('space', spacing, 'px'),
     ...group('radius', radius, 'px'),
     ...group('font-size', fontSize, 'px'),

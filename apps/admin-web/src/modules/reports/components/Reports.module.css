@@ -58,8 +58,8 @@
 
 /* Export Center Card */
 .exportCenterCard {
-  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
-  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, var(--color-surface-subtle) 0%, var(--color-primary-soft) 100%);
+  border: 1px solid var(--color-primary-soft);
   border-radius: 12px;
   padding: 20px 24px;
   display: flex;
@@ -79,13 +79,13 @@
 .exportTitle {
   font-size: 16px;
   font-weight: 700;
-  color: #1e3a8a;
+  color: var(--color-primary-hover);
   margin: 0;
 }
 
 .exportSubtitle {
   font-size: 13px;
-  color: #3b82f6;
+  color: var(--color-primary);
   margin: 0;
 }
 
@@ -101,9 +101,9 @@
   align-items: center;
   gap: 8px;
   padding: 9px 16px;
-  background-color: #ffffff;
-  color: #1e40af;
-  border: 1px solid #93c5fd;
+  background-color: var(--color-surface);
+  color: var(--color-primary-hover);
+  border: 1px solid var(--color-primary-soft);
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
@@ -113,8 +113,8 @@
 }
 
 .exportActionBtn:hover {
-  background-color: #dbeafe;
-  border-color: #60a5fa;
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary);
   transform: translateY(-1px);
 }
 
@@ -181,7 +181,7 @@
 .progressBarBg {
   width: 100%;
   height: 8px;
-  background-color: var(--surface-subtle, #f1f5f9);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -231,7 +231,7 @@
 
 .table th {
   padding: 12px 18px;
-  background-color: var(--surface-subtle, #f8fafc);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 12px;
@@ -272,19 +272,19 @@
 }
 
 .scoreHigh {
-  background-color: #dcfce7;
-  color: #15803d;
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .scoreMid {
-  background-color: #fef9c3;
-  color: #854d0e;
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text);
 }
 
 .toast {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
+  background-color: var(--color-success-soft);
+  border: 1px solid var(--color-success-soft);
+  color: var(--color-success);
   padding: 10px 16px;
   border-radius: 8px;
   font-size: 13px;

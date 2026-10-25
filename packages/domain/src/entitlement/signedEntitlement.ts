@@ -1,13 +1,14 @@
-// Use safe dynamic loader so Metro / React Native bundling does not fail on Node standard library
+// Use safe loader so Metro / React Native / Edge runtime bundling does not fail
 const getNodeCrypto = () => {
   try {
     const proc = (globalThis as any).process;
     if (typeof proc?.getBuiltinModule === 'function') {
       return proc.getBuiltinModule('crypto') || proc.getBuiltinModule('node:crypto');
     }
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    const req = typeof module !== 'undefined' && module.require ? module.require : (new Function('return typeof require !== "undefined" ? require : null')());
-    return req ? req('crypto') : null;
+    if (typeof require !== 'undefined') {
+      return require('crypto');
+    }
+    return null;
   } catch {
     return null;
   }

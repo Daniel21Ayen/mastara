@@ -4,8 +4,8 @@
   top: calc(100% + 8px);
   right: 0;
   width: 380px;
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12), 0 4px 6px rgba(15, 23, 42, 0.04);
   display: flex;
@@ -28,7 +28,7 @@
 
 .header {
   padding: 16px 20px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-surface-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -43,14 +43,14 @@
 .title {
   font-size: 15px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .unreadBadge {
   font-size: 11px;
   font-weight: 700;
-  color: #ffffff;
-  background-color: var(--color-danger, #b91c1c);
+  color: var(--color-surface);
+  background-color: var(--color-danger, var(--color-danger));
   padding: 2px 7px;
   border-radius: 10px;
 }
@@ -60,7 +60,7 @@
   border: none;
   font-size: 12.5px;
   font-weight: 600;
-  color: #1a56db;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 4px;
 }
@@ -73,8 +73,8 @@
   display: flex;
   gap: 8px;
   padding: 10px 16px;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #f1f5f9;
+  background-color: var(--color-surface-subtle);
+  border-bottom: 1px solid var(--color-surface-subtle);
 }
 
 .tabBtn {
@@ -84,19 +84,19 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .tabBtn:hover {
-  color: #0f172a;
-  background-color: #e2e8f0;
+  color: var(--color-text);
+  background-color: var(--color-border);
 }
 
 .activeTab {
-  background-color: #ffffff;
-  color: #1a56db;
+  background-color: var(--color-surface);
+  color: var(--color-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
@@ -112,22 +112,22 @@
   align-items: flex-start;
   gap: 12px;
   padding: 14px 18px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--color-surface-subtle);
   cursor: pointer;
   position: relative;
   transition: background-color 0.12s ease;
 }
 
 .item:hover {
-  background-color: #f8fafc;
+  background-color: var(--color-surface-subtle);
 }
 
 .unreadItem {
-  background-color: #eff6ff;
+  background-color: var(--color-primary-soft);
 }
 
 .unreadItem:hover {
-  background-color: #dbeafe;
+  background-color: var(--color-primary-soft);
 }
 
 .iconWrap {
@@ -145,13 +145,13 @@
 .typeStudent,
 .typeExam,
 .typeSystem {
-  background-color: var(--color-primary-soft, #eff6ff);
-  color: var(--color-primary, #1a56db);
+  background-color: var(--color-primary-soft, var(--color-primary-soft));
+  color: var(--color-primary, var(--color-primary));
 }
 
 .typeSecurity {
-  background-color: var(--color-danger-soft, #fee2e2);
-  color: var(--color-danger, #b91c1c);
+  background-color: var(--color-danger-soft, var(--color-danger-soft));
+  color: var(--color-danger, var(--color-danger));
 }
 
 .content {
@@ -171,18 +171,18 @@
 .itemTitle {
   font-size: 13.5px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--color-text);
 }
 
 .time {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--color-text-faint);
   white-space: nowrap;
 }
 
 .description {
   font-size: 12.5px;
-  color: #475569;
+  color: var(--color-text-muted);
   margin: 0;
   line-height: 1.4;
 }
@@ -197,7 +197,7 @@
 .actionLink {
   font-size: 12px;
   font-weight: 600;
-  color: #1a56db;
+  color: var(--color-primary);
   text-decoration: none;
 }
 
@@ -208,21 +208,21 @@
 .clearBtn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--color-text-faint);
   font-size: 12px;
   cursor: pointer;
   padding: 2px 4px;
 }
 
 .clearBtn:hover {
-  color: var(--color-danger, #b91c1c);
+  color: var(--color-danger, var(--color-danger));
 }
 
 .dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: #1a56db;
+  background-color: var(--color-primary);
   position: absolute;
   top: 16px;
   right: 12px;
@@ -234,11 +234,11 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: #94a3b8;
+  color: var(--color-text-faint);
 }
 
 .emptyIcon {
-  color: #cbd5e1;
+  color: var(--color-border-subtle);
 }
 
 .emptyText {
@@ -248,15 +248,15 @@
 
 .footer {
   padding: 12px 16px;
-  background-color: #f8fafc;
-  border-top: 1px solid #f1f5f9;
+  background-color: var(--color-surface-subtle);
+  border-top: 1px solid var(--color-surface-subtle);
   text-align: center;
 }
 
 .footerLink {
   font-size: 12.5px;
   font-weight: 600;
-  color: #1a56db;
+  color: var(--color-primary);
   text-decoration: none;
 }
 

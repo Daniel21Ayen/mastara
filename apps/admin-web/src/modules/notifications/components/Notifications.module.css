@@ -32,7 +32,7 @@
 
 .tabBtn:hover {
   color: var(--text);
-  background-color: var(--surface-subtle, #f8fafc);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
 }
 
 .tabBtnActive {
@@ -42,8 +42,8 @@
 }
 
 .badgeCount {
-  background-color: #ef4444;
-  color: #fff;
+  background-color: var(--color-danger);
+  color: var(--color-surface);
   font-size: 11px;
   font-weight: 700;
   padding: 2px 7px;
@@ -125,7 +125,7 @@
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background-color: var(--surface-subtle, #f8fafc);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   font-size: 14px;
   color: var(--text);
   outline: none;
@@ -137,7 +137,7 @@
 .select:focus,
 .textarea:focus {
   border-color: var(--primary);
-  background-color: #fff;
+  background-color: var(--color-surface);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
@@ -154,7 +154,7 @@
   padding: 12px 20px;
   border-radius: 8px;
   background-color: var(--primary);
-  color: #fff;
+  color: var(--color-surface);
   font-size: 14px;
   font-weight: 600;
   border: none;
@@ -177,7 +177,7 @@
 }
 
 .broadcastItem {
-  background-color: var(--surface-subtle, #f8fafc);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px;
@@ -258,7 +258,7 @@
 
 .filterBtnActive {
   background-color: var(--primary);
-  color: #fff;
+  color: var(--color-surface);
   border-color: var(--primary);
 }
 
@@ -296,7 +296,7 @@
 
 .notifUnread {
   border-left: 4px solid var(--primary);
-  background-color: #faf5ff;
+  background-color: var(--color-surface-subtle);
 }
 
 .notifIconBox {
@@ -310,28 +310,28 @@
 }
 
 .notifIconPayment {
-  background-color: #f0fdf4;
-  color: #16a34a;
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .notifIconStudent {
-  background-color: #eff6ff;
-  color: #2563eb;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .notifIconExam {
-  background-color: #faf5ff;
-  color: #7c3aed;
+  background-color: var(--color-surface-subtle);
+  color: var(--color-primary);
 }
 
 .notifIconSecurity {
-  background-color: #fff1f2;
-  color: #e11d48;
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .notifIconSystem {
-  background-color: #f8fafc;
-  color: #475569;
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-muted);
 }
 
 .notifContent {
@@ -375,7 +375,7 @@
 .actionBtn {
   padding: 6px 12px;
   border-radius: 6px;
-  background-color: var(--surface-subtle, #f1f5f9);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   color: var(--text);
   font-size: 12px;
   font-weight: 600;
@@ -400,13 +400,13 @@
 }
 
 .dismissBtn:hover {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 .successToast {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
+  background-color: var(--color-success-soft);
+  border: 1px solid var(--color-success-soft);
+  color: var(--color-success);
   padding: 12px 16px;
   border-radius: 8px;
   font-size: 13px;

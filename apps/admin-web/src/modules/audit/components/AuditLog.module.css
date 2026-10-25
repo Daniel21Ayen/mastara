@@ -94,7 +94,7 @@
   padding: 8px 12px 8px 36px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background-color: var(--surface-subtle, #f8fafc);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   font-size: 14px;
   color: var(--text);
   outline: none;
@@ -103,14 +103,14 @@
 
 .searchInput:focus {
   border-color: var(--primary);
-  background-color: #fff;
+  background-color: var(--color-surface);
 }
 
 .select {
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background-color: var(--surface-subtle, #f8fafc);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
@@ -123,7 +123,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background-color: var(--surface-subtle, #f1f5f9);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   color: var(--text);
   font-size: 13px;
   font-weight: 600;
@@ -160,7 +160,7 @@
 
 .table th {
   padding: 12px 18px;
-  background-color: var(--surface-subtle, #f8fafc);
+  background-color: var(--surface-subtle, var(--color-surface-subtle));
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 12px;
@@ -212,18 +212,18 @@
 }
 
 .actorAdmin {
-  background-color: #f3e8ff;
-  color: #7e22ce;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .actorStudent {
-  background-color: #e0f2fe;
-  color: #0369a1;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .actorSystem {
-  background-color: #f1f5f9;
-  color: #475569;
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-muted);
 }
 
 .actionText {
@@ -275,8 +275,8 @@
 }
 
 .jsonBox {
-  background-color: #0f172a;
-  color: #f8fafc;
+  background-color: var(--color-text);
+  color: var(--color-surface-subtle);
   padding: 16px;
   border-radius: 8px;
   font-family: monospace;
