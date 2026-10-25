@@ -32,3 +32,10 @@ Validates database connection pooling and Prisma pagination response times acros
 ```bash
 k6 run tests/load/k6-paginated-lists.js
 ```
+
+### 4. Catalog Snapshot & Delta Sync Load Test
+Simulates peak student concurrency downloading catalog snapshots, testing 304 ETag caching and delta sync response times:
+```bash
+k6 run tests/load/k6-catalog-snapshot.js
+```
+
