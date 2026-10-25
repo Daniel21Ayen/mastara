@@ -15,12 +15,16 @@ const isNative =
   (navigator as any).product === 'ReactNative';
 
 let AppState: typeof import('react-native').AppState | null = null;
+let InteractionManager: typeof import('react-native').InteractionManager | null = null;
 if (isNative) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     AppState = require('react-native').AppState;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    InteractionManager = require('react-native').InteractionManager;
   } catch {
     AppState = null;
+    InteractionManager = null;
   }
 }
 
@@ -171,23 +175,36 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         })
       : null;
 
-    // Run trigger once on mount if online
+    // Startup optimization: run catalog sync after first screen is drawn, never before it
+    let startupTimer: ReturnType<typeof setTimeout> | null = null;
     if (online) {
-      handleTrigger(false);
+      if (InteractionManager?.runAfterInteractions) {
+        InteractionManager.runAfterInteractions(() => {
+          handleTrigger(false);
+        });
+      } else {
+        startupTimer = setTimeout(() => {
+          handleTrigger(false);
+        }, 500);
+      }
     }
 
     return () => {
       unsubscribeNet();
       appStateSubscription?.remove();
+      if (startupTimer) clearTimeout(startupTimer);
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
       if (retryTimer.current) clearTimeout(retryTimer.current);
     };
   }, [user, online, syncNow]);
 
-  // Sync catalog after login or user change
+  // Sync catalog after login or user change, deferred so screen renders first
   useEffect(() => {
     if (user && online) {
-      void syncCatalog(user.id, true).catch(() => undefined);
+      const timer = setTimeout(() => {
+        void syncCatalog(user.id, true).catch(() => undefined);
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [user?.id, online]);
 

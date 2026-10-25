@@ -37,17 +37,34 @@ export function RichText({ text, lang }: RichTextProps) {
 
   const hasAnyLayoutHeavy = paragraphs.some((p) => p.layoutHeavy);
 
+  // Split long chapters into sections (e.g. up to 8 paragraphs per section) so long chapters
+  // render in fast digestible chunks without layout thrashing on low-end devices
+  const SECTION_SIZE = 8;
+  const sections = useMemo(() => {
+    if (paragraphs.length <= SECTION_SIZE) return [paragraphs];
+    const chunks: (typeof paragraphs)[] = [];
+    for (let i = 0; i < paragraphs.length; i += SECTION_SIZE) {
+      chunks.push(paragraphs.slice(i, i + SECTION_SIZE));
+    }
+    return chunks;
+  }, [paragraphs]);
+
   // If any formula needs layout (fractions, roots, matrices), use the single shared renderer
-  // instead of spawning multiple WebViews, staying strictly within the 120 MB RAM target.
+  // per section, staying strictly within the 120 MB RAM target.
   if (hasAnyLayoutHeavy) {
-    const fullAccessibilityLabel = paragraphs.map((p) => spokenText(p.segments)).join(' ');
     return (
       <View style={styles.wrap}>
-        <SharedKatexRenderer
-          paragraphs={paragraphs}
-          lang={lang}
-          accessibilityLabel={fullAccessibilityLabel}
-        />
+        {sections.map((section, sIdx) => {
+          const sectionLabel = section.map((p) => spokenText(p.segments)).join(' ');
+          return (
+            <SharedKatexRenderer
+              key={sIdx}
+              paragraphs={section}
+              lang={lang}
+              accessibilityLabel={sectionLabel}
+            />
+          );
+        })}
       </View>
     );
   }

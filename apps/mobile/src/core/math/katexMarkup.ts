@@ -14,12 +14,36 @@ export function escapeHtml(value: string): string {
 const formulaCache = new Map<string, string>();
 const MAX_FORMULA_CACHE = 500;
 
+const chapterMarkupCache = new Map<string, string>();
+const MAX_CHAPTER_CACHE = 100;
+
 export function clearFormulaCache(): void {
   formulaCache.clear();
+  chapterMarkupCache.clear();
 }
 
 export function getFormulaCacheSize(): number {
   return formulaCache.size;
+}
+
+export function getChapterCacheSize(): number {
+  return chapterMarkupCache.size;
+}
+
+export function getCachedChapterMarkup(key: string): string | undefined {
+  return chapterMarkupCache.get(key);
+}
+
+export function setCachedChapterMarkup(key: string, markup: string): void {
+  if (chapterMarkupCache.size >= MAX_CHAPTER_CACHE) {
+    const oldest = chapterMarkupCache.keys().next().value;
+    if (oldest !== undefined) chapterMarkupCache.delete(oldest);
+  }
+  chapterMarkupCache.set(key, markup);
+}
+
+export function clearChapterMarkupCache(): void {
+  chapterMarkupCache.clear();
 }
 
 

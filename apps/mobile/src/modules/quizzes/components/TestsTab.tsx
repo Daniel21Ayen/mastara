@@ -3,7 +3,7 @@ import { QUIZ_NUMBERS, resolveOpen } from '@mastara/domain';
 import type { AccessState, QuizNumber } from '@mastara/domain';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
@@ -42,29 +42,32 @@ export function TestsTab({ courseId, access, course }: TestsTabProps) {
     label: t('tests.quiz', { n }),
   }));
 
-  function openChapter(chapter: QuizChapter, _open?: boolean) {
-    const isDownloaded =
-      downloadedIds.has(`QUIZ_CHAPTER:${chapter.id}`) || downloadedIds.has(`COURSE:${courseId}`);
-    const resolution = resolveOpen({
-      access,
-      isFree: chapter.isFree,
-      isDownloaded,
-      isOnline: online,
-    });
+  const openChapter = useCallback(
+    (chapter: QuizChapter, _open?: boolean) => {
+      const isDownloaded =
+        downloadedIds.has(`QUIZ_CHAPTER:${chapter.id}`) || downloadedIds.has(`COURSE:${courseId}`);
+      const resolution = resolveOpen({
+        access,
+        isFree: chapter.isFree,
+        isDownloaded,
+        isOnline: online,
+      });
 
-    switch (resolution) {
-      case 'LOCKED':
-        setLockedOpen(true);
-        break;
-      case 'OPEN_LOCAL':
-      case 'OPEN_ONLINE':
-        router.push(`/quiz/${chapter.id}` as Href);
-        break;
-      case 'NEEDS_INTERNET':
-        setNeedsInternetOpen(true);
-        break;
-    }
-  }
+      switch (resolution) {
+        case 'LOCKED':
+          setLockedOpen(true);
+          break;
+        case 'OPEN_LOCAL':
+        case 'OPEN_ONLINE':
+          router.push(`/quiz/${chapter.id}` as Href);
+          break;
+        case 'NEEDS_INTERNET':
+          setNeedsInternetOpen(true);
+          break;
+      }
+    },
+    [access, courseId, downloadedIds, online, router],
+  );
 
   return (
     <View style={styles.wrap}>

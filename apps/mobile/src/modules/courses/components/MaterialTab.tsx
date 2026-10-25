@@ -5,7 +5,7 @@ import type { AccessState, ContentKind, ContentLang } from '@mastara/domain';
 import type { TranslationKey } from '@mastara/i18n';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
@@ -68,29 +68,32 @@ export function MaterialTab({ courseId, access, course }: MaterialTabProps) {
     label: t(TAB_CONFIG[id].tab),
   }));
 
-  function openTopic(topic: Topic) {
-    const isDownloaded =
-      downloadedIds.has(`TOPIC:${topic.id}`) || downloadedIds.has(`COURSE:${courseId}`);
-    const resolution = resolveOpen({
-      access,
-      isFree: topic.isFree,
-      isDownloaded,
-      isOnline: online,
-    });
+  const openTopic = useCallback(
+    (topic: Topic) => {
+      const isDownloaded =
+        downloadedIds.has(`TOPIC:${topic.id}`) || downloadedIds.has(`COURSE:${courseId}`);
+      const resolution = resolveOpen({
+        access,
+        isFree: topic.isFree,
+        isDownloaded,
+        isOnline: online,
+      });
 
-    switch (resolution) {
-      case 'LOCKED':
-        setLockedOpen(true);
-        break;
-      case 'OPEN_LOCAL':
-      case 'OPEN_ONLINE':
-        router.push(`/reader/${topic.id}?lang=${config.lang}` as Href);
-        break;
-      case 'NEEDS_INTERNET':
-        setNeedsInternetOpen(true);
-        break;
-    }
-  }
+      switch (resolution) {
+        case 'LOCKED':
+          setLockedOpen(true);
+          break;
+        case 'OPEN_LOCAL':
+        case 'OPEN_ONLINE':
+          router.push(`/reader/${topic.id}?lang=${config.lang}` as Href);
+          break;
+        case 'NEEDS_INTERNET':
+          setNeedsInternetOpen(true);
+          break;
+      }
+    },
+    [access, config.lang, courseId, downloadedIds, online, router],
+  );
 
   return (
     <View style={styles.wrap}>

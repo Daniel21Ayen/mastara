@@ -1,4 +1,5 @@
 import type { MyCourse } from '@mastara/contracts';
+import { memo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
@@ -13,7 +14,7 @@ interface CourseCardProps {
   onPress: (courseId: string) => void;
 }
 
-export function CourseCard({ item, onPress }: CourseCardProps) {
+export const CourseCard = memo(function CourseCard({ item, onPress }: CourseCardProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
@@ -76,7 +77,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
       )}
     </Pressable>
   );
-}
+});
 
 const useStyles = createStyles((theme) => ({
   card: {

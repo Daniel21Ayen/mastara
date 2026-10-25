@@ -1,5 +1,6 @@
 // apps/mobile/src/modules/exams/components/ExamRow.tsx
 import type { Exam, University } from '@mastara/contracts';
+import { memo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
@@ -16,7 +17,7 @@ interface ExamRowProps {
   onPress: (exam: Exam, open: boolean) => void;
 }
 
-export function ExamRow({ exam, university, open, onPress }: ExamRowProps) {
+export const ExamRow = memo(function ExamRow({ exam, university, open, onPress }: ExamRowProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
@@ -47,7 +48,7 @@ export function ExamRow({ exam, university, open, onPress }: ExamRowProps) {
       {trailing}
     </Pressable>
   );
-}
+});
 
 const useStyles = createStyles((theme) => ({
   row: {

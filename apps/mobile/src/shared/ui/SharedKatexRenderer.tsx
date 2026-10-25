@@ -5,7 +5,12 @@ import { PixelRatio, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
-import { buildMathDocument, renderParagraphHtml } from '@/core/math';
+import {
+  buildMathDocument,
+  getCachedChapterMarkup,
+  renderParagraphHtml,
+  setCachedChapterMarkup,
+} from '@/core/math';
 import { createStyles, useTheme } from '@/core/theme';
 
 export interface ParagraphItem {
@@ -58,6 +63,9 @@ export const SharedKatexRenderer = memo(function SharedKatexRenderer({
   );
 
   const html = useMemo(() => {
+    const cached = getCachedChapterMarkup(cacheKey);
+    if (cached) return cached;
+
     const bodyContent = paragraphs
       .map((item) => {
         const innerHtml = renderParagraphHtml(item.segments);
@@ -68,14 +76,17 @@ export const SharedKatexRenderer = memo(function SharedKatexRenderer({
       })
       .join('');
 
-    return buildMathDocument(bodyContent, {
+    const documentHtml = buildMathDocument(bodyContent, {
       color: theme.colors.text,
       fontSizePx,
       lineHeightPx,
       fontFamily: FONT_STACK[lang],
       align: 'left',
     });
-  }, [paragraphs, lang, fontSizePx, lineHeightPx, theme.colors.text]);
+
+    setCachedChapterMarkup(cacheKey, documentHtml);
+    return documentHtml;
+  }, [cacheKey, paragraphs, lang, fontSizePx, lineHeightPx, theme.colors.text]);
 
   const initialHeight = useMemo(() => {
     const cached = docHeightCache.get(cacheKey);

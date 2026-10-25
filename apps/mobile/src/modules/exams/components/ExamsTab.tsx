@@ -4,7 +4,7 @@ import type { AccessState, ExamKind } from '@mastara/domain';
 import type { TranslationKey } from '@mastara/i18n';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
@@ -55,29 +55,32 @@ export function ExamsTab({ courseId, access, course }: ExamsTabProps) {
     label: t(KIND_TEXT[value].tab),
   }));
 
-  function openExam(exam: Exam, _open?: boolean) {
-    const isDownloaded =
-      downloadedIds.has(`EXAM:${exam.id}`) || downloadedIds.has(`COURSE:${courseId}`);
-    const resolution = resolveOpen({
-      access,
-      isFree: exam.isFree,
-      isDownloaded,
-      isOnline: online,
-    });
+  const openExam = useCallback(
+    (exam: Exam, _open?: boolean) => {
+      const isDownloaded =
+        downloadedIds.has(`EXAM:${exam.id}`) || downloadedIds.has(`COURSE:${courseId}`);
+      const resolution = resolveOpen({
+        access,
+        isFree: exam.isFree,
+        isDownloaded,
+        isOnline: online,
+      });
 
-    switch (resolution) {
-      case 'LOCKED':
-        setLockedOpen(true);
-        break;
-      case 'OPEN_LOCAL':
-      case 'OPEN_ONLINE':
-        router.push(`/exam/${exam.id}` as Href);
-        break;
-      case 'NEEDS_INTERNET':
-        setNeedsInternetOpen(true);
-        break;
-    }
-  }
+      switch (resolution) {
+        case 'LOCKED':
+          setLockedOpen(true);
+          break;
+        case 'OPEN_LOCAL':
+        case 'OPEN_ONLINE':
+          router.push(`/exam/${exam.id}` as Href);
+          break;
+        case 'NEEDS_INTERNET':
+          setNeedsInternetOpen(true);
+          break;
+      }
+    },
+    [access, courseId, downloadedIds, online, router],
+  );
 
   return (
     <View style={styles.wrap}>

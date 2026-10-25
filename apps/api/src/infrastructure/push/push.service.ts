@@ -165,7 +165,7 @@ export class PushService {
         headers["Authorization"] = `Bearer ${expoAccessToken}`;
       }
 
-      const response = await fetch(this.expoEndpoint, {
+      const response: any = await fetch(this.expoEndpoint, {
         method: "POST",
         headers,
         body: JSON.stringify(message),
@@ -236,7 +236,7 @@ export class PushService {
     }
 
     try {
-      const response = await fetch(this.fcmEndpoint, {
+      const response: any = await fetch(this.fcmEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

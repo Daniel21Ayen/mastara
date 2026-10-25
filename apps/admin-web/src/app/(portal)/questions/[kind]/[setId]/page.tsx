@@ -1,12 +1,23 @@
 // apps/admin-web/src/app/(portal)/questions/[kind]/[setId]/page.tsx
 import { examSetKindFromSlug } from '@mastara/domain';
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 
 import { adminText } from '@/core/i18n';
-import { QuestionFormScreen } from '@/modules/questions/screens/QuestionFormScreen';
+import { StateMessage } from '@/shared/ui';
 
 export const metadata: Metadata = { title: adminText('admin.questions.form.heading') };
+
+const QuestionFormScreen = dynamic(
+  () =>
+    import('@/modules/questions/screens/QuestionFormScreen').then(
+      (m) => m.QuestionFormScreen,
+    ),
+  {
+    loading: () => <StateMessage>{adminText('admin.common.loading')}</StateMessage>,
+  },
+);
 
 export default async function Page({
   params,

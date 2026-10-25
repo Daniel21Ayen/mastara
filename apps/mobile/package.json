@@ -29,6 +29,7 @@
     "@mastara/i18n": "*",
     "@mastara/ui-tokens": "*",
     "@react-native-community/netinfo": "12.0.1",
+    "@shopify/flash-list": "^2.3.3",
     "expo": "~57.0.30",
     "expo-build-properties": "~57.0.22",
     "expo-clipboard": "~57.0.2",

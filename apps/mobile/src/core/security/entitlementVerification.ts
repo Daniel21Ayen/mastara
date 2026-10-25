@@ -47,9 +47,9 @@ export async function verifyCourseAccess(
 
   const lastSeen =
     options.lastSeenServerTimeMs ??
-    (await secureStorage
+    ((await secureStorage
       .getString(STORAGE_KEYS.lastSeenServerTime)
-      .then((s) => (s ? Number(s) : 0)));
+      .then((s) => (s ? Number(s) : 0))) ?? 0);
 
   const result = verifyEntitlementTokenOffline(token, {
     currentDeviceTimeMs: options.currentDeviceTimeMs,

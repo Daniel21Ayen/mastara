@@ -2,6 +2,7 @@
 import type { QuizChapter } from '@mastara/contracts';
 import { canOpenContent } from '@mastara/domain';
 import type { AccessState } from '@mastara/domain';
+import { memo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
@@ -18,7 +19,7 @@ interface QuizChapterRowProps {
   onPress: (chapter: QuizChapter, open: boolean) => void;
 }
 
-export function QuizChapterRow({ chapter, access, best, onPress }: QuizChapterRowProps) {
+export const QuizChapterRow = memo(function QuizChapterRow({ chapter, access, best, onPress }: QuizChapterRowProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
@@ -47,7 +48,7 @@ export function QuizChapterRow({ chapter, access, best, onPress }: QuizChapterRo
       {trailing}
     </Pressable>
   );
-}
+});
 
 const useStyles = createStyles((theme) => ({
   row: {

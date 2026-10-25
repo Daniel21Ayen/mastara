@@ -53,6 +53,12 @@ export class PrismaService
     try {
       await this.$connect();
       this.logger.log("Successfully connected to PostgreSQL database via Prisma.");
+
+      if (process.env.PRISMA_LOG_QUERIES === "true" || process.env.NODE_ENV === "development") {
+        (this as any).$on?.("query", (e: any) => {
+          this.logger.debug(`Prisma Query [${e.duration}ms]: ${e.query}`);
+        });
+      }
     } catch (error) {
       this.logger.error("Failed to connect to database during onModuleInit:", error);
       throw error;

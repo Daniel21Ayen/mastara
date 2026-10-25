@@ -2,6 +2,7 @@
 import type { Topic } from '@mastara/contracts';
 import { canOpenContent } from '@mastara/domain';
 import type { AccessState, ContentLang } from '@mastara/domain';
+import { memo } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
@@ -18,7 +19,7 @@ interface TopicRowProps {
   onPress: (topic: Topic, open: boolean) => void;
 }
 
-export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
+export const TopicRow = memo(function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
@@ -53,7 +54,7 @@ export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
       )}
     </Pressable>
   );
-}
+});
 
 const useStyles = createStyles((theme) => ({
   row: {

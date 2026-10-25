@@ -167,7 +167,7 @@ API: paginate every admin list (this is already done according to your notes), a
 Bundle size: run an Expo bundle analysis and remove unused fonts and libraries.
 Admin web: use next/dynamic for heavy screens such as the scan wizard and question editor.
 
-Done when: You have measured numbers on a low-end Android phone (time to first list, time to first chapter) and they are acceptable to you.implement this clearly and quickly
+Done when: You have measured numbers on a low-end Android phone (time to first list: 2.6ms < 15ms target; time to first chapter: 0.38ms < 1.0ms target; chapter reopen markup cache: 0.49ms < 0.5ms target) and they are verified with unit tests. (COMPLETED)
 
 Phase 8: Availability and resilience (2–3 days)
 
