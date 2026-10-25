@@ -76,4 +76,29 @@ export const MIGRATIONS: readonly Migration[] = [
        WHERE key LIKE 'content.%' OR key LIKE 'quiz.%' OR key LIKE 'exam.%' OR key LIKE 'coc.%';
     `,
   },
+  {
+    // Phase 3: local catalog database on mobile. A local copy of lists so screens render at once offline.
+    version: 4,
+    sql: `
+      CREATE TABLE catalog_item (
+        user_id TEXT NOT NULL,
+        id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        course_id TEXT NOT NULL,
+        parent_id TEXT,
+        title TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        is_free INTEGER NOT NULL DEFAULT 0,
+        meta TEXT,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (user_id, id)
+      );
+      CREATE INDEX idx_catalog_list ON catalog_item (user_id, course_id, kind, parent_id, position);
+      CREATE TABLE catalog_state (
+        user_id TEXT PRIMARY KEY,
+        version TEXT,
+        synced_at INTEGER
+      );
+    `,
+  },
 ];

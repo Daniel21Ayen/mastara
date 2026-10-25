@@ -56,11 +56,59 @@ async function migrate(db: SQLiteDatabase): Promise<void> {
 
 const DB_NAME = 'mastara.db';
 
-async function open(): Promise<SQLiteDatabase> {
-  if (!SQLite?.openDatabaseAsync) {
-    throw new Error('SQLite is not available in this environment');
+function createNodeSqliteShim(): SQLiteDatabase {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { DatabaseSync } = require('node:sqlite');
+    const rawDb = new DatabaseSync(':memory:');
+    return {
+      async execAsync(sql: string) {
+        rawDb.exec(sql);
+      },
+      async runAsync(sql: string, ...params: any[]) {
+        const flattened = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
+        const stmt = rawDb.prepare(sql);
+        const res = stmt.run(...flattened);
+        return { lastInsertRowId: Number(res.lastInsertRowid), changes: res.changes };
+      },
+      async getFirstAsync<T>(sql: string, ...params: any[]) {
+        const flattened = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
+        const stmt = rawDb.prepare(sql);
+        return (stmt.get(...flattened) as T) ?? null;
+      },
+      async getAllAsync<T>(sql: string, ...params: any[]) {
+        const flattened = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
+        const stmt = rawDb.prepare(sql);
+        return stmt.all(...flattened) as T[];
+      },
+      async withTransactionAsync<T>(task: () => Promise<T>): Promise<T> {
+        rawDb.exec('BEGIN TRANSACTION;');
+        try {
+          const result = await task();
+          rawDb.exec('COMMIT;');
+          return result;
+        } catch (err) {
+          rawDb.exec('ROLLBACK;');
+          throw err;
+        }
+      },
+      async closeAsync() {
+        rawDb.close();
+      },
+    } as unknown as SQLiteDatabase;
+  } catch (err) {
+    throw new Error(`SQLite is not available in this environment: ${err}`);
   }
-  const db = await SQLite.openDatabaseAsync(DB_NAME);
+}
+
+async function open(): Promise<SQLiteDatabase> {
+  let db: SQLiteDatabase;
+  if (isNative && SQLite?.openDatabaseAsync) {
+    db = await SQLite.openDatabaseAsync(DB_NAME);
+  } else {
+    db = createNodeSqliteShim();
+  }
+
   try {
     if (isNative) {
       if (env.dbEncryption) await db.execAsync(`PRAGMA key = '${await databaseKey()}';`);

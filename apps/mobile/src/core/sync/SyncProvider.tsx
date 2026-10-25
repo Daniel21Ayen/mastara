@@ -1,13 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
-import { subscribeOnline, useOnline } from '@/core/network';
+import { isOnline, subscribeOnline, useOnline } from '@/core/network';
 import { useSession } from '@/core/session';
 import { getAccountState } from '@/modules/auth/api/auth.api';
 
 import { outbox } from './outbox';
 import { flushOutbox } from './syncWorker';
 import { syncDownstreamContent } from './contentSync';
+import { syncCatalog } from './catalogSync';
 
 const isNative =
   typeof navigator !== 'undefined' &&
@@ -26,6 +27,7 @@ if (isNative) {
 const DEBOUNCE_MS = 500;
 const BASE_RETRY_MS = 1000;
 const MAX_BACKOFF_MS = 60_000;
+const FOREGROUND_THROTTLE_MS = 3 * 60_000; // 3 minutes
 
 function calculateBackoffWithJitter(attempt: number): number {
   const exp = Math.min(MAX_BACKOFF_MS, BASE_RETRY_MS * Math.pow(2, attempt));
@@ -41,6 +43,7 @@ interface SyncValue {
   syncing: boolean;
   lastSyncAt: number | null;
   syncNow: () => Promise<void>;
+  syncCatalogNow: (force?: boolean) => Promise<void>;
 }
 
 const SyncContext = createContext<SyncValue | null>(null);
@@ -116,16 +119,37 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     });
   }, [refresh, syncNow]);
 
+  const lastForegroundSync = useRef(0);
+
+  const syncCatalogNow = useCallback(async (force = false) => {
+    try {
+      await syncCatalog(user?.id, force);
+    } catch {
+      // ignore
+    }
+  }, [user]);
+
   // Trigger sync on NetInfo changes and app foreground (active)
   useEffect(() => {
-    const handleTrigger = () => {
+    const handleTrigger = (isForeground = false) => {
+      if (isForeground) {
+        const now = Date.now();
+        if (now - lastForegroundSync.current < FOREGROUND_THROTTLE_MS) {
+          return;
+        }
+        lastForegroundSync.current = now;
+      }
+
       retryAttempts.current = 0;
       if (retryTimer.current) clearTimeout(retryTimer.current);
 
-      // 1. Separate downstream content sync
+      // 1. Local catalog snapshot sync (metadata only)
+      void syncCatalog(user?.id).catch(() => undefined);
+
+      // 2. Downstream cached summary content sync
       void syncDownstreamContent(user?.id).catch(() => undefined);
 
-      // 2. Outbox sync
+      // 3. Outbox sync
       if (user) {
         void syncNow().catch(() => undefined);
       }
@@ -133,23 +157,23 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
     // NetInfo connectivity change subscription
     const unsubscribeNet = subscribeOnline(() => {
-      if (online) {
-        handleTrigger();
+      if (isOnline()) {
+        handleTrigger(false);
       }
     });
 
-    // AppState foreground listener
+    // AppState foreground listener (throttled to once every 3 minutes)
     const appStateSubscription = AppState
       ? AppState.addEventListener('change', (state) => {
           if (state === 'active') {
-            handleTrigger();
+            handleTrigger(true);
           }
         })
       : null;
 
     // Run trigger once on mount if online
     if (online) {
-      handleTrigger();
+      handleTrigger(false);
     }
 
     return () => {
@@ -160,9 +184,16 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     };
   }, [user, online, syncNow]);
 
+  // Sync catalog after login or user change
+  useEffect(() => {
+    if (user && online) {
+      void syncCatalog(user.id, true).catch(() => undefined);
+    }
+  }, [user?.id, online]);
+
   const value = useMemo(
-    () => ({ online, pending, rejected, syncing, lastSyncAt, syncNow }),
-    [online, pending, rejected, syncing, lastSyncAt, syncNow],
+    () => ({ online, pending, rejected, syncing, lastSyncAt, syncNow, syncCatalogNow }),
+    [online, pending, rejected, syncing, lastSyncAt, syncNow, syncCatalogNow],
   );
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;
 }

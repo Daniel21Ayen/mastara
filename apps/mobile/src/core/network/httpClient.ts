@@ -66,6 +66,10 @@ async function request<T>(
       body: requestBody,
     });
 
+    if (response.status === 304) {
+      return null as unknown as T;
+    }
+
     if (!response.ok) {
       let errorJson: { errorCode?: string; message?: string } | null = null;
       try {

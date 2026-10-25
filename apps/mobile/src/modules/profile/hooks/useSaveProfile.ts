@@ -3,7 +3,7 @@ import type { StudentProfile } from '@mastara/contracts';
 import { useCallback } from 'react';
 
 import { useSession } from '@/core/session';
-import { outbox } from '@/core/sync';
+import { outbox, syncCatalog } from '@/core/sync';
 
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
 import type { PendingStudentSync } from '@/modules/auth/api/auth.api';
@@ -20,6 +20,9 @@ export function useSaveProfile() {
     async (profile: StudentProfile) => {
       if (!user) return;
       saveProfile(profile); // the session is saved on the phone straight away
+
+      // Trigger catalog sync after course selection / profile update
+      void syncCatalog(user.id, true).catch(() => undefined);
 
       // If student has not yet purchased content, save profile locally only
       // Do NOT insert or save to central database until they purchase content
