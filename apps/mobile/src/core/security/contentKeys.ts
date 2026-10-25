@@ -24,3 +24,8 @@ export async function getEntitlementKey(): Promise<string | null> {
 export async function setEntitlementKey(key: string): Promise<void> {
   await secureStorage.setString(STORAGE_KEYS.entitlementKey, key);
 }
+
+export async function removeEntitlementKey(): Promise<void> {
+  await secureStorage.remove(STORAGE_KEYS.entitlementKey);
+}
+

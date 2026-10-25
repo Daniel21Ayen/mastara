@@ -4,8 +4,8 @@ import { describe, it, beforeEach } from 'node:test';
 
 import type { Topic } from '@mastara/contracts';
 import { ERROR_CODES, offlineAccess } from '@mastara/domain';
-import { ApiError } from '@/core/network/ApiError';
-import { clearFormulaCache, getFormulaCacheSize, renderFormula } from '@/core/math/katexMarkup';
+import { ApiError } from '../../core/network/ApiError';
+import { clearFormulaCache, getFormulaCacheSize, renderFormula } from '../../core/math/katexMarkup';
 import { readerMemoryCache } from './store/readerMemoryCache';
 
 describe('Phase 5: Opening bodies and optional downloads', () => {

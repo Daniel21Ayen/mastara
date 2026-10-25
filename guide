@@ -167,7 +167,7 @@ API: paginate every admin list (this is already done according to your notes), a
 Bundle size: run an Expo bundle analysis and remove unused fonts and libraries.
 Admin web: use next/dynamic for heavy screens such as the scan wizard and question editor.
 
-Done when: You have measured numbers on a low-end Android phone (time to first list, time to first chapter) and they are acceptable to you.
+Done when: You have measured numbers on a low-end Android phone (time to first list, time to first chapter) and they are acceptable to you.implement this clearly and quickly
 
 Phase 8: Availability and resilience (2–3 days)
 
@@ -187,7 +187,7 @@ Error tracking (such as Sentry), structured logs, and alerts on error rate and s
 Graceful degradation: if Redis is down the API still works from Postgres, just slower.
 Run prisma migrate deploy in the release step, with a rollback plan.
 
-Done when: You can stop the API for 10 minutes and the app still lists and opens downloaded content with no crash.
+Done when: You can stop the API for 10 minutes and the app still lists and opens downloaded content with no crash. implement this clearly and quickly
 
 Phase 9: Testing and release (2–3 days)
 Unit tests: resolveOpen matrix, snapshot delta apply, entitlement expiry, clock rollback.
@@ -196,6 +196,6 @@ Device tests with airplane mode, for each of these accounts: unpaid, paid, expir
 Load tests: run the three k6 scripts in tests/load, plus one for the snapshot endpoint.
 Staging: deploy there first with production-like data, and test the admin to mobile flow (publish, mobile sync, student sees the change).
 Release: EAS production build, check APK size under 50 MB, staged rollout to a small group, then everyone.
-Suggested order
+Suggested order implement this clearly and quickly
 
 Phases 0 → 2 → 3 → 4 → 5 give you the new behaviour. Phase 1 (colours) is independent, so you can run it in parallel. Phases 6 → 9 are the readiness work, and parts of 6 and 7 should be tested while you build 4 and 5.

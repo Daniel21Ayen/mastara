@@ -8,7 +8,9 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  UseGuards,
 } from "@nestjs/common";
+import { DeviceGuard } from "../../../common/guards/device.guard";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -57,6 +59,7 @@ export class ContentController {
   }
 
   @Get("topics/:topicId")
+  @UseGuards(DeviceGuard)
   @ApiOperation({
     summary: "Get topic lesson details and bilingual content (en/am)",
   })
