@@ -82,10 +82,12 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
           <CourseActionButton course={item.course} compact />
         </View>
 
-        {item.access === 'LOCKED' ? (
-          <Badge label={t('access.locked')} tone="danger" />
+        {item.access === 'PAID' ? (
+          <Badge label={t('access.paid')} tone="primary" />
+        ) : item.access === 'FREE_TRIAL' ? (
+          <Badge label={t('access.freeTrial')} tone="muted" />
         ) : (
-          <Icon name="chevron" color={theme.colors.textMuted} />
+          <Badge label={t('access.locked')} tone="danger" />
         )}
       </Pressable>
 

@@ -94,6 +94,7 @@ export class AdminTestsService {
       correctOption: meta.correctOption !== undefined ? meta.correctOption : null,
       trueIsCorrect: meta.trueIsCorrect !== undefined ? meta.trueIsCorrect : null,
       acceptedAnswers: Array.isArray(meta.acceptedAnswers) ? meta.acceptedAnswers : [],
+      displayNumber: q.display_number ?? undefined,
       status: (meta.status ?? (q.is_active ? "PUBLISHED" : "DRAFT")) as CatalogStatus,
       updatedAt: q.updated_at.toISOString(),
       nextId,
@@ -394,46 +395,127 @@ export class AdminTestsService {
     }
 
     const studentType = toStudentType(input.form);
-    const created = await this.prisma.question.create({
-      data: {
-        course_id: input.courseId,
-        topic_id: input.topicId,
-        type: studentType as any,
-        prompt_en: input.prompt.trim(),
-        options: input.form === "MULTIPLE_CHOICE" ? input.options.map((o) => o.trim()) : [],
-        correct_answers: {
-          quizNo: input.quizNo,
-          title: input.title.trim(),
-          form: input.form,
-          correctOption: input.correctOption ?? null,
-          trueIsCorrect: input.trueIsCorrect ?? null,
-          acceptedAnswers: input.acceptedAnswers ?? [],
-          status: input.status,
-        },
-        is_active: input.status === "PUBLISHED",
-      },
-      include: {
-        course: true,
-        topic: { include: { module: true } },
-      },
-    });
-
     const isPublished = input.status === "PUBLISHED";
-    await this.prisma.auditLog.create({
-      data: {
-        actor_id: adminId || "00000000-0000-0000-0000-000000000000",
-        actor_role: Role.ADMIN,
-        action: isPublished ? "QUESTION_PUBLISHED" : "QUESTION_CREATED",
-        target_type: "Question",
-        target_id: created.id,
-        metadata: {
-          target: `Question ${created.id} · Quiz ${input.quizNo} · ${course.code}`,
-          reason: input.reason,
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      let allocatedDisplayNumber = input.displayNumber;
+      if (!allocatedDisplayNumber) {
+        const count = await tx.question.count({
+          where: {
+            course_id: input.courseId,
+            topic_id: input.topicId,
+          },
+        });
+        allocatedDisplayNumber = count + 1;
+      }
+
+      const q = await tx.question.create({
+        data: {
+          course_id: input.courseId,
+          topic_id: input.topicId,
+          display_number: allocatedDisplayNumber,
+          type: studentType as any,
+          prompt_en: input.prompt.trim(),
+          options: input.form === "MULTIPLE_CHOICE" ? input.options.map((o) => o.trim()) : [],
+          correct_answers: {
+            quizNo: input.quizNo,
+            title: input.title.trim(),
+            form: input.form,
+            correctOption: input.correctOption ?? null,
+            trueIsCorrect: input.trueIsCorrect ?? null,
+            acceptedAnswers: input.acceptedAnswers ?? [],
+            status: input.status,
+          },
+          is_active: isPublished,
         },
-      },
+        include: {
+          course: true,
+          topic: { include: { module: true } },
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          actor_id: adminId || "00000000-0000-0000-0000-000000000000",
+          actor_role: Role.ADMIN,
+          action: isPublished ? "QUESTION_PUBLISHED" : "QUESTION_CREATED",
+          target_type: "Question",
+          target_id: q.id,
+          metadata: {
+            target: `Question ${q.id} (No. ${allocatedDisplayNumber}) · Quiz ${input.quizNo} · ${course.code}`,
+            reason: input.reason,
+          },
+        },
+      });
+
+      return q;
     });
 
     return this.mapToAdminQuestion(created, null);
+  }
+
+  async deleteQuestion(id: string, adminId?: string): Promise<{ success: boolean }> {
+    return this.prisma.$transaction(async (tx) => {
+      const q = await tx.question.findUnique({
+        where: { id },
+        select: { id: true, course_id: true, topic_id: true, display_number: true },
+      });
+
+      if (!q) {
+        throw new NotFoundException(`Question not found with ID ${id}`);
+      }
+
+      await tx.question.delete({ where: { id } });
+
+      // Renumber: subsequent questions in the set decrement by 1 to keep continuous sequence
+      if (q.display_number && q.topic_id) {
+        await tx.question.updateMany({
+          where: {
+            topic_id: q.topic_id,
+            display_number: { gt: q.display_number },
+          },
+          data: {
+            display_number: { decrement: 1 },
+          },
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          actor_id: adminId || "00000000-0000-0000-0000-000000000000",
+          actor_role: Role.ADMIN,
+          action: "QUESTION_DELETED" as any,
+          target_type: "Question",
+          target_id: id,
+          metadata: { target: `Deleted question ${id}` },
+        },
+      });
+
+      return { success: true };
+    });
+  }
+
+  async backfillDisplayNumbers(): Promise<number> {
+    return this.prisma.$transaction(async (tx) => {
+      const questionsWithoutNumber = await tx.question.findMany({
+        where: { display_number: null },
+        orderBy: [{ topic_id: "asc" }, { created_at: "asc" }],
+      });
+
+      const topicCounters = new Map<string, number>();
+      for (const q of questionsWithoutNumber) {
+        const key = q.topic_id || q.course_id || "default";
+        const current = topicCounters.get(key) ?? 0;
+        const nextNum = current + 1;
+        topicCounters.set(key, nextNum);
+
+        await tx.question.update({
+          where: { id: q.id },
+          data: { display_number: nextNum },
+        });
+      }
+      return questionsWithoutNumber.length;
+    });
   }
 
   async updateQuestion(

@@ -1,29 +1,48 @@
 // apps/mobile/src/core/sync/contentSync.ts
 import { isOnline, httpClient } from '@/core/network';
-import { env } from '@/core/config/env';
+import { cacheStore } from '@/core/db/cache';
+
+const etags = new Map<string, string>();
+
+interface DeltaSyncItem {
+  key: string;
+  url: string;
+  requiresAuth: boolean;
+}
+
+const SYNC_ENDPOINTS: DeltaSyncItem[] = [
+  { key: 'catalog:universities', url: '/catalog/universities', requiresAuth: false },
+  { key: 'commerce:pricing', url: '/commerce/pricing', requiresAuth: false },
+  { key: 'learning:myCourses', url: '/learning/my-courses', requiresAuth: true },
+  { key: 'learning:homeSummary', url: '/learning/home-summary', requiresAuth: true },
+];
 
 /**
- * Automatically synchronizes downstream course & content data whenever network connection is detected.
+ * Synchronizes downstream course & catalog content using version or ETag delta sync.
+ * Kept strictly separate from the outbox sync mechanism.
  */
 export async function syncDownstreamContent(userId?: string): Promise<void> {
-  if (env.useMocks || !isOnline()) return;
+  if (!isOnline()) return;
 
-  try {
-    // 1. Sync catalog universities & pricing
-    await Promise.allSettled([
-      httpClient.get('/catalog/universities').catch(() => null),
-      httpClient.get('/commerce/pricing').catch(() => null),
-    ]);
+  for (const item of SYNC_ENDPOINTS) {
+    if (item.requiresAuth && !userId) continue;
 
-    // 2. If student is logged in, sync enrolled courses and home summary
-    if (userId) {
-      await Promise.allSettled([
-        httpClient.get('/learning/my-courses').catch(() => null),
-        httpClient.get('/learning/home-summary').catch(() => null),
-      ]);
+    try {
+      const headers: Record<string, string> = {};
+      const currentEtag = etags.get(item.key);
+      if (currentEtag) {
+        headers['If-None-Match'] = currentEtag;
+      }
+
+      const res = await httpClient.get<any>(item.url, { headers });
+      if (res) {
+        // Compute or read ETag/version hash and update local SQLite cache
+        const newEtag = typeof res === 'object' && res ? JSON.stringify(res).length.toString() : 'v1';
+        etags.set(item.key, newEtag);
+        await cacheStore.put(item.key, res);
+      }
+    } catch {
+      // 304 Not Modified or transient network failure: keep cached version
     }
-  } catch (err) {
-    // Background sync errors are non-blocking
-    console.warn('[Sync] Automatic content sync warning:', err);
   }
 }

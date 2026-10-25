@@ -1,0 +1,43 @@
+# tests/e2e-mobile/flow-downloads-and-paywall.yaml
+# Maestro E2E Flow: Paywall Gate -> Store Preselection -> Download -> Delete -> Re-Download
+appId: com.kewakibt.mastara
+---
+- launchApp
+- tapOn: "My Courses"
+- tapOn: "General Physics"
+
+# 1. Gate: Tap on a locked chapter
+- tapOn: "Material"
+- tapOn: "Chapter 4: Electromagnetism" # Paid chapter
+
+# 2. Paywall appears
+- assertVisible: "Unlock Full Course Access"
+- assertVisible: "Purchase Course"
+
+# 3. Tap Purchase Course (routes to Store with General Physics preselected)
+- tapOn: "Purchase Course"
+- assertVisible: "General Physics"
+- assertVisible: "Order Summary"
+
+# 4. Mandatory Download Enforcement
+- tapOn: "Downloads"
+- assertVisible: "General Physics Pack"
+- assertVisible: "Download"
+- tapOn: "Download"
+
+# Wait for download completion (progress 0% -> 100%)
+- extendedWaitUntil:
+    visible: "Downloaded"
+    timeout: 30000
+
+# 5. Course Deletion
+- tapOn: "Delete"
+- assertVisible: "Are you sure you want to delete this course download?"
+- tapOn: "Delete Files"
+- assertVisible: "Download" # Toggles back to Download state
+
+# 6. Re-Download
+- tapOn: "Download"
+- extendedWaitUntil:
+    visible: "Downloaded"
+    timeout: 30000

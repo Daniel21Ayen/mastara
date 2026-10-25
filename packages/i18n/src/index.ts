@@ -21,4 +21,21 @@ export function interpolate(template: string, params?: TranslationParams): strin
     name in params ? String(params[name]) : match,
   );
 }
+/** Translates a key for a given language, falling back to English and warning in development if missing. */
+export function translate(
+  lang: Language,
+  key: TranslationKey,
+  params?: TranslationParams,
+): string {
+  const template = resources[lang]?.[key];
+  if (template === undefined) {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
+      console.warn(`[i18n] Missing translation key: "${String(key)}" for language "${lang}"`);
+    }
+    const fallback = resources[DEFAULT_LANGUAGE]?.[key] ?? String(key);
+    return interpolate(fallback, params);
+  }
+  return interpolate(template, params);
+}
+
 export * from './adminStrings';

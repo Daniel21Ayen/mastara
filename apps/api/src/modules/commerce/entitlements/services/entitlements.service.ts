@@ -16,11 +16,48 @@ export interface EntitlementResponse {
 
 import { PaginationQueryDto, PaginatedResult } from "../../../../common/pagination";
 
+import { signEntitlementToken } from "@mastara/domain";
+import type { SignedEntitlementToken } from "@mastara/contracts";
+
 @Injectable()
 export class EntitlementsService {
   private readonly logger = new Logger(EntitlementsService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Generates a cryptographically signed entitlement token for offline access.
+   */
+  async getSignedEntitlementToken(studentId: string): Promise<SignedEntitlementToken> {
+    const now = new Date();
+    const serverTime = now.getTime();
+    const entitlements = await this.prisma.entitlement.findMany({
+      where: {
+        student_id: studentId,
+        status: EntitlementStatus.ACTIVE,
+        expires_at: { gt: now },
+      },
+      select: {
+        course_id: true,
+        expires_at: true,
+      },
+    });
+
+    const courseIds = Array.from(new Set(entitlements.map((e) => e.course_id)));
+    let maxExpiry = new Date(serverTime + 30 * 24 * 60 * 60 * 1000);
+    for (const e of entitlements) {
+      if (e.expires_at > maxExpiry) {
+        maxExpiry = e.expires_at;
+      }
+    }
+
+    return signEntitlementToken({
+      studentId,
+      courseIds,
+      expiresAt: maxExpiry.toISOString(),
+      serverTime,
+    });
+  }
 
   /**
    * Returns active (non-expired, non-revoked) entitlements for a student with optional pagination.

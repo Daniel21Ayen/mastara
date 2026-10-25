@@ -31,6 +31,12 @@ export class AdminQuestionInputDto {
   @IsNotEmpty()
   topicId!: string;
 
+  @ApiPropertyOptional({ description: "Display number within exam set or quiz chapter (integer >= 1)" })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  displayNumber?: number;
+
   @ApiProperty({ description: "Short descriptive question title" })
   @IsString()
   @IsNotEmpty()
@@ -164,6 +170,12 @@ export class AdminExamQuestionInputDto {
   @IsString()
   @IsNotEmpty()
   id!: string;
+
+  @ApiPropertyOptional({ description: "Question number displayed within set (integer >= 1)" })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  displayNumber?: number;
 
   @ApiProperty({
     enum: ["MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER", "BLANK_SPACE"],

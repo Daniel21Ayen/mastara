@@ -58,7 +58,7 @@ export function TestsTab({ courseId, access, course }: TestsTabProps) {
     id: courseId,
     semesterId: '',
     code: '',
-    title: t('tests.title') || 'Course Quiz',
+    title: t('tests.title'),
     stream: 'COMMON',
   };
 
@@ -86,7 +86,12 @@ export function TestsTab({ courseId, access, course }: TestsTabProps) {
         <QuizChapterRow key={chapter.id} chapter={chapter} access={access} best={best} onPress={openChapter} />
       ))}
 
-      <LockedSheet visible={lockedOpen} onClose={() => setLockedOpen(false)} />
+      <LockedSheet
+        visible={lockedOpen}
+        courseId={courseId}
+        courseTitle={course?.title}
+        onClose={() => setLockedOpen(false)}
+      />
       <DownloadRequiredSheet
         visible={downloadPromptOpen}
         course={fallbackCourse}

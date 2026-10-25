@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
-import { useOnline } from '@/core/network';
+import { subscribeOnline, useOnline } from '@/core/network';
 import { useSession } from '@/core/session';
+import { getAccountState } from '@/modules/auth/api/auth.api';
 
 import { outbox } from './outbox';
 import { flushOutbox } from './syncWorker';
@@ -22,8 +23,15 @@ if (isNative) {
   }
 }
 
-const INTERVAL_MS = 30_000;
 const DEBOUNCE_MS = 500;
+const BASE_RETRY_MS = 1000;
+const MAX_BACKOFF_MS = 60_000;
+
+function calculateBackoffWithJitter(attempt: number): number {
+  const exp = Math.min(MAX_BACKOFF_MS, BASE_RETRY_MS * Math.pow(2, attempt));
+  const jitter = exp * (0.8 + Math.random() * 0.4); // +/- 20% jitter
+  return Math.round(jitter);
+}
 
 interface SyncValue {
   online: boolean;
@@ -37,7 +45,13 @@ interface SyncValue {
 
 const SyncContext = createContext<SyncValue | null>(null);
 
-/** Keeps the outbox flowing: uploads on start, on reconnect, on return to the app, after each change and every 30 s. */
+/**
+ * Event-driven sync engine:
+ * 1. Outbox flushes only when phone is registered remotely (REGISTERED_REMOTE).
+ * 2. Triggers on NetInfo connection change, AppState active (foreground), and outbox enqueue.
+ * 3. Zero timer-based interval polling. Resilient with exponential backoff & jitter.
+ * 4. Content sync is separate from the outbox.
+ */
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { user } = useSession();
   const online = useOnline();
@@ -45,7 +59,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [rejected, setRejected] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryAttempts = useRef(0);
 
   const refresh = useCallback(async () => {
     try {
@@ -58,50 +75,88 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   const syncNow = useCallback(async () => {
     if (!user) return;
+
+    // Outbox flushes ONLY after phone registration (REGISTERED_REMOTE)
+    const accountState = await getAccountState();
+    if (accountState !== 'REGISTERED_REMOTE') {
+      // In LOCAL_ONLY mode, do not flush student data to remote server
+      return;
+    }
+
     setSyncing(true);
     try {
       const result = await flushOutbox(user.id);
-      if (result.sent > 0) setLastSyncAt(Date.now());
+      if (result.sent > 0) {
+        setLastSyncAt(Date.now());
+      }
+      retryAttempts.current = 0;
     } catch {
-      // background sync is resilient
+      // On failure, schedule retry using exponential backoff with jitter
+      if (retryAttempts.current < 5) {
+        const delay = calculateBackoffWithJitter(retryAttempts.current);
+        retryAttempts.current += 1;
+        if (retryTimer.current) clearTimeout(retryTimer.current);
+        retryTimer.current = setTimeout(() => {
+          void syncNow().catch(() => undefined);
+        }, delay);
+      }
     } finally {
       setSyncing(false);
       await refresh();
     }
   }, [user, refresh]);
 
-  // Upload soon after every new change, waiting a moment so quick bursts go out together.
+  // Trigger outbox on local change after short debounce
   useEffect(() => {
     void refresh();
     return outbox.subscribe(() => {
       void refresh();
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => void syncNow().catch(() => undefined), DEBOUNCE_MS);
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => void syncNow().catch(() => undefined), DEBOUNCE_MS);
     });
   }, [refresh, syncNow]);
 
-  // Start, reconnect and periodic uploads.
+  // Trigger sync on NetInfo changes and app foreground (active)
   useEffect(() => {
-    if (!online) return;
-    if (user) void syncNow().catch(() => undefined);
-    void syncDownstreamContent(user?.id).catch(() => undefined);
+    const handleTrigger = () => {
+      retryAttempts.current = 0;
+      if (retryTimer.current) clearTimeout(retryTimer.current);
 
-    const interval = setInterval(() => {
-      if (user) void syncNow().catch(() => undefined);
+      // 1. Separate downstream content sync
       void syncDownstreamContent(user?.id).catch(() => undefined);
-    }, INTERVAL_MS);
 
-    const subscription = AppState
+      // 2. Outbox sync
+      if (user) {
+        void syncNow().catch(() => undefined);
+      }
+    };
+
+    // NetInfo connectivity change subscription
+    const unsubscribeNet = subscribeOnline(() => {
+      if (online) {
+        handleTrigger();
+      }
+    });
+
+    // AppState foreground listener
+    const appStateSubscription = AppState
       ? AppState.addEventListener('change', (state) => {
           if (state === 'active') {
-            if (user) void syncNow().catch(() => undefined);
-            void syncDownstreamContent(user?.id).catch(() => undefined);
+            handleTrigger();
           }
         })
       : null;
+
+    // Run trigger once on mount if online
+    if (online) {
+      handleTrigger();
+    }
+
     return () => {
-      clearInterval(interval);
-      subscription?.remove();
+      unsubscribeNet();
+      appStateSubscription?.remove();
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      if (retryTimer.current) clearTimeout(retryTimer.current);
     };
   }, [user, online, syncNow]);
 

@@ -1,9 +1,6 @@
 // apps/mobile/src/modules/profile/api/profile.api.ts
 import type { StudentProfile } from '@mastara/contracts';
 
-import { env } from '@/core/config/env';
-import { getMockProfile, saveMockProfile } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
 import type { PendingStudentSync } from '@/modules/auth/api/auth.api';
@@ -12,18 +9,6 @@ export interface ProfileApi {
   getProfile(userId: string): Promise<StudentProfile | null>;
   saveProfile(userId: string, profile: StudentProfile): Promise<StudentProfile>;
 }
-
-const mockProfileApi: ProfileApi = {
-  async getProfile(userId) {
-    await simulateLatency();
-    return getMockProfile(userId);
-  },
-  async saveProfile(userId, profile) {
-    await simulateLatency();
-    saveMockProfile(userId, profile);
-    return profile;
-  },
-};
 
 interface BackendProfileResponse {
   id: string;
@@ -84,10 +69,6 @@ export const profileApi: ProfileApi = {
       return session.profile;
     }
 
-    if (env.useMocks) {
-      return mockProfileApi.getProfile(userId);
-    }
-
     try {
       return await realProfileApi.getProfile(userId);
     } catch {
@@ -95,7 +76,7 @@ export const profileApi: ProfileApi = {
     }
   },
   saveProfile: async (userId, profile) => {
-    // If student is unpurchased, save locally only. Do not insert/save to DB until purchase
+    // If student is unpurchased (LOCAL_ONLY), save locally only. Do not insert/save to DB until purchase
     const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
     if (pendingSync && !pendingSync.purchased) {
       pendingSync.profile = profile;
@@ -103,9 +84,6 @@ export const profileApi: ProfileApi = {
       return profile;
     }
 
-    if (env.useMocks) {
-      return mockProfileApi.saveProfile(userId, profile);
-    }
     return realProfileApi.saveProfile(userId, profile);
   },
 };

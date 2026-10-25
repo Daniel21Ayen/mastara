@@ -2,7 +2,6 @@
 import type { AuthResult, EditAccountInput, LoginInput, RegisterInput, User } from '@mastara/contracts';
 import { ERROR_CODES } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
 import { ApiError, httpClient, isApiError } from '@/core/network';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
 import {
@@ -16,16 +15,12 @@ import {
   clearLockout,
 } from '../lib/loginLockout';
 
-export interface AuthApi {
-  login(input: LoginInput): Promise<AuthResult>;
-  register(input: RegisterInput): Promise<AuthResult>;
-  /** Changes the name and the phone or email. The account ID stays the same. */
-  updateAccount(user: User, input: EditAccountInput): Promise<User>;
-}
+export type AccountState = 'LOCAL_ONLY' | 'REGISTERED_REMOTE';
 
 export interface PendingStudentSync {
   userId: string;
-  localAccountId?: string;
+  localAccountId: string;
+  accountState: AccountState;
   name: string;
   identifier: string;
   password?: string;               // Legacy plaintext (erased upon first successful login)
@@ -34,23 +29,17 @@ export interface PendingStudentSync {
   purchased?: boolean;
 }
 
-// Development mock memory (Only used in dev when explicitly configured)
-const mockUsers = new Map<string, User>();
-
-function userKey(identifier: string): string {
-  return identifier.trim().toLowerCase();
+export interface AuthApi {
+  login(input: LoginInput): Promise<AuthResult>;
+  register(input: RegisterInput): Promise<AuthResult>;
+  /** Changes the name and the phone or email. The account ID stays the same. */
+  updateAccount(user: User, input: EditAccountInput): Promise<User>;
 }
 
-function upsertUser(identifier: string, name?: string): User {
-  const key = userKey(identifier);
-  const existing = mockUsers.get(key);
-  const user: User = {
-    id: `u-${key}`,
-    identifier: identifier.trim(),
-    name: name ?? existing?.name ?? key.split('@')[0] ?? key,
-  };
-  mockUsers.set(key, user);
-  return user;
+export async function getAccountState(): Promise<AccountState | 'NONE'> {
+  const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
+  if (!pendingSync) return 'NONE';
+  return pendingSync.accountState ?? (pendingSync.purchased ? 'REGISTERED_REMOTE' : 'LOCAL_ONLY');
 }
 
 export const realAuthApi: AuthApi & { register(input: RegisterInput & { localAccountId?: string }): Promise<AuthResult> } = {
@@ -69,7 +58,7 @@ export const realAuthApi: AuthApi & { register(input: RegisterInput & { localAcc
       name: input.name.trim(),
       identifier: input.identifier.trim(),
       password: input.password,
-      localAccountId: input.localAccountId,
+      localAccountId: 'localAccountId' in input ? (input as { localAccountId?: string }).localAccountId : undefined,
     });
     if (res.token) {
       await httpClient.setToken(res.token);
@@ -110,7 +99,6 @@ async function verifyOfflineAccountPassword(
   // Case 2: Legacy plaintext password migration
   if (account.password && typeof account.password === 'string') {
     if (account.password === inputPassword) {
-      // Migrate immediately to salted PBKDF2 hash and erase plaintext password permanently
       account.passwordHash = await hashPassword(inputPassword);
       delete account.password;
       if (onMigrated) {
@@ -142,10 +130,9 @@ export const authApi: AuthApi = {
       (await secureStorage.getJson<Record<string, PendingStudentSync>>(STORAGE_KEYS.offlineUsers)) || {};
     const localAccount = registry[norm];
 
-    // If student registered offline and has not yet purchased content
-    if (localAccount && !localAccount.purchased) {
+    // If account is LOCAL_ONLY (registered offline and hasn't made first purchase yet)
+    if (localAccount && (localAccount.accountState === 'LOCAL_ONLY' || !localAccount.purchased)) {
       const isValid = await verifyOfflineAccountPassword(input.password, localAccount, async () => {
-        // Save migrated account back to secure storage with plaintext erased
         registry[norm] = localAccount;
         await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
         await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, localAccount);
@@ -153,7 +140,11 @@ export const authApi: AuthApi = {
 
       if (isValid) {
         await clearLockout(input.identifier);
-        const user = upsertUser(localAccount.identifier, localAccount.name);
+        const user: User = {
+          id: localAccount.userId,
+          name: localAccount.name,
+          identifier: localAccount.identifier,
+        };
         await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, localAccount);
         return { user, token: 'local-offline-token' };
       }
@@ -162,72 +153,70 @@ export const authApi: AuthApi = {
       throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Invalid credentials');
     }
 
-    // 3. Central database login via TLS (online check)
-    if (!env.useMocks) {
-      try {
-        const result = await realAuthApi.login(input);
-        await clearLockout(input.identifier);
-        return result;
-      } catch (err) {
-        if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
-          // If network is offline, check cached session with verified offline account
-          if (localAccount) {
-            const isValid = await verifyOfflineAccountPassword(input.password, localAccount, async () => {
-              registry[norm] = localAccount;
-              await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
-            });
+    // 3. Central database login via real API client
+    try {
+      const result = await realAuthApi.login(input);
+      await clearLockout(input.identifier);
+      return result;
+    } catch (err) {
+      if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {
+        // If network is offline, check cached verified offline account
+        if (localAccount) {
+          const isValid = await verifyOfflineAccountPassword(input.password, localAccount, async () => {
+            registry[norm] = localAccount;
+            await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
+          });
 
-            if (isValid) {
-              await clearLockout(input.identifier);
-              const user = upsertUser(localAccount.identifier, localAccount.name);
-              return { user, token: 'cached-offline-token' };
-            }
+          if (isValid) {
+            await clearLockout(input.identifier);
+            const user: User = {
+              id: localAccount.userId,
+              name: localAccount.name,
+              identifier: localAccount.identifier,
+            };
+            return { user, token: 'cached-offline-token' };
           }
-
-          // Check cached session
-          const session = await secureStorage.getJson<{ user: User }>(STORAGE_KEYS.session);
-          if (session?.user && session.user.identifier.trim().toLowerCase() === norm) {
-            // Note: If no hashed offline credentials match, offline login must NOT succeed
-            await recordFailedAttempt(input.identifier);
-            throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Invalid offline credentials');
-          }
-
-          // NO mockAuthApi fallback when offline!
-          await recordFailedAttempt(input.identifier);
-          throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Offline credentials verification failed');
         }
 
-        // If online error (e.g. wrong password from server), record failure
+        // Check cached session
+        const session = await secureStorage.getJson<{ user: User }>(STORAGE_KEYS.session);
+        if (session?.user && session.user.identifier.trim().toLowerCase() === norm) {
+          await recordFailedAttempt(input.identifier);
+          throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Invalid offline credentials');
+        }
+
         await recordFailedAttempt(input.identifier);
-        throw err;
+        throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Offline credentials verification failed');
       }
-    }
 
-    // Dev mock mode only (only when env.useMocks is explicitly true in development)
-    if (__DEV__ && env.useMocks) {
-      return { user: upsertUser(input.identifier), token: 'mock-token' };
+      await recordFailedAttempt(input.identifier);
+      throw err;
     }
-
-    throw new ApiError(ERROR_CODES.UNAUTHORIZED, 'Invalid credentials');
   },
 
   register: async (input) => {
     const norm = input.identifier.trim().toLowerCase();
-    const user = upsertUser(input.identifier, input.name);
 
     // Compute cryptographically secure salted PBKDF2 hash
     const passwordHash = await hashPassword(input.password);
 
-    // Store credentials locally with NO plaintext password.
-    // When the student purchases, the password is provided over TLS to server directly.
     const localAccountId =
       typeof globalThis.crypto?.randomUUID === 'function'
         ? globalThis.crypto.randomUUID()
         : `loc-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
+    const userId = `u-${localAccountId}`;
+    const user: User = {
+      id: userId,
+      name: input.name.trim(),
+      identifier: input.identifier.trim(),
+    };
+
+    // Stored with explicit LOCAL_ONLY state. Zero network requests made.
     const record: PendingStudentSync = {
-      userId: user.id,
+      userId,
       localAccountId,
+      accountState: 'LOCAL_ONLY',
       name: input.name.trim(),
       identifier: input.identifier.trim(),
       passwordHash,
@@ -241,7 +230,7 @@ export const authApi: AuthApi = {
     registry[norm] = record;
     await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
 
-    return { user, token: 'offline-registered-token' };
+    return { user, token: 'local-offline-token' };
   },
 
   updateAccount: async (user, input) => {
@@ -252,9 +241,9 @@ export const authApi: AuthApi = {
       identifier: input.identifier.trim(),
     };
 
-    // If student is pending purchase (unpurchased), update local offline records only
+    // If student is LOCAL_ONLY, update local offline records only. ZERO network requests!
     const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
-    if (pendingSync && !pendingSync.purchased) {
+    if (pendingSync && (pendingSync.accountState === 'LOCAL_ONLY' || !pendingSync.purchased)) {
       pendingSync.name = updatedUser.name;
       pendingSync.identifier = updatedUser.identifier;
       await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, pendingSync);
@@ -266,11 +255,6 @@ export const authApi: AuthApi = {
         registry[updatedUser.identifier.toLowerCase()] = pendingSync;
         await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
       }
-      return updatedUser;
-    }
-
-    if (__DEV__ && env.useMocks) {
-      mockUsers.set(userKey(updatedUser.identifier), updatedUser);
       return updatedUser;
     }
 

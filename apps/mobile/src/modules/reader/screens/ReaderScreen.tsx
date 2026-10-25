@@ -47,11 +47,11 @@ export function ReaderScreen() {
       settled.current = true;
       return;
     }
-    const jump = setTimeout(() => scrollTo(data.startIndex), 350);
+    const jump = setTimeout(() => scrollTo(data.startIndex), 50);
     const settle = setTimeout(() => {
       settled.current = true;
       setCurrent(data.startIndex);
-    }, 1200);
+    }, 150);
     return () => {
       clearTimeout(jump);
       clearTimeout(settle);

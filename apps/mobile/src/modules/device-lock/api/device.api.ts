@@ -1,9 +1,5 @@
 // apps/mobile/src/modules/device-lock/api/device.api.ts
-import { ERROR_CODES } from '@mastara/domain';
-
-import { env } from '@/core/config/env';
-import { ApiError, httpClient } from '@/core/network';
-import { simulateLatency } from '@/core/mock/delay';
+import { httpClient } from '@/core/network';
 
 export interface RegisterDeviceInput {
   userId: string;
@@ -18,25 +14,6 @@ export interface DeviceApi {
   releaseDevice(userId: string): Promise<void>;
 }
 
-// Mock server memory: userId -> bound device ID.
-const bindings = new Map<string, string>();
-
-const mockDeviceApi: DeviceApi = {
-  async registerDevice({ userId, deviceId }) {
-    await simulateLatency();
-
-    // Demo rule: an account whose ID contains "locked" is already bound to another phone.
-    const bound = bindings.get(userId) ?? (userId.includes('locked') ? 'another-phone' : undefined);
-    if (bound && bound !== deviceId) throw new ApiError(ERROR_CODES.DEVICE_MISMATCH_LOCKED);
-
-    bindings.set(userId, deviceId);
-  },
-  async releaseDevice(userId) {
-    await simulateLatency();
-    bindings.delete(userId);
-  },
-};
-
 export const realDeviceApi: DeviceApi = {
   async registerDevice(input) {
     await httpClient.post('/device/register', {
@@ -49,7 +26,4 @@ export const realDeviceApi: DeviceApi = {
   },
 };
 
-export const deviceApi: DeviceApi = {
-  registerDevice: (input) => (env.useMocks ? mockDeviceApi.registerDevice(input) : realDeviceApi.registerDevice(input)),
-  releaseDevice: (userId) => (env.useMocks ? mockDeviceApi.releaseDevice(userId) : realDeviceApi.releaseDevice(userId)),
-};
+export const deviceApi: DeviceApi = realDeviceApi;

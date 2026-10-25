@@ -1,0 +1,52 @@
+# tests/e2e-mobile/flow-student-journey.yaml
+# Maestro E2E Flow: Offline Register -> Profile Edit -> Free Content -> First Purchase -> DB Sync -> MS ID Verification
+appId: com.kewakibt.mastara
+---
+# 1. Launch App in Simulated Offline Mode (Airport mode / no connection)
+- launchApp
+- assertVisible: "Mastara"
+
+# 2. Offline Registration
+- tapOn: "Register"
+- inputText:
+    id: "phone-input"
+    text: "0912345678"
+- inputText:
+    id: "name-input"
+    text: "Abebe Kebede"
+- inputText:
+    id: "password-input"
+    text: "password123"
+- tapOn: "Create Account"
+
+# 3. Profile Setup & Academic Scope
+- assertVisible: "Choose your University"
+- tapOn: "Addis Ababa University"
+- tapOn: "Natural Science"
+- tapOn: "Semester 1"
+- tapOn: "Save & Continue"
+
+# 4. Explore Free Content while Offline
+- assertVisible: "My Courses"
+- tapOn: "Freshman Mathematics"
+- tapOn: "Material"
+- assertVisible: "Chapter 1: Logic and Set Theory"
+- tapOn: "Chapter 1: Logic and Set Theory"
+- assertVisible: "Propositional Logic"
+
+# 5. First Purchase & Online Sync
+- tapOn: "Store"
+- assertVisible: "Semester Bundle"
+- tapOn: "Purchase Bundle"
+- tapOn: "Telebirr"
+- inputText:
+    id: "transaction-reference"
+    text: "TB987654321"
+- tapOn: "Submit Order"
+- assertVisible: "Order Submitted"
+
+# 6. Verify Online DB Sync and MS ID Generation
+- tapOn: "Profile"
+- assertVisible: "MS00" # Verify sequential MS ID assigned (e.g. MS0001, MS0042)
+- assertVisible: "Abebe Kebede"
+- assertVisible: "0912345678"

@@ -29,5 +29,19 @@ export class EntitlementsController {
   ) {
     return this.entitlementsService.getStudentEntitlements(studentId, query);
   }
+
+  @Get("token")
+  @ApiOperation({
+    summary: "Get cryptographically signed entitlement token for offline verification and rollback protection",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Signed token containing studentId, courseIds, expiry, and server timestamp",
+  })
+  async getSignedToken(
+    @CurrentUser("id") studentId: string,
+  ) {
+    return this.entitlementsService.getSignedEntitlementToken(studentId);
+  }
 }
 

@@ -17,6 +17,9 @@ interface I18nValue {
 
 const I18nContext = createContext<I18nValue | null>(null);
 
+declare const __DEV__: boolean | undefined;
+const isDev = (typeof __DEV__ !== 'undefined' && __DEV__) || process.env.NODE_ENV !== 'production';
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(DEFAULT_LANGUAGE);
 
@@ -33,13 +36,38 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (key: TranslationKey, params?: TranslationParams) => interpolate(resources[language][key], params),
+    (key: TranslationKey, params?: TranslationParams) => {
+      const template = resources[language]?.[key];
+      if (template === undefined) {
+        if (isDev) {
+          console.warn(`[i18n] Missing translation key: "${String(key)}" for language "${language}"`);
+        }
+        const fallback = resources[DEFAULT_LANGUAGE]?.[key] ?? String(key);
+        return interpolate(fallback, params);
+      }
+      return interpolate(template, params);
+    },
     [language],
   );
+
   const te = useCallback(
     (message: string | undefined) => {
       if (message === undefined) return undefined;
-      return message in resources[language] ? resources[language][message as TranslationKey] : message;
+      if (message in resources[language]) {
+        return resources[language][message as TranslationKey];
+      }
+      if (message in resources[DEFAULT_LANGUAGE]) {
+        if (isDev) {
+          console.warn(
+            `[i18n] Missing translation key: "${message}" for language "${language}", falling back to English`,
+          );
+        }
+        return resources[DEFAULT_LANGUAGE][message as TranslationKey];
+      }
+      if (isDev) {
+        console.warn(`[i18n] Missing translation key: "${message}"`);
+      }
+      return message;
     },
     [language],
   );

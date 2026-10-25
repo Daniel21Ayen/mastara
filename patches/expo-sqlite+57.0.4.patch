@@ -1,0 +1,36 @@
+--- a/node_modules/expo-sqlite/build/SQLiteStatement.js
++++ b/node_modules/expo-sqlite/build/SQLiteStatement.js
+@@ -23,7 +23,15 @@
+     async getColumnNamesAsync() {
+         if (this.columnNames == null) {
+-            this.columnNames = await this.statement.getColumnNamesAsync();
++            try {
++                if (typeof this.statement.getColumnNamesSync === 'function') {
++                    this.columnNames = this.statement.getColumnNamesSync();
++                } else {
++                    this.columnNames = await this.statement.getColumnNamesAsync();
++                }
++            } catch {
++                this.columnNames = [];
++            }
+         }
+         return this.columnNames;
+     }
+--- a/node_modules/expo-sqlite/src/SQLiteStatement.ts
++++ b/node_modules/expo-sqlite/src/SQLiteStatement.ts
+@@ -80,7 +80,15 @@
+   private async getColumnNamesAsync(): Promise<string[]> {
+     if (this.columnNames == null) {
+-      this.columnNames = await this.statement.getColumnNamesAsync();
++      try {
++        if (typeof (this.statement as any).getColumnNamesSync === 'function') {
++          this.columnNames = (this.statement as any).getColumnNamesSync();
++        } else {
++          this.columnNames = await this.statement.getColumnNamesAsync();
++        }
++      } catch {
++        this.columnNames = [];
++      }
+     }
+     return this.columnNames;
+   }

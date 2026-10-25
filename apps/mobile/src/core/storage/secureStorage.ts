@@ -10,6 +10,9 @@ export const STORAGE_KEYS = {
   pendingRemoteSync: 'mastara.pendingRemoteSync',
   offlineUsers: 'mastara.offlineUsers',
   authLockout: 'mastara.authLockout',
+  deviceKey: 'mastara.deviceKey',
+  entitlementKey: 'mastara.entitlementKey',
+  lastSeenServerTime: 'mastara.lastSeenServerTime',
 } as const;
 
 type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

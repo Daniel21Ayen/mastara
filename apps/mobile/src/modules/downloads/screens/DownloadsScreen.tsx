@@ -40,7 +40,7 @@ export function DownloadsScreen() {
         const course = unit.meta as { title?: string };
         return {
           title: course?.title ?? unit.title,
-          subtitle: t('course.download.downloaded') || 'Full course downloaded',
+          subtitle: t('course.download.downloaded'),
         };
       }
       case 'TOPIC': {

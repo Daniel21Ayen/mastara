@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 
-import { env } from '@/core/config/env';
 import { adminText } from '@/core/i18n';
 import { Button, TextField } from '@/shared/ui';
 
@@ -64,7 +63,6 @@ export function LoginScreen({ nextPath }: { nextPath: string }) {
         ) : null}
 
         <p className={styles.note}>{adminText('admin.login.studentsNote')}</p>
-        {env.useMocks ? <p className={styles.note}>{adminText('admin.login.mockHint')}</p> : null}
       </form>
     </main>
   );

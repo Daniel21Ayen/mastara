@@ -1,0 +1,14 @@
+--- a/node_modules/expo-notifications/build/TopicSubscriptionModule.android.js
++++ b/node_modules/expo-notifications/build/TopicSubscriptionModule.android.js
+@@ -1,2 +1,2 @@
+-import { requireNativeModule } from 'expo-modules-core';
+-export default requireNativeModule('ExpoTopicSubscriptionModule');
++import { requireOptionalNativeModule } from 'expo-modules-core';
++export default requireOptionalNativeModule('ExpoTopicSubscriptionModule') || {};
+--- a/node_modules/expo-notifications/src/TopicSubscriptionModule.android.ts
++++ b/node_modules/expo-notifications/src/TopicSubscriptionModule.android.ts
+@@ -1,2 +1,2 @@
+-import { requireNativeModule } from 'expo-modules-core';
+-export default requireNativeModule<TopicSubscriptionModule>('ExpoTopicSubscriptionModule');
++import { requireOptionalNativeModule } from 'expo-modules-core';
++export default (requireOptionalNativeModule<TopicSubscriptionModule>('ExpoTopicSubscriptionModule') || ({} as TopicSubscriptionModule));

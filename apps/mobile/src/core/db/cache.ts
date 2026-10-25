@@ -15,7 +15,7 @@ interface CacheHit<T> {
   clock?: ClockReading;
 }
 
-const cacheStore = {
+export const cacheStore = {
   async put(key: string, value: unknown): Promise<void> {
     try {
       const db = await getDb();
@@ -79,27 +79,40 @@ export async function invalidateCache(prefix?: string): Promise<void> {
 }
 
 /**
- * Network first: a successful answer is saved on the phone. When the phone is offline the saved answer is used.
- * `adapt` can change a saved answer before use (for example to apply the offline access rules). It receives a trusted
- * "now" that a date set back on the phone cannot move earlier (see `trustedNowMs`).
+ * Fast Cache with Background Revalidation (Stale-While-Revalidate):
+ * When cached data is available on the phone, returns it immediately so screens render in <5ms without blocking on the network.
+ * In the background, asynchronously refreshes the data from the server and updates SQLite.
+ * `adapt` can change a saved answer before use (for example to apply the offline access rules).
  */
 export async function readThrough<T>(
   key: string,
   load: () => Promise<T>,
   adapt?: (value: T, cachedAtMs: number, nowMs: number) => T,
 ): Promise<T> {
+  // 1. Fast Cache Path: return cached data immediately to prevent loading delays
+  const hit = await cacheStore.get<T>(key);
+  if (hit) {
+    const now: ClockReading = { wallMs: Date.now(), uptimeMs: await getUptimeMs(), bootId: getBootId() };
+    const cachedResult = adapt ? adapt(hit.value, hit.cachedAtMs, trustedNowMs(hit.cachedAtMs, hit.clock, now)) : hit.value;
+
+    // Asynchronously refresh in the background without blocking the UI
+    load()
+      .then((fresh) => cacheStore.put(key, fresh))
+      .catch(() => {
+        // Silently keep cached data if network fails
+      });
+
+    return cachedResult;
+  }
+
+  // 2. Cache miss: fetch from network
   try {
     const value = await load();
     await cacheStore.put(key, value);
     return value;
   } catch (error) {
     if (!isApiError(error, ERROR_CODES.NETWORK_OFFLINE)) throw error;
-
-    const hit = await cacheStore.get<T>(key);
-    if (!hit) throw error;
-    if (!adapt) return hit.value;
-    const now: ClockReading = { wallMs: Date.now(), uptimeMs: await getUptimeMs(), bootId: getBootId() };
-    return adapt(hit.value, hit.cachedAtMs, trustedNowMs(hit.cachedAtMs, hit.clock, now));
+    throw error;
   }
 }
 

@@ -6,7 +6,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
-import { EntitlementStatus, PublicationStatus, Role } from "@mastara/database";
+import { EntitlementStatus, PublicationStatus, Role, ContentKind } from "@mastara/database";
 import {
   canOpenContent,
   AccessState,
@@ -183,7 +183,8 @@ export class ContentService {
       for (const topic of mod.topics) {
         const progress = progressMap.get(topic.id);
         const isFree = topic.is_free_trial || mod.is_free_trial;
-        const latestContent = topic.contents?.[0];
+        const noteContent = topic.contents?.find((c) => c.kind === ContentKind.NOTE);
+        const amharicContent = topic.contents?.find((c) => c.kind === ContentKind.AMHARIC_NOTE);
 
         result.push({
           id: topic.id,
@@ -200,8 +201,8 @@ export class ContentService {
             am: mod.description_am || topic.title_am,
           },
           body: {
-            en: latestContent?.body_en || "",
-            am: latestContent?.body_am || "",
+            en: noteContent?.body || noteContent?.title || "",
+            am: amharicContent?.body || amharicContent?.title || "",
           },
           isFree,
           isCompleted: progress ? progress.isCompleted : false,
@@ -232,7 +233,6 @@ export class ContentService {
         contents: {
           where: { status: PublicationStatus.PUBLISHED },
           orderBy: { version: "desc" },
-          take: 1,
         },
       },
     });
@@ -241,11 +241,12 @@ export class ContentService {
       throw new NotFoundException(`Topic not found with ID ${topicId}`);
     }
 
-    const latestContent = topic.contents[0] || null;
+    const noteContent = topic.contents.find((c) => c.kind === ContentKind.NOTE);
+    const amharicContent = topic.contents.find((c) => c.kind === ContentKind.AMHARIC_NOTE);
     const isFree =
       topic.is_free_trial ||
       topic.module.is_free_trial ||
-      Boolean(latestContent?.is_free_trial);
+      Boolean(noteContent?.is_free_trial);
 
     const accessState = await this.getStudentAccessState(
       studentId,
@@ -288,8 +289,8 @@ export class ContentService {
         am: topic.module.description_am || topic.title_am,
       },
       body: {
-        en: latestContent?.body_en || "",
-        am: latestContent?.body_am || "",
+        en: noteContent?.body || noteContent?.title || "",
+        am: amharicContent?.body || amharicContent?.title || "",
       },
       isFree,
       accessState,
@@ -479,8 +480,8 @@ export class ContentService {
     const noteCount = allTopics.length;
 
     const amharicNoteCount = allTopics.filter((t) => {
-      const latest = t.contents[0];
-      return Boolean(t.title_am?.trim() && latest?.body_am?.trim());
+      const am = t.contents.find((c) => c.kind === ContentKind.AMHARIC_NOTE);
+      return Boolean(t.title_am?.trim() && (am?.body?.trim() || am?.title?.trim()));
     }).length;
 
     const updates: (ContentUpdate & { ms: number })[] = [
@@ -493,8 +494,8 @@ export class ContentService {
         ms: m.updated_at.getTime(),
       })),
       ...allTopics.map((t) => {
-        const latest = t.contents[0];
-        const hasAm = Boolean(t.title_am?.trim() && latest?.body_am?.trim());
+        const am = t.contents.find((c) => c.kind === ContentKind.AMHARIC_NOTE);
+        const hasAm = Boolean(t.title_am?.trim() && (am?.body?.trim() || am?.title?.trim()));
         const parentModule = modules.find((m) => m.id === t.module_id);
         return {
           id: t.id,
@@ -727,14 +728,23 @@ export class ContentService {
         title_am: input.title.am.trim(),
         sort_order: chapterNumber,
         contents: {
-          create: {
-            version: 0,
-            status: PublicationStatus.DRAFT,
-            title_en: input.title.en.trim(),
-            title_am: input.title.am.trim(),
-            body_en: "",
-            body_am: "",
-          },
+          create: [
+            {
+              kind: ContentKind.NOTE,
+              version: 0,
+              status: PublicationStatus.DRAFT,
+              title: input.title.en.trim(),
+              title_en: input.title.en.trim(),
+              body: "",
+            },
+            {
+              kind: ContentKind.AMHARIC_NOTE,
+              version: 0,
+              status: PublicationStatus.DRAFT,
+              title: input.title.am.trim(),
+              body: "",
+            },
+          ],
         },
       },
     });
@@ -769,16 +779,16 @@ export class ContentService {
         module: true,
         contents: {
           orderBy: { version: "desc" },
-          take: 1,
         },
       },
       orderBy: { updated_at: "desc" },
     });
 
     return topics.map((t) => {
-      const latest = t.contents[0];
-      const status = (latest?.status ?? t.module.status) as CatalogStatus;
-      const version = latest?.version ?? 0;
+      const noteContent = t.contents.find((c) => c.kind === ContentKind.NOTE);
+      const amharicContent = t.contents.find((c) => c.kind === ContentKind.AMHARIC_NOTE);
+      const status = (noteContent?.status ?? t.module.status) as CatalogStatus;
+      const version = noteContent?.version ?? 0;
 
       return {
         id: t.id,
@@ -786,8 +796,8 @@ export class ContentService {
         moduleId: t.module_id,
         moduleNumber: t.module.sort_order,
         title: { en: t.title_en, am: t.title_am },
-        body: { en: latest?.body_en ?? "", am: latest?.body_am ?? "" },
-        isFree: t.is_free_trial || Boolean(latest?.is_free_trial),
+        body: { en: noteContent?.body ?? "", am: amharicContent?.body ?? "" },
+        isFree: t.is_free_trial || Boolean(noteContent?.is_free_trial),
         status,
         version,
         updatedAt: t.updated_at.toISOString(),
@@ -832,16 +842,27 @@ export class ContentService {
         is_free_trial: input.isFree,
         sort_order: chapterNumber,
         contents: {
-          create: {
-            version,
-            status: input.status as PublicationStatus,
-            title_en: input.title.en.trim(),
-            title_am: input.title.am.trim(),
-            body_en: input.body.en.trim(),
-            body_am: input.body.am.trim(),
-            is_free_trial: input.isFree,
-            published_at: input.status === "PUBLISHED" ? new Date() : null,
-          },
+          create: [
+            {
+              kind: ContentKind.NOTE,
+              version,
+              status: input.status as PublicationStatus,
+              title: input.title.en.trim(),
+              title_en: input.title.en.trim(),
+              body: input.body.en.trim(),
+              is_free_trial: input.isFree,
+              published_at: input.status === "PUBLISHED" ? new Date() : null,
+            },
+            {
+              kind: ContentKind.AMHARIC_NOTE,
+              version,
+              status: input.status as PublicationStatus,
+              title: input.title.am.trim(),
+              body: input.body.am.trim(),
+              is_free_trial: input.isFree,
+              published_at: input.status === "PUBLISHED" ? new Date() : null,
+            },
+          ],
         },
       },
       include: {
@@ -928,29 +949,56 @@ export class ContentService {
       },
     });
 
-    let finalContent = latest;
-    if (newVersion > currentVersion || !latest) {
-      finalContent = await this.prisma.content.create({
+    const latestNote = topic.contents.find((c) => c.kind === ContentKind.NOTE);
+    const latestAmharic = topic.contents.find((c) => c.kind === ContentKind.AMHARIC_NOTE);
+
+    let finalNote = latestNote;
+    if (newVersion > currentVersion || !latestNote) {
+      finalNote = await this.prisma.content.create({
         data: {
           topic_id: topic.id,
+          kind: ContentKind.NOTE,
           version: newVersion,
           status: input.status as PublicationStatus,
+          title: input.title.en.trim(),
           title_en: input.title.en.trim(),
-          title_am: input.title.am.trim(),
-          body_en: input.body.en.trim(),
-          body_am: input.body.am.trim(),
+          body: input.body.en.trim(),
           is_free_trial: input.isFree,
           published_at: input.status === "PUBLISHED" ? new Date() : null,
         },
       });
     } else {
-      finalContent = await this.prisma.content.update({
-        where: { id: latest.id },
+      finalNote = await this.prisma.content.update({
+        where: { id: latestNote.id },
         data: {
+          title: input.title.en.trim(),
           title_en: input.title.en.trim(),
-          title_am: input.title.am.trim(),
-          body_en: input.body.en.trim(),
-          body_am: input.body.am.trim(),
+          body: input.body.en.trim(),
+          status: input.status as PublicationStatus,
+          is_free_trial: input.isFree,
+        },
+      });
+    }
+
+    if (newVersion > currentVersion || !latestAmharic) {
+      await this.prisma.content.create({
+        data: {
+          topic_id: topic.id,
+          kind: ContentKind.AMHARIC_NOTE,
+          version: newVersion,
+          status: input.status as PublicationStatus,
+          title: input.title.am.trim(),
+          body: input.body.am.trim(),
+          is_free_trial: input.isFree,
+          published_at: input.status === "PUBLISHED" ? new Date() : null,
+        },
+      });
+    } else {
+      await this.prisma.content.update({
+        where: { id: latestAmharic.id },
+        data: {
+          title: input.title.am.trim(),
+          body: input.body.am.trim(),
           status: input.status as PublicationStatus,
           is_free_trial: input.isFree,
         },
@@ -992,7 +1040,7 @@ export class ContentService {
       isFree: input.isFree,
       status: input.status,
       version: newVersion,
-      updatedAt: finalContent.updated_at.toISOString(),
+      updatedAt: (finalNote ?? topic).updated_at.toISOString(),
     };
   }
 
@@ -1025,27 +1073,29 @@ export class ContentService {
       data: { title_am: input.title.trim() },
     });
 
-    let finalContent = latest;
-    if (newVersion > currentVersion || !latest) {
+    const latestAmharic = topic.contents.find((c) => c.kind === ContentKind.AMHARIC_NOTE);
+    const latestNote = topic.contents.find((c) => c.kind === ContentKind.NOTE);
+
+    let finalContent = latestAmharic;
+    if (newVersion > currentVersion || !latestAmharic) {
       finalContent = await this.prisma.content.create({
         data: {
           topic_id: topic.id,
+          kind: ContentKind.AMHARIC_NOTE,
           version: newVersion,
           status: currentStatus as PublicationStatus,
-          title_en: latest?.title_en ?? topic.title_en,
-          title_am: input.title.trim(),
-          body_en: latest?.body_en ?? "",
-          body_am: input.body.trim(),
+          title: input.title.trim(),
+          body: input.body.trim(),
           is_free_trial: topic.is_free_trial,
           published_at: currentStatus === "PUBLISHED" ? new Date() : null,
         },
       });
     } else {
       finalContent = await this.prisma.content.update({
-        where: { id: latest.id },
+        where: { id: latestAmharic.id },
         data: {
-          title_am: input.title.trim(),
-          body_am: input.body.trim(),
+          title: input.title.trim(),
+          body: input.body.trim(),
         },
       });
     }
@@ -1060,18 +1110,18 @@ export class ContentService {
       metadata: {
         target:
           currentStatus === "PUBLISHED"
-            ? `Amharic note · ${finalContent.title_en} · v${newVersion}`
-            : `Amharic note · ${finalContent.title_en}`,
+            ? `Amharic note · ${finalContent.title} · v${newVersion}`
+            : `Amharic note · ${finalContent.title}`,
       },
     });
 
     return {
       id: topic.id,
       courseId: topic.module.course_id,
-      moduleId: topic.module_id,
+      moduleId: topic.module.id,
       moduleNumber: topic.module.sort_order,
-      title: { en: finalContent.title_en ?? (finalContent as any).title ?? '', am: input.title.trim() },
-      body: { en: finalContent.body_en ?? (finalContent as any).body ?? '', am: input.body.trim() },
+      title: { en: topic.title_en, am: input.title.trim() },
+      body: { en: latestNote?.body ?? "", am: input.body.trim() },
       isFree: topic.is_free_trial,
       status: currentStatus,
       version: newVersion,

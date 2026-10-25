@@ -386,18 +386,33 @@ async function main() {
         },
       });
 
-      // Bilingual STEM Note
+      // Bilingual STEM Notes (English Note and separate Amharic Note per SRS)
       await prisma.content.upsert({
         where: { topic_id_kind_version: { topic_id: topic.id, kind: ContentKind.NOTE, version: 1 } },
         update: {},
         create: {
           topic_id: topic.id,
+          kind: ContentKind.NOTE,
           version: 1,
           status: PublicationStatus.PUBLISHED,
+          title: `Chapter ${chNum} Study Notes & Formulations`,
           title_en: `Chapter ${chNum} Study Notes & Formulations`,
-          title_am: `የምዕራፍ ${chNum} የጥናት ማስታወሻዎች እና ስሌቶች`,
-          body_en: `### ${course.title_en} · Chapter ${chNum}\n\nIn this section, we formulate key theorems and models.\n\n$$\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1 \\quad \\text{and} \\quad \\int_a^b f'(x)dx = f(b) - f(a)$$\n\nFurther, for kinetic relationships, $E_k = \\frac{1}{2}mv^2$ and $P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$. Review all worked examples before attempting the chapter quiz.`,
-          body_am: `### ${course.title_en} · ምዕራፍ ${chNum}\n\nበዚህ ክፍል ዋና ዋና ቲዎረሞችን እና ቀመሮችን እንመረምራለን።\n\n$$\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1 \\quad \\text{እና} \\quad \\int_a^b f'(x)dx = f(b) - f(a)$$\n\nእንዲሁም ለኃይል ግንኙነቶች $E_k = \\frac{1}{2}mv^2$ ይሆናል። ጥያቄዎችን ከመስራትዎ በፊት ምሳሌዎችን ይከልሱ።`,
+          body: `### ${course.title_en} · Chapter ${chNum}\n\nIn this section, we formulate key theorems and models.\n\n$$\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1 \\quad \\text{and} \\quad \\int_a^b f'(x)dx = f(b) - f(a)$$\n\nFurther, for kinetic relationships, $E_k = \\frac{1}{2}mv^2$ and $P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$. Review all worked examples before attempting the chapter quiz.`,
+          is_free_trial: isFree,
+          published_at: new Date(),
+        },
+      });
+
+      await prisma.content.upsert({
+        where: { topic_id_kind_version: { topic_id: topic.id, kind: ContentKind.AMHARIC_NOTE, version: 1 } },
+        update: {},
+        create: {
+          topic_id: topic.id,
+          kind: ContentKind.AMHARIC_NOTE,
+          version: 1,
+          status: PublicationStatus.PUBLISHED,
+          title: `የምዕራፍ ${chNum} የጥናት ማስታወሻዎች እና ስሌቶች`,
+          body: `### ${course.title_en} · ምዕራፍ ${chNum}\n\nበዚህ ክፍል ዋና ዋና ቲዎረሞችን እና ቀመሮችን እንመረምራለን።\n\n$$\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1 \\quad \\text{እና} \\quad \\int_a^b f'(x)dx = f(b) - f(a)$$\n\nእንዲሁም ለኃይል ግንኙነቶች $E_k = \\frac{1}{2}mv^2$ ይሆናል። ጥያቄዎችን ከመስራትዎ በፊት ምሳሌዎችን ይከልሱ።`,
           is_free_trial: isFree,
           published_at: new Date(),
         },

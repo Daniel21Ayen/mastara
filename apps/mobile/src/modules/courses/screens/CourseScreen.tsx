@@ -49,8 +49,8 @@ export function CourseScreen() {
             <View style={styles.flex}>
               <AppText variant="caption" muted>
                 {isDownloaded
-                  ? t('course.download.downloaded') || 'Course is downloaded locally'
-                  : t('course.download.required.title') || 'Download required to access content'}
+                  ? t('course.download.downloaded')
+                  : t('course.download.required.title')}
               </AppText>
             </View>
             <CourseActionButton course={item.course} />

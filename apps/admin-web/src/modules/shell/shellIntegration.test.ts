@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { ADMIN_NAV } from '@/core/navigation/adminNav';
-import { listAudit } from '@/core/mock/data';
+import { listAudit } from '../../../dev-mocks/data';
 import { buildCssVariables } from '@/core/theme/cssVariables';
 import type { AuditAction } from '@mastara/domain';
 

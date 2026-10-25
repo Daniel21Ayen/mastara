@@ -101,6 +101,8 @@ export function BuildTestSetDialog({
   );
   const [quizNo, setQuizNo] = useState<1 | 2 | 3>(defaultQuizNo);
   const [chapter, setChapter] = useState(CHAPTER_OPTIONS[0] || 'Chapter 1');
+  const [timeAllowed, setTimeAllowed] = useState<number>(15);
+  const [access, setAccess] = useState<'Enrolled Only' | 'Free Trial'>('Enrolled Only');
   const [status, setStatus] = useState<'Active' | 'Inactive'>('Active');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -143,7 +145,8 @@ export function BuildTestSetDialog({
       semester,
       stream,
       program,
-      access: 'Enrolled Only',
+      timeAllowed: `${timeAllowed} mins`,
+      access,
       status,
       verified: true,
       questionCount: 1,
@@ -340,6 +343,39 @@ export function BuildTestSetDialog({
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            {/* Time Allowed */}
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel} htmlFor="build-time-allowed">
+                Time Allowed (minutes) <span className={styles.requiredAsterisk}>*</span>
+              </label>
+              <input
+                id="build-time-allowed"
+                type="number"
+                min={1}
+                max={180}
+                className={styles.input}
+                value={timeAllowed}
+                onChange={(e) => setTimeAllowed(Math.max(1, parseInt(e.target.value, 10) || 15))}
+                required
+              />
+            </div>
+
+            {/* Access / Permission */}
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel} htmlFor="build-access">
+                Access / Permission <span className={styles.requiredAsterisk}>*</span>
+              </label>
+              <select
+                id="build-access"
+                className={styles.select}
+                value={access}
+                onChange={(e) => setAccess(e.target.value as 'Enrolled Only' | 'Free Trial')}
+              >
+                <option value="Enrolled Only">Enrolled Only</option>
+                <option value="Free Trial">Free Trial</option>
               </select>
             </div>
 

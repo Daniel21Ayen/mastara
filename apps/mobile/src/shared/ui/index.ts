@@ -26,4 +26,6 @@ export * from './ThemeSwitch';
 export * from './TopBar';
 export * from './UnderlineTabs';
 export * from './ConnectivityPill';
+export * from './LockedContentSheet';
+export * from './SharedKatexRenderer';
 

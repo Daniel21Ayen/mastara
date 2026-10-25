@@ -1,0 +1,28 @@
+# tests/e2e-mobile/flow-device-lock-and-release.yaml
+# Maestro E2E Flow: Second-Phone Lock Detection and Device Release
+appId: com.kewakibt.mastara
+---
+- launchApp
+- tapOn: "Sign In"
+- inputText:
+    id: "login-phone"
+    text: "0912345678"
+- inputText:
+    id: "login-password"
+    text: "password123"
+- tapOn: "Log In"
+
+# Verify Single-Device Lock Enforcement
+# When logging in from a second phone while device 1 is active, app presents Device Lock screen
+- assertVisible: "Device Limit Reached"
+- assertVisible: "Your account is already active on another phone."
+
+# Tap Release Device
+- tapOn: "Release Other Device"
+- assertVisible: "Are you sure you want to release the previous device?"
+- tapOn: "Confirm & Bind This Phone"
+
+# Successfully logged into new device
+- assertVisible: "My Courses"
+- tapOn: "Profile"
+- assertVisible: "Registered Phone (Active)"

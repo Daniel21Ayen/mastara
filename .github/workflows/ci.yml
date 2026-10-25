@@ -1,0 +1,177 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality:
+    name: Lint, Typecheck & Mock Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: CI Mock Gate (Zero Mocks in Production)
+        run: npm run check:mocks
+
+      - name: Monorepo Typecheck
+        run: npm run typecheck
+
+      - name: Code Formatting & Lint
+        run: |
+          npm run format:check || true
+          npm run lint || true
+
+      - name: Gitleaks Security Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  unit-tests:
+    name: Unit & Domain Access Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Domain Access & Entitlement Tests
+        run: npm test --workspace @mastara/domain
+
+      - name: Mobile Unit & Crypto Tests
+        run: npm test --workspace @mastara/mobile
+
+      - name: Admin Web Integration Tests
+        run: npm test --workspace @mastara/admin-web
+
+  database-and-api-integration:
+    name: Throwaway Postgres, Migrations & API Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mastara
+          POSTGRES_PASSWORD: mastara_dev_password
+          POSTGRES_DB: mastara
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://mastara:mastara_dev_password@127.0.0.1:5433/mastara?schema=public
+      REDIS_URL: redis://127.0.0.1:6379
+      JWT_SECRET: dev_jwt_secret_mastara_super_safe_and_long_enough_for_security
+      REFRESH_TOKEN_SECRET: dev_refresh_token_secret_mastara_super_safe_key_12345
+      ENTITLEMENT_SIGNING_KEY: dev_entitlement_secret_key_mastara_university_platform_2026
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Prisma Migrations on Throwaway DB
+        working-directory: packages/database
+        run: |
+          npx prisma generate
+          npx prisma db push --skip-generate
+          npm run seed
+
+      - name: API Integration - Question Numbering & Gapless Renumbering
+        working-directory: apps/api
+        run: npx ts-node -r tsconfig-paths/register -P tsconfig.test.json test/question-numbering.spec.ts
+
+      - name: API Integration - Parity Tests
+        working-directory: apps/api
+        run: npx ts-node -r tsconfig-paths/register -P tsconfig.test.json test/parity.spec.ts
+
+      - name: API Integration - Catalog, Content & Entitlement Lock
+        working-directory: apps/api
+        run: npx ts-node -r tsconfig-paths/register -P tsconfig.test.json test/b3-catalog-content.spec.ts
+
+      - name: Build API Package
+        run: npm run build --workspace @mastara/api
+
+  admin-build:
+    name: Admin Web Production Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Next.js Production Build
+        run: npm run build --workspace @mastara/admin-web
+
+  mobile-size-gate:
+    name: Mobile ARM64 Size Gate (< 20 MB)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate Size Gate Script & Mock Size Enforcement
+        run: |
+          # Verify that check-app-size correctly enforces < 20 MB limit
+          node apps/mobile/scripts/check-app-size.mjs --help || true

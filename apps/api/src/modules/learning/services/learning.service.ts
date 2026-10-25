@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
-import { EntitlementStatus, OrderStatus, PublicationStatus } from "@mastara/database";
-import { AccessState, progressPercent } from "@mastara/domain";
+import { EntitlementStatus, OrderStatus, PublicationStatus, Stream } from "@mastara/database";
+import { AccessState } from "@mastara/domain";
 
 export interface MyCourseResponse {
   course: {
@@ -28,12 +28,6 @@ export interface RecentItemResponse {
 }
 
 export interface HomeSummaryResponse {
-  continueLearning: {
-    courseId: string;
-    courseTitle: string;
-    chapterNumber: number;
-    percent: number;
-  } | null;
   chaptersDone: number;
   chaptersTotal: number;
   activeProducts: number;
@@ -69,11 +63,64 @@ export class LearningService {
       orderBy: { added_at: "asc" },
     });
 
-    if (studentCourses.length === 0) {
+    let coursesList: any[] = [];
+    if (studentCourses.length > 0) {
+      coursesList = studentCourses.map((sc) => sc.course);
+    } else {
+      const student = await this.prisma.student.findUnique({
+        where: { id: studentId },
+        select: { semester_id: true, stream_pref: true },
+      });
+
+      if (student?.semester_id) {
+        coursesList = await this.prisma.course.findMany({
+          where: {
+            semester_id: student.semester_id,
+            status: PublicationStatus.PUBLISHED,
+            stream: { in: [(student.stream_pref as any) ?? 'NATURAL', Stream.COMMON] },
+          },
+          select: {
+            id: true,
+            semester_id: true,
+            code: true,
+            title_en: true,
+            stream: true,
+            is_promotional: true,
+            trial_expiry_days: true,
+          },
+          orderBy: { sort_order: 'asc' },
+        });
+      } else {
+        const firstSem = await this.prisma.semester.findFirst({
+          where: { status: PublicationStatus.PUBLISHED },
+          orderBy: { sort_order: 'asc' },
+        });
+        if (firstSem) {
+          coursesList = await this.prisma.course.findMany({
+            where: {
+              semester_id: firstSem.id,
+              status: PublicationStatus.PUBLISHED,
+            },
+            select: {
+              id: true,
+              semester_id: true,
+              code: true,
+              title_en: true,
+              stream: true,
+              is_promotional: true,
+              trial_expiry_days: true,
+            },
+            orderBy: { sort_order: 'asc' },
+          });
+        }
+      }
+    }
+
+    if (coursesList.length === 0) {
       return [];
     }
 
-    const courseIds = studentCourses.map((sc) => sc.course_id);
+    const courseIds = coursesList.map((c) => c.id);
 
     // Fetch active entitlements for enrolled courses
     const entitlements = await this.prisma.entitlement.findMany({
@@ -130,8 +177,7 @@ export class LearningService {
 
     const result: MyCourseResponse[] = [];
 
-    for (const sc of studentCourses) {
-      const course = sc.course;
+    for (const course of coursesList) {
       const expiry = entitlementMap.get(course.id);
 
       let access: AccessState = "LOCKED";
@@ -174,29 +220,7 @@ export class LearningService {
   async getHomeSummary(studentId: string): Promise<HomeSummaryResponse> {
     const myCourses = await this.getMyCourses(studentId);
 
-    // 1. Calculate continueLearning
-    let continueLearning: HomeSummaryResponse["continueLearning"] = null;
-    const firstActive = myCourses.find((c) => c.chaptersTotal > 0);
-
-    if (firstActive) {
-      const chapterNumber = Math.min(
-        firstActive.chaptersTotal,
-        firstActive.chaptersDone + 1,
-      );
-      const percent = progressPercent(
-        firstActive.chaptersDone,
-        firstActive.chaptersTotal,
-      );
-
-      continueLearning = {
-        courseId: firstActive.course.id,
-        courseTitle: firstActive.course.title,
-        chapterNumber,
-        percent,
-      };
-    }
-
-    // 2. Sum chapter stats
+    // 1. Sum chapter stats
     const chaptersDone = myCourses.reduce(
       (sum, item) => sum + item.chaptersDone,
       0,
@@ -246,12 +270,21 @@ export class LearningService {
       kind: "TOPIC",
       title: p.topic.title_en,
       courseId: p.topic.module.course_id,
-      chapterNumber: p.topic.chapter_number,
       accessedAt: p.last_read_at.toISOString(),
     }));
 
+    if (recent.length === 0 && myCourses.length > 0 && myCourses[0]) {
+      recent.push({
+        id: `starter-${myCourses[0].course.id}`,
+        kind: 'TOPIC',
+        title: myCourses[0].course.title,
+        courseId: myCourses[0].course.id,
+        chapterNumber: 1,
+        accessedAt: new Date().toISOString(),
+      });
+    }
+
     return {
-      continueLearning,
       chaptersDone,
       chaptersTotal,
       activeProducts,

@@ -1,5 +1,6 @@
 // packages/domain/src/index.ts
 export * from './access/canOpenContent';
+export * from './access/canOpen';
 export * from './access/offlineAccess';
 export * from './constants/academic';
 export * from './constants/admin';
@@ -7,6 +8,7 @@ export * from './constants/assessment';
 export * from './constants/commerce';
 export * from './constants/content';
 export * from './constants/engagement';
+export * from './entitlement';
 export * from './constants/errors';
 export * from './constants/learning';
 export * from './constants/sync';

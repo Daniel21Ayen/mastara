@@ -54,7 +54,6 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
         id: 'tests',
         labelKey: 'admin.nav.tests',
         items: [
-          { id: 'unified-assessments', labelKey: 'admin.nav.unifiedAssessments', href: '/instructor/assessments' },
           { id: 'quiz-1', labelKey: 'admin.nav.quiz1', href: '/content/tests/quiz-1' },
           { id: 'quiz-2', labelKey: 'admin.nav.quiz2', href: '/content/tests/quiz-2' },
           { id: 'quiz-3', labelKey: 'admin.nav.quiz3', href: '/content/tests/quiz-3' },

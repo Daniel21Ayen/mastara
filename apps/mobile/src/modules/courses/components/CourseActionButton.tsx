@@ -64,14 +64,14 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
           <ActivityIndicator size="small" color={theme.accents.cyan.main} />
           {!compact && (
             <AppText variant="caption" bold color={theme.accents.cyan.main}>
-              {t('course.download.downloading') || 'Downloading...'}
+              {t('course.download.downloading')}
             </AppText>
           )}
         </View>
       ) : isDownloaded ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('course.download.delete') || 'Delete Download'}
+          accessibilityLabel={t('course.download.delete')}
           hitSlop={8}
           onPress={handlePress}
           style={({ pressed }) => [
@@ -84,14 +84,14 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
           <Icon name="trash" size={compact ? 18 : 20} color={theme.colors.danger} />
           {!compact && (
             <AppText variant="caption" bold color={theme.colors.danger}>
-              {t('course.download.delete') || 'Delete'}
+              {t('course.download.delete')}
             </AppText>
           )}
         </Pressable>
       ) : (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('course.download.action') || 'Download Course'}
+          accessibilityLabel={t('course.download.action')}
           hitSlop={8}
           onPress={handlePress}
           style={({ pressed }) => [
@@ -104,7 +104,7 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
           <Icon name="download" size={compact ? 18 : 20} color={theme.colors.primary} />
           {!compact && (
             <AppText variant="caption" bold color={theme.colors.primary}>
-              {t('course.download.action') || 'Download'}
+              {t('course.download.action')}
             </AppText>
           )}
         </Pressable>
@@ -112,15 +112,15 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
 
       <BottomSheet
         visible={sheet === 'delete'}
-        title={t('course.download.deleteConfirmTitle') || 'Delete Downloaded Course'}
+        title={t('course.download.deleteConfirmTitle')}
         onClose={() => setSheet(null)}
       >
         <AppText muted>
           {t('course.download.deleteConfirmBody') ||
             `Are you sure you want to remove all offline materials and files for "${course.title}"?`}
         </AppText>
-        <AppButton label={t('download.delete.confirm') || 'Delete'} onPress={() => void remove()} />
-        <AppButton label={t('common.cancel') || 'Cancel'} variant="outline" onPress={() => setSheet(null)} />
+        <AppButton label={t('download.delete.confirm')} onPress={() => void remove()} />
+        <AppButton label={t('common.cancel')} variant="outline" onPress={() => setSheet(null)} />
       </BottomSheet>
 
       <BottomSheet visible={sheet === 'failed'} title={t('download.failed.title')} onClose={closeFailure}>

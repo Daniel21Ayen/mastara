@@ -44,6 +44,7 @@ export const adminQuestionSchema = z.object({
   trueIsCorrect: z.boolean().nullable(),
   acceptedAnswers: z.array(z.string()),
   explanation: z.string().optional(),
+  displayNumber: z.number().int().min(1).optional(),
   status,
   updatedAt: z.string(),
   /** The next question of the same course and quiz, for "Next". */
@@ -113,6 +114,7 @@ export const questionInputSchema = z.object({
   trueIsCorrect: z.boolean().nullable(),
   acceptedAnswers: z.array(z.string()).max(10),
   explanation: z.string().optional(),
+  displayNumber: z.number().int().min(1).optional(),
   status,
   reason: reasonSchema.optional(),
 });

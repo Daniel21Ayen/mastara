@@ -1,9 +1,8 @@
 // apps/mobile/src/modules/profile/components/SyncStatusCard.tsx
 import { View } from 'react-native';
 
-import { env } from '@/core/config/env';
 import { useI18n } from '@/core/i18n';
-import { setForcedOffline, useOnline } from '@/core/network';
+import { useOnline } from '@/core/network';
 import { useSync } from '@/core/sync';
 import { createStyles, useTheme } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
@@ -41,14 +40,13 @@ export function SyncStatusCard() {
       <AppText variant="caption" muted>
         {lastSyncAt ? t('sync.lastSync', { time: timeAgo(new Date(lastSyncAt).toISOString()) }) : t('sync.never')}
       </AppText>
-      <AppButton label={t('sync.now')} variant="outline" disabled={!online || pending === 0} loading={syncing} onPress={() => void syncNow()} />
-      {env.useMocks ? (
-        <AppButton
-          label={online ? t('sync.simulate') : t('sync.simulateOff')}
-          variant="outline"
-          onPress={() => setForcedOffline(online)}
-        />
-      ) : null}
+      <AppButton
+        label={t('sync.now')}
+        variant="outline"
+        disabled={!online || pending === 0}
+        loading={syncing}
+        onPress={() => void syncNow()}
+      />
     </Card>
   );
 }

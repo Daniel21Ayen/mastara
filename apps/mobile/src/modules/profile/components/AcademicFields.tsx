@@ -6,7 +6,7 @@ import { View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { createStyles, useTheme } from '@/core/theme';
 import type { FormApi } from '@/shared/hooks';
-import { AppText, SegmentedControl, SelectField } from '@/shared/ui';
+import { AppButton, AppText, SegmentedControl, SelectField } from '@/shared/ui';
 import type { SegmentOption } from '@/shared/ui';
 
 import { useAcademicOptions } from '../hooks/useAcademicOptions';
@@ -74,7 +74,12 @@ export function AcademicFields({ form, onChange }: AcademicFieldsProps) {
         <AppText bold>{t('profile.stream')}</AppText>
         <SegmentedControl options={streams} value={values.stream} onChange={(stream) => change({ stream })} />
       </View>
-      {options.failed ? <AppText color={theme.colors.danger}>{t('error.generic')}</AppText> : null}
+      {options.failed ? (
+        <View style={styles.group}>
+          <AppText color={theme.colors.danger}>{t('error.generic')}</AppText>
+          <AppButton label={t('common.retry')} variant="outline" onPress={options.reload} />
+        </View>
+      ) : null}
     </>
   );
 }

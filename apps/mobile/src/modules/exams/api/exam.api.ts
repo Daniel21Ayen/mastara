@@ -2,10 +2,7 @@
 import type { Exam, Question, University } from '@mastara/contracts';
 import type { ExamKind } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { buildExamQuestions, buildExams, courses, findExam, universityOf } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface ExamListing {
@@ -25,46 +22,23 @@ export interface ExamApi {
   getSession(examId: string): Promise<ExamSessionData | null>;
 }
 
-const mockExamApi: ExamApi = {
-  async getExams(courseId, kind) {
-    await simulateLatency(150);
-    const course = courses.find((item) => item.id === courseId);
-    if (!course) return [];
-    return buildExams(course)
-      .filter((exam) => exam.kind === kind)
-      .map((exam) => {
-        const university = universityOf(exam.universityId);
-        return university ? { exam, university } : null;
-      })
-      .filter((listing): listing is ExamListing => listing !== null);
-  },
-  async getSession(examId) {
-    await simulateLatency(200);
-    const exam = findExam(examId);
-    if (!exam) return null;
-    const university = universityOf(exam.universityId);
-    if (!university) return null;
-    return { exam, university, questions: buildExamQuestions(exam) };
-  },
-};
-
 export const realExamApi: ExamApi = {
   async getExams(courseId: string, kind: ExamKind): Promise<ExamListing[]> {
-    return httpClient.get<ExamListing[]>(`/assessment/exams/courses/${courseId}?kind=${kind}`);
+    return httpClient.get<ExamListing[]>(`/assessment/exams/courses/${encodeURIComponent(courseId)}?kind=${kind}`);
   },
   async getSession(examId: string): Promise<ExamSessionData | null> {
     try {
-      return await httpClient.get<ExamSessionData>(`/assessment/exams/${examId}/session`);
+      return await httpClient.get<ExamSessionData>(`/assessment/exams/${encodeURIComponent(examId)}/session`);
     } catch {
       return null;
     }
   },
 };
 
-/** The server, with no download rules. Used to download an exam. */
-export const examRemote: ExamApi = env.useMocks ? mockExamApi : realExamApi;
+/** The real remote server API. Used to download an exam. */
+export const examRemote: ExamApi = realExamApi;
 
-/** Online first. An exam opens offline only if the student downloaded it. */
+/** Online first with SQLite cache. An exam opens offline only if the student downloaded it. */
 export const examApi = gatewayReads('exam', examRemote, {
   details: ['getSession'],
   lists: {

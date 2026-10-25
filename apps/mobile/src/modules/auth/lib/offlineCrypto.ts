@@ -9,14 +9,14 @@ export interface PasswordHashRecord {
 
 const DEFAULT_ITERATIONS = 5000; // Tuned for budget Android phones (~10-30ms)
 
-function bufferToHex(buffer: ArrayBuffer | Uint8Array): string {
+export function bufferToHex(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 }
 
-function hexToBytes(hex: string): Uint8Array {
+export function hexToBytes(hex: string): Uint8Array {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
@@ -24,7 +24,7 @@ function hexToBytes(hex: string): Uint8Array {
   return bytes;
 }
 
-function getRandomBytes(length: number): Uint8Array {
+export function getRandomBytes(length: number): Uint8Array {
   if (typeof globalThis.crypto?.getRandomValues === 'function') {
     return globalThis.crypto.getRandomValues(new Uint8Array(length));
   }
@@ -73,7 +73,7 @@ async function derivePbkdf2Hash(
   const derivedBits = await globalThis.crypto.subtle.deriveBits(
     {
       name: 'PBKDF2',
-      salt: saltBytes,
+      salt: saltBytes as unknown as BufferSource,
       iterations,
       hash: 'SHA-256',
     },

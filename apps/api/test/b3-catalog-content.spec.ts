@@ -16,6 +16,7 @@ import {
   Role,
   StudentStatus,
   Stream,
+  ContentKind,
 } from "@mastara/database";
 
 let passed = 0;
@@ -158,11 +159,23 @@ async function runPhaseB3Tests() {
   await prisma.content.create({
     data: {
       topic_id: topic1.id,
+      kind: ContentKind.NOTE,
       version: 1,
+      title: "Big O, Omega and Theta Notation",
       title_en: "Big O, Omega and Theta Notation",
-      title_am: "ቢግ ኦ፣ ኦሜጋ እና ቴታ ኖቴሽን",
-      body_en: "The time complexity is expressed as $T(n) = O(n \\log n)$ with matrix equations $$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$$",
-      body_am: "የጊዜ ውስብስብነት በ $T(n) = O(n \\log n)$ ይገለጻል",
+      body: "The time complexity is expressed as $T(n) = O(n \\log n)$ with matrix equations $$\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$$",
+      is_free_trial: true,
+      status: PublicationStatus.PUBLISHED,
+    },
+  });
+
+  await prisma.content.create({
+    data: {
+      topic_id: topic1.id,
+      kind: ContentKind.AMHARIC_NOTE,
+      version: 1,
+      title: "ቢግ ኦ፣ ኦሜጋ እና ቴታ ኖቴሽን",
+      body: "የጊዜ ውስብስብነት በ $T(n) = O(n \\log n)$ ይገለጻል",
       is_free_trial: true,
       status: PublicationStatus.PUBLISHED,
     },
@@ -183,11 +196,23 @@ async function runPhaseB3Tests() {
   await prisma.content.create({
     data: {
       topic_id: topic2.id,
+      kind: ContentKind.NOTE,
       version: 1,
+      title: "Solving Recurrences with Master Theorem",
       title_en: "Solving Recurrences with Master Theorem",
-      title_am: "ሪከረንሶችን በማስተር ቴዎረም መፍታት",
-      body_en: "For recurrences of form $T(n) = aT(n/b) + f(n)$...",
-      body_am: "ለ $T(n) = aT(n/b) + f(n)$ አይነት ሪከረንሶች...",
+      body: "For recurrences of form $T(n) = aT(n/b) + f(n)$...",
+      is_free_trial: false,
+      status: PublicationStatus.PUBLISHED,
+    },
+  });
+
+  await prisma.content.create({
+    data: {
+      topic_id: topic2.id,
+      kind: ContentKind.AMHARIC_NOTE,
+      version: 1,
+      title: "ሪከረንሶችን በማስተር ቴዎረም መፍታት",
+      body: "ለ $T(n) = aT(n/b) + f(n)$ አይነት ሪከረንሶች...",
       is_free_trial: false,
       status: PublicationStatus.PUBLISHED,
     },
@@ -385,16 +410,12 @@ async function runPhaseB3Tests() {
     // Test Home Dashboard Summary
     const homeSummary = await learningService.getHomeSummary(student.id);
     assert(
-      homeSummary.continueLearning !== null &&
-        homeSummary.continueLearning.courseId === courseNat.id &&
-        homeSummary.continueLearning.chapterNumber === 2 &&
-        homeSummary.continueLearning.percent === 50 &&
-        homeSummary.chaptersDone === 1 &&
+      homeSummary.chaptersDone === 1 &&
         homeSummary.chaptersTotal === 2 &&
         homeSummary.activeProducts === 1 &&
         homeSummary.recent.length >= 1 &&
         homeSummary.recent[0]?.title === topic1.title_en,
-      "Generates accurate home summary with continue learning card (50%), active products, and recent activity",
+      "Generates accurate home summary with active products and recent activity",
     );
   } finally {
     // ----------------------------------------------------

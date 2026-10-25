@@ -1,23 +1,11 @@
 // apps/admin-web/src/modules/dashboard/api/dashboard.api.ts
 import { dashboardSummarySchema } from '@mastara/contracts';
 import type { DashboardSummary } from '@mastara/contracts';
-
-import { env } from '@/core/config/env';
-import { buildDashboardSummary } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
-
 import { httpClient } from '@/core/network';
 
 export interface DashboardApi {
   getSummary(): Promise<DashboardSummary>;
 }
-
-const mockDashboardApi: DashboardApi = {
-  async getSummary() {
-    await simulateLatency();
-    return dashboardSummarySchema.parse(buildDashboardSummary());
-  },
-};
 
 export const realDashboardApi: DashboardApi = {
   async getSummary() {
@@ -26,9 +14,4 @@ export const realDashboardApi: DashboardApi = {
   },
 };
 
-function createDashboardApi(): DashboardApi {
-  if (env.useMocks) return mockDashboardApi;
-  return realDashboardApi;
-}
-
-export const dashboardApi = createDashboardApi();
+export const dashboardApi: DashboardApi = realDashboardApi;

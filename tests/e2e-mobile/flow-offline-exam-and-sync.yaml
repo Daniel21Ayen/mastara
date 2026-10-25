@@ -1,0 +1,43 @@
+# tests/e2e-mobile/flow-offline-exam-and-sync.yaml
+# Maestro E2E Flow: Offline Timed Exam Sitting -> Submit -> Outbox Queue -> Later Online Sync
+appId: com.kewakibt.mastara
+---
+- launchApp
+- tapOn: "My Courses"
+- tapOn: "Freshman Mathematics"
+- tapOn: "Exams"
+- tapOn: "Mid Exam 2025"
+
+# 1. Sitting Exam Offline
+- assertVisible: "Exam Instructions"
+- tapOn: "Start Exam"
+- assertVisible: "Question 1"
+
+# Answer question 1
+- tapOn: "Option B"
+- tapOn: "Next Question"
+
+# Flag question 2
+- tapOn: "Flag Question"
+- tapOn: "Next Question"
+
+# Submit Exam
+- tapOn: "All Questions"
+- tapOn: "Submit Exam"
+- assertVisible: "Confirm Submission"
+- tapOn: "Yes, Submit"
+
+# Exam completed offline
+- assertVisible: "Exam Submitted (Saved Offline)"
+- assertVisible: "Score: 18 / 20"
+
+# 2. Reconnect to Internet and trigger sync
+- tapOn: "Profile"
+- tapOn: "Sync"
+- assertVisible: "1 change waiting in outbox"
+- tapOn: "Sync Now"
+
+# Verify sync completion
+- extendedWaitUntil:
+    visible: "All changes synced"
+    timeout: 15000

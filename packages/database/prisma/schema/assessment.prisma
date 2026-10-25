@@ -61,6 +61,7 @@ enum AttemptState {
 model Question {
   id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   question_number       Int               @default(autoincrement())
+  display_number        Int?
   kind                  QuestionKind      @default(MID)
   university_id         String?           @db.Uuid
   program_id            String?           @db.Uuid

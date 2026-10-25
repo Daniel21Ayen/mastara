@@ -8,7 +8,7 @@ import {
   listSupportTickets,
   replySupportTicket,
   setSupportTicketStatus,
-} from '@/core/mock/data';
+} from '../../../dev-mocks/data';
 
 describe('Admin Support System Integration', () => {
   it('lists initial tickets with default pagination', () => {

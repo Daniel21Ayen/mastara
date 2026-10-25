@@ -1,3 +1,4 @@
+// apps/admin-web/src/modules/questions/api/questions.api.ts
 import {
   bulkQuestionImportInputSchema,
   bulkQuestionImportResultSchema,
@@ -13,24 +14,7 @@ import type {
   ExamSetListQuery,
   ExamSetListResult,
 } from '@mastara/contracts';
-import {
-  exportExamSetToCsv,
-  exportExamSetToPrintableHtml,
-  parseBulkQuestions,
-  statusChange,
-} from '@mastara/domain';
-import type { AuditAction } from '@mastara/domain';
-
 import { env } from '@/core/config/env';
-import {
-  findExamSet,
-  findSetOfQuestion,
-  getExamSet,
-  listExamSets,
-  recordAudit,
-  saveExamSet,
-} from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface ExportSetOptions {
@@ -59,130 +43,10 @@ export interface QuestionsApi {
   ): Promise<{ content: string; filename: string; contentType: string }>;
   downloadSet(
     id: string,
-    format: 'csv' | 'pdf' | 'html',
+    format?: 'csv' | 'pdf' | 'html',
     options?: ExportSetOptions,
   ): Promise<void>;
 }
-
-
-
-function auditAction(created: boolean, change: ReturnType<typeof statusChange>): AuditAction {
-  if (change === 'PUBLISH') return 'EXAM_SET_PUBLISHED';
-  if (change === 'UNPUBLISH') return 'EXAM_SET_UNPUBLISHED';
-  return created ? 'EXAM_SET_CREATED' : 'EXAM_SET_UPDATED';
-}
-
-const mockQuestionsApi: QuestionsApi = {
-  async listSets(query) {
-    await simulateLatency();
-    return examSetListResultSchema.parse(listExamSets(query));
-  },
-
-  async getSet(id) {
-    await simulateLatency();
-    return examSetSchema.parse(getExamSet(id));
-  },
-
-  async findSet(id) {
-    await simulateLatency(100);
-    const set = findExamSet(id);
-    return set ? examSetSchema.parse(set) : null;
-  },
-
-  async questionOwner(questionId) {
-    await simulateLatency(100);
-    return findSetOfQuestion(questionId);
-  },
-
-  async saveSet(input) {
-    await simulateLatency();
-    const parsed = examSetInputSchema.parse(input);
-    const { set, created, before } = saveExamSet(parsed);
-    const change = before === null ? (set.status === 'PUBLISHED' ? 'PUBLISH' : 'NONE') : statusChange(before, set.status);
-    recordAudit({
-      actor: 'ADMIN',
-      action: auditAction(created, change),
-      target: `Exam set ${set.id} · ${set.questions.length} questions`,
-      reason: parsed.reason,
-    });
-    return examSetSchema.parse(set);
-  },
-
-  async bulkImport(input) {
-    await simulateLatency();
-    let content = '';
-    let dryRun = true;
-    let targetExamSetId: string | undefined;
-
-    if (typeof FormData !== 'undefined' && input instanceof FormData) {
-      dryRun = input.get('dryRun') === 'true';
-      targetExamSetId = (input.get('targetExamSetId') as string) || undefined;
-      const file = input.get('file');
-      if (file && typeof (file as any).text === 'function') {
-        content = await (file as any).text();
-      } else {
-        content = (input.get('content') as string) || '';
-      }
-    } else {
-      const parsed = bulkQuestionImportInputSchema.parse(input);
-      content = parsed.content;
-      dryRun = parsed.dryRun;
-      targetExamSetId = parsed.targetExamSetId;
-    }
-
-    const parseRes = parseBulkQuestions(content);
-    return bulkQuestionImportResultSchema.parse({
-      totalRows: parseRes.totalRows,
-      validRows: parseRes.validRows,
-      errorRows: parseRes.errorRows,
-      errors: parseRes.errors,
-      preview: parseRes.questions,
-      appliedCount: dryRun ? 0 : parseRes.questions.length,
-      targetExamSetId,
-    });
-  },
-
-  async exportSet(id, format = 'csv', options = {}) {
-    await simulateLatency();
-    const set = getExamSet(id);
-    if (!set) throw new Error(`Exam set ${id} not found`);
-
-    if (format === 'csv') {
-      return {
-        content: exportExamSetToCsv(set),
-        filename: `${set.id}.csv`,
-        contentType: 'text/csv; charset=utf-8',
-      };
-    }
-
-    return {
-      content: exportExamSetToPrintableHtml(set, options),
-      filename: `${set.id}-exam-sheet.html`,
-      contentType: 'text/html; charset=utf-8',
-    };
-  },
-
-  async downloadSet(id, format = 'csv', options = {}) {
-    const res = await this.exportSet(id, format, options);
-    if (typeof window === 'undefined') return;
-
-    if (format === 'csv') {
-      const blob = new Blob([res.content], { type: res.contentType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = res.filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    } else {
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.write(res.content);
-        win.document.close();
-      }
-    }
-  },
-};
 
 export const realQuestionsApi: QuestionsApi = {
   async listSets(query: ExamSetListQuery): Promise<ExamSetListResult> {
@@ -309,12 +173,4 @@ export const realQuestionsApi: QuestionsApi = {
   },
 };
 
-
-
-function createQuestionsApi(): QuestionsApi {
-  if (env.useMocks) return mockQuestionsApi;
-  return realQuestionsApi;
-}
-
-export const questionsApi = createQuestionsApi();
-
+export const questionsApi: QuestionsApi = realQuestionsApi;

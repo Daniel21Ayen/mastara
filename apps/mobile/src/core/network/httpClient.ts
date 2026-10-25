@@ -9,6 +9,7 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 interface RequestOptions extends Omit<RequestInit, 'body' | 'method'> {
   headers?: Record<string, string>;
+  timeoutMs?: number;
 }
 
 async function request<T>(
@@ -52,9 +53,14 @@ async function request<T>(
     }
   }
 
+  const timeoutMs = options.timeoutMs ?? 6000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
     const response = await fetch(url, {
       ...options,
+      signal: options.signal ?? controller.signal,
       method,
       headers,
       body: requestBody,
@@ -99,10 +105,13 @@ async function request<T>(
     if (error instanceof ApiError) {
       throw error;
     }
+    const isTimeout = error instanceof Error && (error.name === 'AbortError' || error.message.includes('abort'));
     throw new ApiError(
       ERROR_CODES.NETWORK_OFFLINE,
-      error instanceof Error ? error.message : 'Network request failed',
+      isTimeout ? 'Network request timed out' : (error instanceof Error ? error.message : 'Network request failed'),
     );
+  } finally {
+    clearTimeout(timer);
   }
 }
 

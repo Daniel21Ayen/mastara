@@ -1,9 +1,6 @@
 import type { CreateTicketInput, Ticket } from '@mastara/contracts';
 
-import { env } from '@/core/config/env';
 import { cacheReads } from '@/core/db';
-import { addTicket, listTickets } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface SupportApi {
@@ -29,17 +26,6 @@ function mapTicket(t: any): Ticket {
   };
 }
 
-const mockSupportApi: SupportApi = {
-  async getTickets(userId) {
-    await simulateLatency(100);
-    return listTickets(userId);
-  },
-  async createTicket(userId, input) {
-    await simulateLatency(250);
-    return addTicket(userId, input);
-  },
-};
-
 export const realSupportApi: SupportApi = {
   async getTickets(_userId) {
     const briefs = await httpClient.get<Array<{ id: string }>>('/support/tickets');
@@ -58,7 +44,5 @@ export const realSupportApi: SupportApi = {
   },
 };
 
-const baseApi: SupportApi = env.useMocks ? mockSupportApi : realSupportApi;
-
 /** Reads are saved on the phone and used when it is offline; writes always need the server. */
-export const supportApi = cacheReads('support', baseApi, ['getTickets']);
+export const supportApi = cacheReads('support', realSupportApi, ['getTickets']);

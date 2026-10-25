@@ -10,11 +10,6 @@ import type {
   PaymentListQuery,
   PaymentListResult,
 } from '@mastara/contracts';
-
-import { env } from '@/core/config/env';
-import { adminText } from '@/core/i18n';
-import { decidePayment, getPayment, listPayments, recordAudit } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 /**
@@ -26,31 +21,6 @@ export interface PaymentsApi {
   get(id: string): Promise<AdminPayment>;
   decide(id: string, decision: PaymentDecision): Promise<AdminPayment>;
 }
-
-const mockPaymentsApi: PaymentsApi = {
-  async list(query) {
-    await simulateLatency();
-    return paymentListResultSchema.parse(listPayments(query));
-  },
-
-  async get(id) {
-    await simulateLatency();
-    return adminPaymentSchema.parse(getPayment(id));
-  },
-
-  async decide(id, decision) {
-    await simulateLatency();
-    const parsed = paymentDecisionSchema.parse(decision);
-    const payment = decidePayment(id, parsed);
-    recordAudit({
-      actor: 'ADMIN',
-      action: parsed.action === 'APPROVE' ? 'PAYMENT_APPROVED' : 'PAYMENT_REJECTED',
-      target: `Order · ${payment.studentName}`,
-      reason: parsed.action === 'REJECT' ? adminText(`admin.payments.reject.${parsed.reason}`) : undefined,
-    });
-    return adminPaymentSchema.parse(payment);
-  },
-};
 
 export const realPaymentsApi: PaymentsApi = {
   async list(query) {
@@ -67,7 +37,9 @@ export const realPaymentsApi: PaymentsApi = {
   },
 
   async get(id) {
-    const payment = await httpClient.get<AdminPayment>(`/commerce/payments/${encodeURIComponent(id)}`);
+    const payment = await httpClient.get<AdminPayment>(
+      `/commerce/payments/${encodeURIComponent(id)}`,
+    );
     return adminPaymentSchema.parse(payment);
   },
 
@@ -81,9 +53,4 @@ export const realPaymentsApi: PaymentsApi = {
   },
 };
 
-function createPaymentsApi(): PaymentsApi {
-  if (env.useMocks) return mockPaymentsApi;
-  return realPaymentsApi;
-}
-
-export const paymentsApi = createPaymentsApi();
+export const paymentsApi: PaymentsApi = realPaymentsApi;

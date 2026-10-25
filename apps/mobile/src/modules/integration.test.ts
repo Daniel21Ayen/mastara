@@ -17,7 +17,16 @@ import { deviceApi } from './device-lock/api/device.api';
 import { notificationsApi } from './notifications/api/notifications.api';
 import { supportApi } from './support/api/support.api';
 
-test('Mobile Integration: Auth Flow (offline registration & central server login)', async () => {
+async function isServerRunning(): Promise<boolean> {
+  try {
+    const res = await fetch('http://localhost:3000/health', { signal: AbortSignal.timeout(300) });
+    return res.ok || res.status < 500;
+  } catch {
+    return false;
+  }
+}
+
+test('Mobile Integration: Auth Flow (offline registration & central server login)', async (t) => {
   const rand = Math.floor(Math.random() * 900000 + 100000);
   const identifier = `+251911${rand}`;
   const password = 'Password@123';
@@ -43,6 +52,11 @@ test('Mobile Integration: Auth Flow (offline registration & central server login
   assert.ok(loggedInOffline.token, 'Login should return an auth token');
   assert.strictEqual(loggedInOffline.user.id, registeredOffline.user.id);
 
+  if (!await isServerRunning()) {
+    t.skip('Skipping central server registration: API server not running on localhost:3000');
+    return;
+  }
+
   // 3. Central database registration (simulating purchase commitment)
   const registeredServer = await realAuthApi.register({
     identifier,
@@ -53,7 +67,11 @@ test('Mobile Integration: Auth Flow (offline registration & central server login
   assert.strictEqual(registeredServer.user.identifier, identifier);
 });
 
-test('Mobile Integration: Academic Catalog Flow', async () => {
+test('Mobile Integration: Academic Catalog Flow', async (t) => {
+  if (!await isServerRunning()) {
+    t.skip('Skipping live catalog test: API server not running on localhost:3000');
+    return;
+  }
   // 1. Get universities
   const universities = await academicApi.getUniversities();
   assert.ok(Array.isArray(universities), 'Should return an array of universities');
@@ -85,7 +103,11 @@ test('Mobile Integration: Academic Catalog Flow', async () => {
   }
 });
 
-test('Mobile Integration: Student Profile & Enrollment Flow', async () => {
+test('Mobile Integration: Student Profile & Enrollment Flow', async (t) => {
+  if (!await isServerRunning()) {
+    t.skip('Skipping live profile test: API server not running on localhost:3000');
+    return;
+  }
   const rand = Math.floor(Math.random() * 900000 + 100000);
   const identifier = `+251922${rand}`;
   const registered = await realAuthApi.register({
@@ -130,7 +152,11 @@ test('Mobile Integration: Student Profile & Enrollment Flow', async () => {
   assert.ok(typeof summary.activeProducts === 'number');
 });
 
-test('Mobile Integration: Store & Pricing Flow', async () => {
+test('Mobile Integration: Store & Pricing Flow', async (t) => {
+  if (!await isServerRunning()) {
+    t.skip('Skipping live store test: API server not running on localhost:3000');
+    return;
+  }
   const pricing = await storeApi.getPricing();
   assert.ok(pricing.singlePrice > 0, 'Pricing config should have single price');
   assert.ok(pricing.fullStreamPrice > 0, 'Pricing config should have fullStreamPrice');
@@ -141,7 +167,11 @@ test('Mobile Integration: Store & Pricing Flow', async () => {
   assert.ok(accounts.TELEBIRR, 'Accounts should include Telebirr');
 });
 
-test('Mobile Integration: Content & Assessments Flow', async () => {
+test('Mobile Integration: Content & Assessments Flow', async (t) => {
+  if (!await isServerRunning()) {
+    t.skip('Skipping live content test: API server not running on localhost:3000');
+    return;
+  }
   const universities = await academicApi.getUniversities();
   const uni = universities[0];
   const programs = await academicApi.getPrograms(uni.id);
@@ -172,7 +202,11 @@ test('Mobile Integration: Content & Assessments Flow', async () => {
 
 });
 
-test('Mobile Integration: Device Lock Flow', async () => {
+test('Mobile Integration: Device Lock Flow', async (t) => {
+  if (!await isServerRunning()) {
+    t.skip('Skipping live device test: API server not running on localhost:3000');
+    return;
+  }
   const deviceId = `test-device-${Date.now()}`;
   await deviceApi.registerDevice({
     userId: 'test-user',
@@ -183,7 +217,11 @@ test('Mobile Integration: Device Lock Flow', async () => {
   await deviceApi.releaseDevice('test-user');
 });
 
-test('Mobile Integration: Support Tickets & Notifications Flow', async () => {
+test('Mobile Integration: Support Tickets & Notifications Flow', async (t) => {
+  if (!await isServerRunning()) {
+    t.skip('Skipping live support test: API server not running on localhost:3000');
+    return;
+  }
   const tickets = await supportApi.getTickets('test-user');
   assert.ok(Array.isArray(tickets));
 
@@ -191,7 +229,11 @@ test('Mobile Integration: Support Tickets & Notifications Flow', async () => {
   assert.ok(Array.isArray(notifications));
 });
 
-test('Mobile Integration: Offline Exam Outbox Sync API Flow', async () => {
+test('Mobile Integration: Offline Exam Outbox Sync API Flow', async (t) => {
+  if (!await isServerRunning()) {
+    t.skip('Skipping live sync test: API server not running on localhost:3000');
+    return;
+  }
   const rand = Math.floor(Math.random() * 900000 + 100000);
   const authRes = await authApi.register({
     identifier: `+251933${rand}`,

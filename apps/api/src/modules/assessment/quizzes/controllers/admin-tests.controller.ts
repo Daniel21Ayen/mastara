@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Param,
   Body,
   Query,
@@ -131,6 +132,17 @@ export class AdminTestsController {
     @CurrentUser("id") adminId: string,
   ): Promise<AdminQuestion> {
     return this.adminTestsService.updateQuestion(id, dto, adminId);
+  }
+
+  @Delete("questions/:id")
+  @ApiOperation({ summary: "Delete question and renumber subsequent questions in set" })
+  @ApiParam({ name: "id", description: "UUID of the question" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Question deleted and set renumbered" })
+  async deleteQuestion(
+    @Param("id") id: string,
+    @CurrentUser("id") adminId: string,
+  ): Promise<{ success: boolean }> {
+    return this.adminTestsService.deleteQuestion(id, adminId);
   }
 
   @Get("exam-sets")

@@ -1,6 +1,12 @@
 // apps/admin-web/src/core/config/env.ts
-export const env = {
-  useMocks: process.env.NEXT_PUBLIC_USE_MOCKS === 'true',
-  apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000',
-} as const;
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+if (!apiUrl) {
+  throw new Error(
+    'Fatal: Missing NEXT_PUBLIC_API_URL environment variable. Admin portal cannot function without a base API server URL.',
+  );
+}
+
+export const env = {
+  apiUrl: apiUrl.replace(/\/$/, ''),
+} as const;

@@ -21,6 +21,16 @@ const config: NextConfig = {
     '192.168.73.116',
     ...(process.env.ALLOWED_DEV_ORIGINS ? process.env.ALLOWED_DEV_ORIGINS.split(',') : []),
   ],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
+        'node:crypto': false,
+      };
+    }
+    return config;
+  },
 };
 
 export default config;

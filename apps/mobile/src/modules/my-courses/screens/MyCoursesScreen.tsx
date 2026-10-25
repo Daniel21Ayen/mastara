@@ -54,7 +54,7 @@ export function MyCoursesScreen() {
     <ActivityIndicator color={theme.colors.primary} />
   ) : courses.error ? (
     <View style={styles.gap}>
-      <AppText muted>{t('error.offline') || 'Unable to load courses.'}</AppText>
+      <AppText muted>{t('error.offline')}</AppText>
       <AppButton label={t('common.retry')} variant="outline" onPress={courses.reload} />
     </View>
   ) : courses.total === 0 ? (

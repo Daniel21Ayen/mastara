@@ -29,6 +29,7 @@ const config: ExpoConfig = {
     ],
     ['expo-image-picker', { photosPermission: 'Mastara needs your photos to attach a payment receipt.' }],
     ...(encryptDatabase ? ([['expo-sqlite', { useSQLCipher: true }]] as [string, object][]) : []),
+    './plugins/withExpoPatches.js',
   ],
   experiments: { typedRoutes: true },
 };

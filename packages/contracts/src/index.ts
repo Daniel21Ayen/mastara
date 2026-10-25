@@ -14,3 +14,5 @@ export * from './user';
 export * from './validation';
 export * from './adminExports';
 export * from './pagination';
+export * from './catalog';
+export * from './canonicalContracts';

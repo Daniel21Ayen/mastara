@@ -82,7 +82,7 @@ export function MaterialTab({ courseId, access, course }: MaterialTabProps) {
     id: courseId,
     semesterId: '',
     code: '',
-    title: t('mycourses.title') || 'Course',
+    title: t('mycourses.title'),
     stream: 'COMMON',
   };
 
@@ -110,7 +110,12 @@ export function MaterialTab({ courseId, access, course }: MaterialTabProps) {
         <TopicRow key={topic.id} topic={topic} lang={config.lang} access={access} onPress={openTopic} />
       ))}
 
-      <LockedSheet visible={lockedOpen} onClose={() => setLockedOpen(false)} />
+      <LockedSheet
+        visible={lockedOpen}
+        courseId={courseId}
+        courseTitle={course?.title}
+        onClose={() => setLockedOpen(false)}
+      />
       <DownloadRequiredSheet
         visible={downloadPromptOpen}
         course={fallbackCourse}

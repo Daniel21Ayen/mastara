@@ -2,10 +2,7 @@
 import type { Question, QuizChapter } from '@mastara/contracts';
 import type { QuizNumber } from '@mastara/domain';
 
-import { env } from '@/core/config/env';
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { buildChapters, buildQuestions, courses, findChapter } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface QuizApi {
@@ -14,56 +11,44 @@ export interface QuizApi {
   getQuestions(chapterId: string): Promise<Question[]>;
 }
 
-const mockQuizApi: QuizApi = {
-  async getChapters(courseId, quizNo) {
-    await simulateLatency(150);
-    const course = courses.find((item) => item.id === courseId);
-    return course ? buildChapters(course).filter((chapter) => chapter.quizNo === quizNo) : [];
-  },
-  async getChapter(chapterId) {
-    await simulateLatency(100);
-    return findChapter(chapterId);
-  },
-  async getQuestions(chapterId) {
-    await simulateLatency(150);
-    const chapter = findChapter(chapterId);
-    return chapter ? buildQuestions(chapter) : [];
-  },
-};
-
 export const realQuizApi: QuizApi = {
   async getChapters(courseId: string, quizNo: QuizNumber): Promise<QuizChapter[]> {
     return httpClient.get<QuizChapter[]>(
-      `/assessment/quizzes/courses/${courseId}/chapters?quizNo=${quizNo}`,
+      `/assessment/quizzes/courses/${encodeURIComponent(courseId)}/chapters?quizNo=${quizNo}`,
     );
   },
   async getChapter(chapterId: string): Promise<QuizChapter | null> {
     try {
-      return await httpClient.get<QuizChapter>(`/assessment/quizzes/chapters/${chapterId}`);
+      return await httpClient.get<QuizChapter>(`/assessment/quizzes/chapters/${encodeURIComponent(chapterId)}`);
     } catch {
       return null;
     }
   },
   async getQuestions(chapterId: string): Promise<Question[]> {
-    return httpClient.get<Question[]>(`/assessment/quizzes/chapters/${chapterId}/questions`);
+    return httpClient.get<Question[]>(`/assessment/quizzes/chapters/${encodeURIComponent(chapterId)}/questions`);
   },
 };
 
-/** The server, with no download rules. Used to download a quiz chapter. */
-export const quizRemote: QuizApi = env.useMocks ? mockQuizApi : realQuizApi;
+/** The real remote server API. Used to download a quiz chapter. */
+export const quizRemote: QuizApi = realQuizApi;
 
-/** Online first. A chapter opens offline only if the student downloaded it. */
+/** Online first with SQLite cache. A chapter opens offline only if the student downloaded it. */
 export const quizApi = gatewayReads('quiz', quizRemote, {
   details: ['getChapter', 'getQuestions'],
   lists: {
     getChapters: async (courseId: string, quizNo: QuizNumber) => {
       const saved = await downloadStore.listByKind<QuizChapter>('QUIZ_CHAPTER', courseId);
-      return saved.map((item) => item.meta).filter((chapter) => chapter.quizNo === quizNo).sort((a, b) => a.chapterNumber - b.chapterNumber);
+      return saved
+        .map((item) => item.meta)
+        .filter((chapter) => chapter.quizNo === quizNo)
+        .sort((a, b) => a.chapterNumber - b.chapterNumber);
     },
   },
 });
 
+export const chapterKey = (chapterId: string): string => contentKey('quiz', 'getChapter', [chapterId]);
+export const questionsKey = (chapterId: string): string => contentKey('quiz', 'getQuestions', [chapterId]);
 export const chapterKeys = (chapterId: string) => ({
-  chapter: contentKey('quiz', 'getChapter', [chapterId]),
-  questions: contentKey('quiz', 'getQuestions', [chapterId]),
+  chapter: chapterKey(chapterId),
+  questions: questionsKey(chapterId),
 });

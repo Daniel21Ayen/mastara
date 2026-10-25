@@ -35,7 +35,7 @@ export function DownloadRequiredSheet({
   return (
     <BottomSheet
       visible={visible}
-      title={t('course.download.required.title') || 'Download Required'}
+      title={t('course.download.required.title')}
       onClose={onClose}
     >
       <AppText muted>
@@ -43,10 +43,10 @@ export function DownloadRequiredSheet({
           `Each course must be downloaded before a student can access or select its materials. Please download "${course.title}" to continue.`}
       </AppText>
       <AppButton
-        label={t('course.download.action') || 'Download Course Now'}
+        label={t('course.download.action')}
         onPress={() => void handleDownload()}
       />
-      <AppButton label={t('common.cancel') || 'Cancel'} variant="outline" onPress={onClose} />
+      <AppButton label={t('common.cancel')} variant="outline" onPress={onClose} />
     </BottomSheet>
   );
 }

@@ -11,6 +11,7 @@ interface Options {
   semesters: SelectOption[];
   loading: boolean;
   failed: boolean;
+  reload: () => void;
 }
 
 /** Cascading options: programs depend on the university, semesters on the program. */
@@ -20,6 +21,12 @@ export function useAcademicOptions(universityId: string, programId: string): Opt
   const universities = useAsync(() => academicApi.getUniversities());
   const programs = useAsync(universityId ? () => academicApi.getPrograms(universityId) : null, [universityId]);
   const semesters = useAsync(programId ? () => academicApi.getSemesters(programId) : null, [programId]);
+
+  const reload = () => {
+    universities.reload();
+    if (universityId) programs.reload();
+    if (programId) semesters.reload();
+  };
 
   return {
     universities: (universities.data ?? []).map((item) => ({
@@ -33,5 +40,6 @@ export function useAcademicOptions(universityId: string, programId: string): Opt
     })),
     loading: universities.loading || programs.loading || semesters.loading,
     failed: Boolean(universities.error || programs.error || semesters.error),
+    reload,
   };
 }

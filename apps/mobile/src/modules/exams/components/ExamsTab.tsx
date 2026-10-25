@@ -71,7 +71,7 @@ export function ExamsTab({ courseId, access, course }: ExamsTabProps) {
     id: courseId,
     semesterId: '',
     code: '',
-    title: t('course.tab.exams') || 'Course Exam',
+    title: t('course.tab.exams'),
     stream: 'COMMON',
   };
 
@@ -105,7 +105,12 @@ export function ExamsTab({ courseId, access, course }: ExamsTabProps) {
         />
       ))}
 
-      <LockedSheet visible={lockedOpen} onClose={() => setLockedOpen(false)} />
+      <LockedSheet
+        visible={lockedOpen}
+        courseId={courseId}
+        courseTitle={course?.title}
+        onClose={() => setLockedOpen(false)}
+      />
       <DownloadRequiredSheet
         visible={downloadPromptOpen}
         course={fallbackCourse}

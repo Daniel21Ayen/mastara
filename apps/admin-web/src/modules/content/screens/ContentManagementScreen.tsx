@@ -17,6 +17,7 @@ import {
 import { BuildTestSetDialog } from '../components/BuildTestSetDialog';
 import { ViewDetailModal } from '../components/ViewDetailModal';
 import { contentApi } from '../api/content.api';
+import { testsApi } from '@/modules/tests/api/tests.api';
 import { StudentPreviewModal } from '@/shared/preview';
 import styles from '../components/ContentManagement.module.css';
 
@@ -217,6 +218,30 @@ export function ContentManagementScreen({
     );
   };
 
+  // Toggle Test Set Status
+  const handleToggleTestStatus = (id: string) => {
+    setTestSets((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, status: t.status === 'Active' ? 'Inactive' : 'Active' }
+          : t,
+      ),
+    );
+  };
+
+  // Delete Test Set Item
+  const handleDeleteTestSet = async (id: string) => {
+    if (confirm('Are you sure you want to delete this test question?')) {
+      setTestSets((prev) => prev.filter((t) => t.id !== id));
+      showToast('Question deleted.');
+      try {
+        await testsApi.deleteQuestion(id);
+      } catch {
+        // Safe offline fallback
+      }
+    }
+  };
+
   // Toggle Material Status
   const handleToggleMaterialStatus = (id: string) => {
     setMaterials((prev) =>
@@ -375,8 +400,8 @@ export function ContentManagementScreen({
                 className={styles.buildTestSetBtn}
                 onClick={() => setIsBuildDialogOpen(true)}
               >
-                <Icon name="grid" size={18} />
-                Build Test Set
+                <Icon name="plus" size={18} />
+                + Add
               </button>
             </div>
           </div>
@@ -556,15 +581,19 @@ export function ContentManagementScreen({
                         <td className={styles.td}>{row.stream}</td>
                         <td className={styles.td}>{row.program}</td>
                         <td className={styles.td}>
-                          <span
+                          <button
+                            type="button"
+                            onClick={() => handleToggleTestStatus(row.id)}
                             className={
                               row.status === 'Active'
                                 ? styles.statusPillActive
                                 : styles.statusPillInactive
                             }
+                            style={{ cursor: 'pointer', border: 'none' }}
+                            title={`Click to mark ${row.status === 'Active' ? 'Inactive' : 'Active'}`}
                           >
                             {row.status}
-                          </span>
+                          </button>
                         </td>
                         <td className={styles.td}>
                           <div className={styles.actionsCell}>
@@ -575,6 +604,15 @@ export function ContentManagementScreen({
                               <Icon name="edit" size={14} />
                               Edit
                             </Link>
+                            <button
+                              type="button"
+                              className={styles.btnActionDanger}
+                              onClick={() => handleDeleteTestSet(row.id)}
+                              title="Delete"
+                            >
+                              <Icon name="trash" size={14} />
+                              Delete
+                            </button>
                             <button
                               type="button"
                               className={styles.btnActionPrimary}

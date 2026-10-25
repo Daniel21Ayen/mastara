@@ -7,8 +7,8 @@ import { View } from 'react-native';
 import { createStyles } from '@/core/theme';
 
 import { AppText } from './AppText';
-import { KatexParagraph } from './KatexParagraph';
 import { MathSpan } from './MathSpan';
+import { SharedKatexRenderer } from './SharedKatexRenderer';
 
 interface RichTextProps {
   /** Paragraphs separated by a blank line; math written as $inline$ or $$block$$. */
@@ -18,41 +18,44 @@ interface RichTextProps {
 
 export function RichText({ text, lang }: RichTextProps) {
   const styles = useStyles();
-  // Parsed once per text, so a formula paragraph keeps the same `segments` and its page is not rebuilt.
+
+  // Parsed once per text
   const paragraphs = useMemo(
     () =>
       text
         .split(/\n{2,}/)
         .filter((paragraph) => paragraph.trim().length > 0)
-        .map((paragraph) => parseMath(paragraph.trim())),
+        .map((paragraph) => {
+          const segments = parseMath(paragraph.trim());
+          const first = segments[0];
+          const onlyBlock = segments.length === 1 && first?.kind === 'math' && first.display;
+          const layoutHeavy = segments.some((segment) => segment.kind === 'math' && needsLayout(segment.value));
+          return { segments, onlyBlock, layoutHeavy };
+        }),
     [text],
   );
 
+  const hasAnyLayoutHeavy = paragraphs.some((p) => p.layoutHeavy);
+
+  // If any formula needs layout (fractions, roots, matrices), use the single shared renderer
+  // instead of spawning multiple WebViews, staying strictly within the 120 MB RAM target.
+  if (hasAnyLayoutHeavy) {
+    const fullAccessibilityLabel = paragraphs.map((p) => spokenText(p.segments)).join(' ');
+    return (
+      <View style={styles.wrap}>
+        <SharedKatexRenderer
+          paragraphs={paragraphs}
+          lang={lang}
+          accessibilityLabel={fullAccessibilityLabel}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrap}>
-      {paragraphs.map((segments, index) => {
+      {paragraphs.map(({ segments, onlyBlock }, index) => {
         const first = segments[0];
-        const onlyBlock = segments.length === 1 && first?.kind === 'math' && first.display;
-
-        // Fractions, roots, matrices and limits need real layout: the whole paragraph goes to KaTeX.
-        // Simple formulas (E = mc^2, Greek letters, small scripts) stay as fast native text below.
-        if (segments.some((segment) => segment.kind === 'math' && needsLayout(segment.value))) {
-          const paragraphView = (
-            <KatexParagraph
-              segments={segments}
-              lang={lang}
-              align={onlyBlock ? 'center' : 'left'}
-              accessibilityLabel={spokenText(segments)}
-            />
-          );
-          return onlyBlock ? (
-            <View key={index} style={styles.block}>
-              {paragraphView}
-            </View>
-          ) : (
-            <View key={index}>{paragraphView}</View>
-          );
-        }
 
         // A paragraph that is only a simple block formula is drawn as its own block.
         if (onlyBlock && first?.kind === 'math') {
@@ -83,10 +86,4 @@ function spokenText(segments: readonly MathSegment[]): string {
 const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.md },
   paragraph: { lineHeight: 26 },
-  block: {
-    alignSelf: 'stretch',
-    backgroundColor: theme.colors.primarySoft,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-  },
 }));

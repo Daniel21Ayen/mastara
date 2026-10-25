@@ -41,7 +41,7 @@ export const pushNotificationService = {
    * Register push notification token with backend if device and push service are available.
    */
   async registerForPushNotifications(userId?: string): Promise<string | null> {
-    if (Platform.OS === 'web' || env.useMocks) {
+    if (Platform.OS === 'web') {
       return null;
     }
 

@@ -7,7 +7,6 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { env } from '@/core/config/env';
 import { getDeviceId, getDeviceName } from '@/core/device/device';
 import { useI18n } from '@/core/i18n';
 import { httpClient, isApiError, isOnline } from '@/core/network';
@@ -88,7 +87,7 @@ export function CheckoutScreen() {
     setSubmitting(true);
     setSubmitError(undefined);
     try {
-      if (!env.useMocks && !isOnline()) {
+      if (!isOnline()) {
         setSubmitError('error.offline');
         setSubmitting(false);
         return;
@@ -111,7 +110,7 @@ export function CheckoutScreen() {
         await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, pendingSync);
       }
 
-      if (!env.useMocks && pendingSync) {
+      if (pendingSync) {
         let authRes;
         try {
           authRes = await realAuthApi.register(pendingSync);
@@ -219,8 +218,8 @@ export function CheckoutScreen() {
       {phoneCollision ? (
         <View
           style={{
-            backgroundColor: theme.colors.card,
-            borderRadius: theme.radii.md,
+            backgroundColor: theme.colors.surface,
+            borderRadius: theme.radius.md,
             padding: theme.spacing.lg,
             borderWidth: 1,
             borderColor: theme.colors.danger,

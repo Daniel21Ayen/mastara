@@ -1,10 +1,7 @@
 // apps/mobile/src/modules/coc/api/coc.api.ts
 import type { CocSet, Question } from '@mastara/contracts';
 
-import { env } from '@/core/config/env';
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
-import { buildCocQuestions, buildCocSets, courseTitles } from '@/core/mock/data';
-import { simulateLatency } from '@/core/mock/delay';
 import { httpClient } from '@/core/network';
 
 export interface CocSession {
@@ -20,34 +17,21 @@ export interface CocApi {
   getSession(setId: string, courseIds: readonly string[]): Promise<CocSession | null>;
 }
 
-const mockCocApi: CocApi = {
-  async getSets(courseIds) {
-    await simulateLatency(150);
-    return buildCocSets(courseIds);
-  },
-  async getSession(setId, courseIds) {
-    await simulateLatency(150);
-    const set = buildCocSets(courseIds).find((item) => item.id === setId);
-    if (!set) return null;
-    return { set, questions: buildCocQuestions(setId, courseIds), courseTitles: courseTitles(courseIds) };
-  },
-};
-
 export const realCocApi: CocApi = {
   async getSets(_courseIds) {
     return httpClient.get<CocSet[]>('/assessment/coc/sets');
   },
   async getSession(setId, _courseIds) {
     try {
-      return await httpClient.get<CocSession>(`/assessment/coc/sets/${setId}/session`);
+      return await httpClient.get<CocSession>(`/assessment/coc/sets/${encodeURIComponent(setId)}/session`);
     } catch {
       return null;
     }
   },
 };
 
-/** The server, with no download rules. Used to download a COC set. */
-export const cocRemote: CocApi = env.useMocks ? mockCocApi : realCocApi;
+/** The real remote server API. Used to download a COC set. */
+export const cocRemote: CocApi = realCocApi;
 
 /**
  * Online first. A COC set opens offline only if the student downloaded it. A downloaded set is a fixed snapshot,
