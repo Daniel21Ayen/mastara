@@ -47,6 +47,9 @@ export interface ColorSet {
   successSoft: string;
   overlay: string;
   sidebar: string;
+  onSidebar: string;
+  onSidebarMuted: string;
+  onSidebarSubtle: string;
 }
 
 /** Light mode. Aligned with the Admin Portal for 100% design consistency. */
@@ -71,6 +74,9 @@ export const lightColors: ColorSet = {
   successSoft: withAlpha(palette.success, 0.12),
   overlay: withAlpha(palette.ink, 0.5),
   sidebar: palette.ink,
+  onSidebar: palette.white,
+  onSidebarMuted: withAlpha(palette.white, 0.75),
+  onSidebarSubtle: withAlpha(palette.white, 0.55),
 };
 
 /** Dark-mode foundations. The brand blue and the error red are lightened so they stay readable on a dark page. */
@@ -105,6 +111,9 @@ export const darkColors: ColorSet = {
   successSoft: withAlpha(darkPalette.success, 0.16),
   overlay: withAlpha('#000000', 0.62),
   sidebar: darkPalette.page,
+  onSidebar: darkPalette.text,
+  onSidebarMuted: withAlpha(darkPalette.text, 0.75),
+  onSidebarSubtle: withAlpha(darkPalette.text, 0.55),
 };
 
 export function getColors(scheme: ColorScheme): ColorSet {
