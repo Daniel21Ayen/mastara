@@ -4,6 +4,7 @@ import type { ContentKind } from '@mastara/domain';
 
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
 import { httpClient } from '@/core/network';
+import { getLocalCatalogTopics, parseCatalogMeta } from '@/core/sync';
 
 export interface ContentApi {
   /** Modules or notes of a course, in order. */
@@ -28,15 +29,49 @@ export const realContentApi: ContentApi = {
 export const contentRemote: ContentApi = realContentApi;
 
 /**
- * Online first with SQLite cache: a lesson opens offline only if downloaded to SQLite,
- * and offline lists show downloaded modules.
+ * Online first with local catalog SQLite: lists come from catalog_item,
+ * and individual lesson bodies open offline when saved.
  */
 export const contentApi = gatewayReads('content', contentRemote, {
   details: ['getTopic'],
   lists: {
     getTopics: async (courseId: string, kind: ContentKind) => {
-      const saved = await downloadStore.listByKind<Topic>('TOPIC', courseId);
-      return saved
+      const [localRows, saved] = await Promise.all([
+        getLocalCatalogTopics(courseId),
+        downloadStore.listByKind<Topic>('TOPIC', courseId).catch(() => []),
+      ]);
+
+      const savedMap = new Map((saved ?? []).map((s) => [s.meta.id, s.meta]));
+
+      if (localRows.length > 0) {
+        return localRows
+          .map((r) => {
+            const savedItem = savedMap.get(r.id);
+            if (savedItem) return savedItem;
+            let title = { en: r.title, am: r.title };
+            if (r.title && r.title.startsWith('{')) {
+              try {
+                const parsed = JSON.parse(r.title);
+                title = { en: parsed.en || r.title, am: parsed.am || parsed.en || r.title };
+              } catch {}
+            }
+            const meta = parseCatalogMeta<{ kind?: string; summary?: { en: string; am: string }; body?: { en: string; am: string } }>(r.meta);
+            return {
+              id: r.id,
+              courseId: r.course_id,
+              kind: (meta?.kind || kind) as ContentKind,
+              number: r.position,
+              title,
+              summary: meta?.summary ?? { en: '', am: '' },
+              body: meta?.body ?? { en: '', am: '' },
+              isFree: Boolean(r.is_free),
+            };
+          })
+          .filter((t) => t.kind === kind)
+          .sort((a, b) => a.number - b.number);
+      }
+
+      return (saved ?? [])
         .map((item) => item.meta)
         .filter((topic) => topic.kind === kind)
         .sort((a, b) => a.number - b.number);

@@ -33,14 +33,48 @@ export const realCocApi: CocApi = {
 /** The real remote server API. Used to download a COC set. */
 export const cocRemote: CocApi = realCocApi;
 
+import { getLocalCatalogCocSets, parseCatalogMeta } from '@/core/sync';
+
 /**
- * Online first. A COC set opens offline only if the student downloaded it. A downloaded set is a fixed snapshot,
- * so its key does not depend on which courses the student has right now.
+ * Online first with local catalog SQLite. A COC set session opens offline when downloaded.
  */
 export const cocApi = gatewayReads('coc', cocRemote, {
   details: ['getSession'],
   lists: {
-    getSets: async () => (await downloadStore.listByKind<CocSet>('COC_SET')).map((item) => item.meta),
+    getSets: async () => {
+      const [localRows, saved] = await Promise.all([
+        getLocalCatalogCocSets(),
+        downloadStore.listByKind<CocSet>('COC_SET').catch(() => []),
+      ]);
+
+      const savedMap = new Map((saved ?? []).map((s) => [s.meta.id, s.meta]));
+
+      if (localRows.length > 0) {
+        return localRows.map((r) => {
+          const savedItem = savedMap.get(r.id);
+          if (savedItem) return savedItem;
+          let title = { en: r.title, am: r.title };
+          if (r.title && r.title.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(r.title);
+              title = { en: parsed.en || r.title, am: parsed.am || parsed.en || r.title };
+            } catch {}
+          }
+          const meta = parseCatalogMeta<{ durationMinutes?: number; isTimed?: boolean; sampleQuestionCount?: number }>(r.meta);
+          return {
+            id: r.id,
+            year: r.position,
+            title,
+            durationMinutes: meta?.durationMinutes ?? 180,
+            isTimed: meta?.isTimed ?? true,
+            sampleQuestionCount: meta?.sampleQuestionCount ?? 20,
+            isFree: Boolean(r.is_free),
+          };
+        });
+      }
+
+      return (saved ?? []).map((item) => item.meta);
+    },
   },
   keyArgs: { getSession: (args) => [args[0]] },
 });

@@ -1,13 +1,10 @@
 import type { MyCourse } from '@mastara/contracts';
-import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { accentForKey, createStyles, useTheme } from '@/core/theme';
 import { CourseActionButton } from '@/modules/courses/components/CourseActionButton';
-import { DownloadRequiredSheet } from '@/modules/courses/components/DownloadRequiredSheet';
-import { useIsCourseDownloaded } from '@/modules/downloads';
-import { AppText, Badge, Icon, LetterTile, ProgressBar } from '@/shared/ui';
+import { AppText, Badge, LetterTile, ProgressBar } from '@/shared/ui';
 
 import { percentOf } from '../lib/filterCourses';
 
@@ -21,9 +18,6 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
   const styles = useStyles();
   const { t } = useI18n();
   const percent = percentOf(item);
-  const accent = accentForKey(item.course.id);
-  const isDownloaded = useIsCourseDownloaded(item.course.id);
-  const [downloadPromptOpen, setDownloadPromptOpen] = useState(false);
 
   const streamLabel =
     item.course.stream === 'COMMON'
@@ -46,57 +40,41 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
         ? t('access.freeTrial')
         : t('access.locked');
 
-  function handleCardPress() {
-    if (!isDownloaded) {
-      setDownloadPromptOpen(true);
-      return;
-    }
-    onPress(item.course.id);
-  }
-
   return (
-    <>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityHint={item.expiresAt ? `Expires ${new Date(item.expiresAt).toLocaleDateString()}` : undefined}
-        onPress={handleCardPress}
-        style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-      >
-        <LetterTile label={item.course.title.charAt(0).toUpperCase()} accent="blue" />
-        <View style={styles.text}>
-          <AppText bold>{item.course.title}</AppText>
-          <AppText variant="caption" muted>
-            {streamLabel} · {accessLabel}
-          </AppText>
-          <View style={styles.progress}>
-            <View style={styles.bar}>
-              <ProgressBar value={percent} accent="blue" />
-            </View>
-            <AppText variant="caption" muted>
-              {percent}%
-            </AppText>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint={item.expiresAt ? `Expires ${new Date(item.expiresAt).toLocaleDateString()}` : undefined}
+      onPress={() => onPress(item.course.id)}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+    >
+      <LetterTile label={item.course.title.charAt(0).toUpperCase()} accent="blue" />
+      <View style={styles.text}>
+        <AppText bold>{item.course.title}</AppText>
+        <AppText variant="caption" muted>
+          {streamLabel} · {accessLabel}
+        </AppText>
+        <View style={styles.progress}>
+          <View style={styles.bar}>
+            <ProgressBar value={percent} accent="blue" />
           </View>
+          <AppText variant="caption" muted>
+            {percent}%
+          </AppText>
         </View>
+      </View>
 
-        <View style={styles.actions} onStartShouldSetResponder={() => true}>
-          <CourseActionButton course={item.course} compact />
-        </View>
+      <View style={styles.actions} onStartShouldSetResponder={() => true}>
+        <CourseActionButton course={item.course} compact />
+      </View>
 
-        {item.access === 'PAID' ? (
-          <Badge label={t('access.paid')} tone="primary" />
-        ) : item.access === 'FREE_TRIAL' ? (
-          <Badge label={t('access.freeTrial')} tone="muted" />
-        ) : (
-          <Badge label={t('access.locked')} tone="danger" />
-        )}
-      </Pressable>
-
-      <DownloadRequiredSheet
-        visible={downloadPromptOpen}
-        course={item.course}
-        onClose={() => setDownloadPromptOpen(false)}
-      />
-    </>
+      {item.access === 'PAID' ? (
+        <Badge label={t('access.paid')} tone="primary" />
+      ) : item.access === 'FREE_TRIAL' ? (
+        <Badge label={t('access.freeTrial')} tone="muted" />
+      ) : (
+        <Badge label={t('access.locked')} tone="danger" />
+      )}
+    </Pressable>
   );
 }
 
@@ -110,10 +88,12 @@ const useStyles = createStyles((theme) => ({
     gap: theme.spacing.md,
   },
   pressed: { opacity: 0.85 },
-  text: { flex: 1, gap: 2 },
-  progress: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginTop: theme.spacing.xs },
+  text: { flex: 1, gap: 4 },
+  progress: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   bar: { flex: 1 },
   actions: {
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 4,
   },
 }));

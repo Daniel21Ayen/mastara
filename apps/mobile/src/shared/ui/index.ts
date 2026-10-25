@@ -27,5 +27,7 @@ export * from './TopBar';
 export * from './UnderlineTabs';
 export * from './ConnectivityPill';
 export * from './LockedContentSheet';
+export * from './NeedsInternetSheet';
 export * from './SharedKatexRenderer';
+
 

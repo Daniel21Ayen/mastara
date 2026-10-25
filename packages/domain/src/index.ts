@@ -1,6 +1,7 @@
 // packages/domain/src/index.ts
 export * from './access/canOpenContent';
 export * from './access/canOpen';
+export * from './access/resolveOpen';
 export * from './access/offlineAccess';
 export * from './constants/academic';
 export * from './constants/admin';

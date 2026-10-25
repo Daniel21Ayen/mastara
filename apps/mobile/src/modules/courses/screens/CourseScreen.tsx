@@ -7,7 +7,7 @@ import { createStyles, useTheme } from '@/core/theme';
 import { useIsCourseDownloaded } from '@/modules/downloads';
 import { ExamsTab } from '@/modules/exams/components/ExamsTab';
 import { TestsTab } from '@/modules/quizzes/components/TestsTab';
-import { AppButton, AppText, Icon, Screen, UnderlineTabs, TopBar } from '@/shared/ui';
+import { AppButton, AppText, Screen, UnderlineTabs, TopBar } from '@/shared/ui';
 import type { UnderlineTabOption } from '@/shared/ui';
 
 import { CourseActionButton } from '../components/CourseActionButton';
@@ -37,8 +37,8 @@ export function CourseScreen() {
     <Screen scroll>
       <TopBar title={item?.course.title ?? ''} onBack={() => router.back()} />
 
-      {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
+      {loading && !item ? <ActivityIndicator color={theme.colors.primary} /> : null}
+      {error && !item ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
       {!loading && !error && !item ? <AppText muted>{t('course.notFound')}</AppText> : null}
 
       {item ? (
@@ -50,21 +50,11 @@ export function CourseScreen() {
               <AppText variant="caption" muted>
                 {isDownloaded
                   ? t('course.download.downloaded')
-                  : t('course.download.required.title')}
+                  : t('course.download.optional')}
               </AppText>
             </View>
             <CourseActionButton course={item.course} />
           </View>
-
-          {!isDownloaded && (
-            <View style={styles.banner}>
-              <Icon name="download" size={18} color={theme.colors.primary} />
-              <AppText variant="caption" color={theme.colors.primary} bold style={styles.flex}>
-                {t('course.download.required.body') ||
-                  'Each course must be downloaded before a student can access or select its materials.'}
-              </AppText>
-            </View>
-          )}
 
           <UnderlineTabs options={tabs} value={tab} onChange={setTab} />
 
@@ -90,16 +80,5 @@ const useStyles = createStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: theme.spacing.xs,
-  },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.primarySoft,
-    borderColor: theme.colors.primarySoft,
-    borderWidth: 1,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
   },
 }));

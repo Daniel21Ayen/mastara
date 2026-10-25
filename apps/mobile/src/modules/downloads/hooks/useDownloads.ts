@@ -58,3 +58,10 @@ export function useIsCourseDownloaded(courseId: string): boolean {
   const ids = useDownloadedIds();
   return ids.has(`COURSE:${courseId}`);
 }
+
+/** Whether an item (or its parent course) is downloaded locally on this device. */
+export function useIsItemDownloaded(unitId: string, courseId?: string): boolean {
+  const ids = useDownloadedIds();
+  return ids.has(unitId) || (courseId ? ids.has(`COURSE:${courseId}`) : false);
+}
+

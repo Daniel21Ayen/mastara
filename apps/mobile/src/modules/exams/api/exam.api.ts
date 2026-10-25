@@ -38,13 +38,56 @@ export const realExamApi: ExamApi = {
 /** The real remote server API. Used to download an exam. */
 export const examRemote: ExamApi = realExamApi;
 
-/** Online first with SQLite cache. An exam opens offline only if the student downloaded it. */
+import { getLocalCatalogExams, parseCatalogMeta } from '@/core/sync';
+
+/** Online first with local catalog SQLite. An exam session opens offline when downloaded. */
 export const examApi = gatewayReads('exam', examRemote, {
   details: ['getSession'],
   lists: {
     getExams: async (courseId: string, kind: ExamKind) => {
-      const saved = await downloadStore.listByKind<ExamListing>('EXAM', courseId);
-      return saved.map((item) => item.meta).filter((listing) => listing.exam.kind === kind);
+      const [localRows, saved] = await Promise.all([
+        getLocalCatalogExams(courseId),
+        downloadStore.listByKind<ExamListing>('EXAM', courseId).catch(() => []),
+      ]);
+
+      const savedMap = new Map((saved ?? []).map((s) => [s.meta.exam.id, s.meta]));
+
+      if (localRows.length > 0) {
+        return localRows
+          .map((r) => {
+            const savedItem = savedMap.get(r.id);
+            if (savedItem) return savedItem;
+            let title = { en: r.title, am: r.title };
+            if (r.title && r.title.startsWith('{')) {
+              try {
+                const parsed = JSON.parse(r.title);
+                title = { en: parsed.en || r.title, am: parsed.am || parsed.en || r.title };
+              } catch {}
+            }
+            const meta = parseCatalogMeta<{ kind?: string; durationMinutes?: number; passingScore?: number; university?: University; universityName?: string; universityCode?: string }>(r.meta);
+            return {
+              exam: {
+                id: r.id,
+                courseId: r.course_id,
+                universityId: r.parent_id || '',
+                kind: (meta?.kind || kind) as ExamKind,
+                year: r.position,
+                title,
+                durationMinutes: meta?.durationMinutes ?? 120,
+                passingScore: meta?.passingScore ?? 50,
+                isFree: Boolean(r.is_free),
+              },
+              university: meta?.university ?? {
+                id: r.parent_id || 'default',
+                name: meta?.universityName ?? 'University',
+                code: meta?.universityCode ?? '',
+              },
+            };
+          })
+          .filter((listing) => listing.exam.kind === kind);
+      }
+
+      return (saved ?? []).map((item) => item.meta).filter((listing) => listing.exam.kind === kind);
     },
   },
 });

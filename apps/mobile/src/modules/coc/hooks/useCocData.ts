@@ -1,5 +1,6 @@
-// apps/mobile/src/modules/coc/hooks/useCocData.ts
+import type { CocSet } from '@mastara/contracts';
 import { canOpenContent } from '@mastara/domain';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useSession } from '@/core/session';
 import { myCoursesApi } from '@/modules/my-courses/api/myCourses.api';
@@ -13,23 +14,71 @@ async function hasPaidCourse(courseIds: readonly string[]): Promise<boolean> {
   return courses.some((course) => course.access === 'PAID');
 }
 
+import { isOnline } from '@/core/network';
+import { realCocApi } from '../api/coc.api';
+
 export function useCocSets() {
   const { profile } = useSession();
   const courseIds = profile?.courseIds ?? [];
+  const [sets, setSets] = useState<CocSet[]>([]);
+  const [paid, setPaid] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  const state = useAsync(async () => {
-    const [sets, paid] = await Promise.all([cocApi.getSets(courseIds), hasPaidCourse(courseIds)]);
-    return { sets, paid };
+  const loadData = useCallback(async () => {
+    try {
+      // 1. Read local catalog + cached access immediately
+      const [localSets, isPaid] = await Promise.all([
+        cocApi.getSets(courseIds),
+        hasPaidCourse(courseIds),
+      ]);
+      setPaid(isPaid);
+      if (localSets && localSets.length > 0) {
+        setSets(localSets);
+        setLoading(false);
+      }
+
+      // 2. Revalidate in background if online
+      if (isOnline()) {
+        try {
+          const freshSets = await realCocApi.getSets(courseIds);
+          if (Array.isArray(freshSets) && freshSets.length > 0) {
+            setSets((prev) => {
+              if (JSON.stringify(prev) !== JSON.stringify(freshSets)) {
+                return freshSets;
+              }
+              return prev;
+            });
+          }
+        } catch (fetchErr) {
+          if (!localSets || localSets.length === 0) {
+            throw fetchErr;
+          }
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setLoading(false);
+    }
   }, [courseIds.join(',')]);
 
+  useEffect(() => {
+    let active = true;
+    void loadData();
+    return () => {
+      active = false;
+    };
+  }, [loadData]);
+
   return {
-    sets: state.data?.sets ?? [],
-    paid: state.data?.paid ?? false,
+    sets,
+    paid,
     hasCourses: courseIds.length > 0,
     courseIds,
-    loading: state.loading,
-    error: state.error,
-    reload: state.reload,
+    loading,
+    error,
+    reload: () => loadData(),
   };
 }
 

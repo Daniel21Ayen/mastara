@@ -85,6 +85,10 @@ export function MyCoursesScreen() {
         contentContainerStyle={styles.list}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        windowSize={5}
+        maxToRenderPerBatch={10}
+        removeClippedSubviews={true}
       />
 
       <CourseFilterSheet

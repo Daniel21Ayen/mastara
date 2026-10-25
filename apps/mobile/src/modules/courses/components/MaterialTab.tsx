@@ -1,4 +1,6 @@
+// apps/mobile/src/modules/courses/components/MaterialTab.tsx
 import type { Course, Topic } from '@mastara/contracts';
+import { resolveOpen } from '@mastara/domain';
 import type { AccessState, ContentKind, ContentLang } from '@mastara/domain';
 import type { TranslationKey } from '@mastara/i18n';
 import type { Href } from 'expo-router';
@@ -7,15 +9,14 @@ import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
+import { useOnline } from '@/core/network';
 import { createStyles, useTheme } from '@/core/theme';
-import { LockedSheet } from '@/modules/access';
-import { useIsCourseDownloaded } from '@/modules/downloads';
+import { LockedSheet, NeedsInternetSheet } from '@/modules/access';
+import { useDownloadedIds } from '@/modules/downloads';
 import { AppText, ErrorNotice, IconTile, UnderlineTabs } from '@/shared/ui';
 import type { IconName, UnderlineTabOption } from '@/shared/ui';
 
 import { useTopics } from '../hooks/useTopics';
-
-import { DownloadRequiredSheet } from './DownloadRequiredSheet';
 import { TopicRow } from './TopicRow';
 
 type MaterialTabId = 'MODULES' | 'NOTES' | 'AMHARIC';
@@ -52,12 +53,13 @@ export function MaterialTab({ courseId, access, course }: MaterialTabProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
+  const online = useOnline();
+  const downloadedIds = useDownloadedIds();
   const router = useRouter();
   const [tab, setTab] = useState<MaterialTabId>('MODULES');
   const [lockedOpen, setLockedOpen] = useState(false);
-  const [downloadPromptOpen, setDownloadPromptOpen] = useState(false);
+  const [needsInternetOpen, setNeedsInternetOpen] = useState(false);
 
-  const isDownloaded = useIsCourseDownloaded(courseId);
   const config = TAB_CONFIG[tab];
   const { topics, loading, error, reload } = useTopics(courseId, config.kind);
 
@@ -66,25 +68,29 @@ export function MaterialTab({ courseId, access, course }: MaterialTabProps) {
     label: t(TAB_CONFIG[id].tab),
   }));
 
-  function openTopic(topic: Topic, open: boolean) {
-    if (!isDownloaded) {
-      setDownloadPromptOpen(true);
-      return;
-    }
-    if (!open) {
-      setLockedOpen(true);
-      return;
-    }
-    router.push(`/reader/${topic.id}?lang=${config.lang}` as Href);
-  }
+  function openTopic(topic: Topic) {
+    const isDownloaded =
+      downloadedIds.has(`TOPIC:${topic.id}`) || downloadedIds.has(`COURSE:${courseId}`);
+    const resolution = resolveOpen({
+      access,
+      isFree: topic.isFree,
+      isDownloaded,
+      isOnline: online,
+    });
 
-  const fallbackCourse: Course = course ?? {
-    id: courseId,
-    semesterId: '',
-    code: '',
-    title: t('mycourses.title'),
-    stream: 'COMMON',
-  };
+    switch (resolution) {
+      case 'LOCKED':
+        setLockedOpen(true);
+        break;
+      case 'OPEN_LOCAL':
+      case 'OPEN_ONLINE':
+        router.push(`/reader/${topic.id}?lang=${config.lang}` as Href);
+        break;
+      case 'NEEDS_INTERNET':
+        setNeedsInternetOpen(true);
+        break;
+    }
+  }
 
   return (
     <View style={styles.wrap}>
@@ -102,8 +108,8 @@ export function MaterialTab({ courseId, access, course }: MaterialTabProps) {
         </View>
       </View>
 
-      {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
-      {error ? <ErrorNotice error={error} onRetry={reload} /> : null}
+      {loading && topics.length === 0 ? <ActivityIndicator color={theme.colors.primary} /> : null}
+      {error && topics.length === 0 ? <ErrorNotice error={error} onRetry={reload} /> : null}
       {!loading && !error && topics.length === 0 ? <AppText muted>{t('material.empty')}</AppText> : null}
 
       {topics.map((topic) => (
@@ -116,10 +122,9 @@ export function MaterialTab({ courseId, access, course }: MaterialTabProps) {
         courseTitle={course?.title}
         onClose={() => setLockedOpen(false)}
       />
-      <DownloadRequiredSheet
-        visible={downloadPromptOpen}
-        course={fallbackCourse}
-        onClose={() => setDownloadPromptOpen(false)}
+      <NeedsInternetSheet
+        visible={needsInternetOpen}
+        onClose={() => setNeedsInternetOpen(false)}
       />
     </View>
   );

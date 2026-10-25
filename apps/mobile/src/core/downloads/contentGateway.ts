@@ -27,9 +27,26 @@ export function readContent<T>(key: string, load: () => Promise<T>): Promise<T> 
   });
 }
 
-/** A list of content: the server's list online; offline, only what was downloaded. See `resolveContentList`. */
-export function readContentList<T>(load: () => Promise<T[]>, downloaded: () => Promise<T[]>): Promise<T[]> {
-  return resolveContentList<T>({ load, downloaded, isOffline, notDownloaded });
+/**
+ * A list of content: the server's list online; offline, lists come from the local catalog.
+ * CONTENT_NOT_DOWNLOADED applies only to bodies, never to lists.
+ */
+export async function readContentList<T>(
+  load: () => Promise<T[]>,
+  catalogFallback: () => Promise<T[]>,
+): Promise<T[]> {
+  try {
+    return await load();
+  } catch (error) {
+    if (isOffline(error)) {
+      try {
+        return await catalogFallback();
+      } catch {
+        return [];
+      }
+    }
+    throw error;
+  }
 }
 
 export interface GatewayOptions<A> {
