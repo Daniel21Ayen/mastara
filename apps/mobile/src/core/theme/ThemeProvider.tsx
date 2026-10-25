@@ -24,32 +24,22 @@ const isPreference = (value: string | null): value is ThemePreference =>
   value === 'system' || value === 'light' || value === 'dark';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const system = useColorScheme();
-  const [preference, setPreferenceState] = useState<ThemePreference>('system');
-
-  // Restore the saved choice once at start (the first frame follows the phone, so there is no flash for most students).
-  useEffect(() => {
-    secureStorage.getString(STORAGE_KEYS.theme).then((saved) => {
-      if (isPreference(saved)) setPreferenceState(saved);
-    });
-  }, []);
+  const [preference, setPreferenceState] = useState<ThemePreference>('light');
 
   const setPreference = useCallback((next: ThemePreference) => {
     setPreferenceState(next);
-    void secureStorage.setString(STORAGE_KEYS.theme, next);
   }, []);
 
-  const scheme: ColorScheme = preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;
+  // Consistently locked to the unified 4-colour brand palette
+  const scheme: ColorScheme = 'light';
 
-  // Keyboards, system dialogs and the status bar follow the same choice. "unspecified" hands control back to the phone:
-  // Android rejects null here ("Parameter specified as non-null is null"), and a failure must never crash the app.
   useEffect(() => {
     try {
-      Appearance.setColorScheme((preference === 'system' ? 'unspecified' : preference) as any);
+      Appearance.setColorScheme('light');
     } catch {
-      // The app's own colours still follow the choice; only system dialogs and the keyboard may not.
+      // Ignored if device ignores manual override
     }
-  }, [preference]);
+  }, []);
 
   const value = useMemo(
     () => ({ theme: themes[scheme], scheme, preference, setPreference }),

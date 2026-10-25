@@ -8,7 +8,7 @@ import { AppText } from './AppText';
 interface AppButtonProps {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'outline';
+  variant?: 'primary' | 'outline' | 'danger';
   disabled?: boolean;
   loading?: boolean;
 }
@@ -23,8 +23,9 @@ export function AppButton({
   const theme = useTheme();
   const styles = useStyles();
   const isPrimary = variant === 'primary';
+  const isDanger = variant === 'danger';
   const inactive = disabled || loading;
-  const textColor = isPrimary ? theme.colors.onPrimary : theme.colors.primary;
+  const textColor = isPrimary || isDanger ? theme.colors.onPrimary : theme.colors.primary;
 
   return (
     <Pressable
@@ -34,7 +35,7 @@ export function AppButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        isPrimary ? styles.primary : styles.outline,
+        isDanger ? styles.danger : isPrimary ? styles.primary : styles.outline,
         inactive && styles.inactive,
         pressed && styles.pressed,
       ]}
@@ -61,6 +62,7 @@ const useStyles = createStyles((theme) => ({
   },
   primary: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   outline: { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary },
+  danger: { backgroundColor: theme.colors.danger, borderColor: theme.colors.danger },
   inactive: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
 }));

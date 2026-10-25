@@ -23,7 +23,7 @@ export function TopBar({ title, onBack, right }: TopBarProps) {
   return (
     <View style={styles.row}>
       <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={onBack} style={styles.back}>
-        <Icon name="back" size={24} color={theme.colors.text} />
+        <Icon name="back" size={24} color={theme.colors.primary} />
       </Pressable>
       <AppText variant="heading" numberOfLines={1} style={styles.title} accessibilityRole="header">
         {title}

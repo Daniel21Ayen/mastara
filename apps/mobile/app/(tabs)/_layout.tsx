@@ -17,6 +17,7 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
         tabBarLabelStyle: { fontFamily: family.bold, fontSize: theme.fontSize.caption },
@@ -28,7 +29,6 @@ export default function TabsLayout() {
           name={tab.name}
           options={{
             title: t(tab.labelKey),
-            tabBarActiveTintColor: theme.accents[tab.accent].main,
             tabBarIcon: ({ color, size }) => <Icon name={tab.icon} color={color} size={size} />,
           }}
         />

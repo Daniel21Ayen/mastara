@@ -1,11 +1,11 @@
 // apps/mobile/src/modules/home/components/RecentlyAccessedList.tsx
 import type { RecentItem } from '@mastara/contracts';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { createStyles } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
-import { AppText, ListRow, SectionHeader } from '@/shared/ui';
+import { AppText, Icon, ListRow, SectionHeader } from '@/shared/ui';
 import type { IconName } from '@/shared/ui';
 
 interface RecentlyAccessedListProps {
@@ -21,6 +21,7 @@ const ICON_BY_KIND: Record<RecentItem['kind'], IconName> = {
 };
 
 export function RecentlyAccessedList({ items, onSeeAll, onItemPress }: RecentlyAccessedListProps) {
+  const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
   const timeAgo = useTimeAgo();
@@ -35,6 +36,8 @@ export function RecentlyAccessedList({ items, onSeeAll, onItemPress }: RecentlyA
     return `${label} · ${timeAgo(item.accessedAt)}`;
   }
 
+  const [first, ...rest] = items;
+
   return (
     <View style={styles.wrap}>
       <SectionHeader
@@ -47,15 +50,41 @@ export function RecentlyAccessedList({ items, onSeeAll, onItemPress }: RecentlyA
           {t('home.recent.empty')}
         </AppText>
       ) : (
-        items.map((item) => (
-          <ListRow
-            key={item.id}
-            icon={ICON_BY_KIND[item.kind]}
-            title={item.title}
-            subtitle={describe(item)}
-            onPress={() => onItemPress(item)}
-          />
-        ))
+        <>
+          {first ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => onItemPress(first)}
+              style={({ pressed }) => [styles.continueCard, pressed && styles.pressed]}
+            >
+              <View style={styles.continueHeader}>
+                <View style={styles.continueIcon}>
+                  <Icon name={ICON_BY_KIND[first.kind]} size={22} color={theme.colors.primary} />
+                </View>
+                <View style={styles.continueText}>
+                  <AppText variant="caption" color={theme.colors.onPrimaryMuted}>
+                    {t('home.recent.title')}
+                  </AppText>
+                  <AppText bold variant="bodyLarge" color={theme.colors.onPrimary}>
+                    {first.title}
+                  </AppText>
+                  <AppText variant="caption" color={theme.colors.onPrimaryMuted}>
+                    {describe(first)}
+                  </AppText>
+                </View>
+              </View>
+            </Pressable>
+          ) : null}
+          {rest.map((item) => (
+            <ListRow
+              key={item.id}
+              icon={ICON_BY_KIND[item.kind]}
+              title={item.title}
+              subtitle={describe(item)}
+              onPress={() => onItemPress(item)}
+            />
+          ))}
+        </>
       )}
     </View>
   );
@@ -63,4 +92,29 @@ export function RecentlyAccessedList({ items, onSeeAll, onItemPress }: RecentlyA
 
 const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.sm },
+  continueCard: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.lg,
+  },
+  continueHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  continueIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueText: {
+    flex: 1,
+    gap: 2,
+  },
+  pressed: {
+    opacity: 0.88,
+  },
 }));

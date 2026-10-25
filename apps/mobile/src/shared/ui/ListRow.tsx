@@ -41,7 +41,7 @@ export function ListRow({ title, subtitle, icon, accent, onPress, trailing }: Li
           </AppText>
         ) : null}
       </View>
-      {trailing ?? <Icon name="chevron" color={theme.colors.textMuted} />}
+      {trailing ?? <Icon name="chevron" color={theme.colors.primary} />}
     </Pressable>
   );
 }

@@ -62,7 +62,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
         onPress={handleCardPress}
         style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       >
-        <LetterTile label={item.course.title.charAt(0).toUpperCase()} accent={accent} />
+        <LetterTile label={item.course.title.charAt(0).toUpperCase()} accent="blue" />
         <View style={styles.text}>
           <AppText bold>{item.course.title}</AppText>
           <AppText variant="caption" muted>
@@ -70,7 +70,7 @@ export function CourseCard({ item, onPress }: CourseCardProps) {
           </AppText>
           <View style={styles.progress}>
             <View style={styles.bar}>
-              <ProgressBar value={percent} accent={accent} />
+              <ProgressBar value={percent} accent="blue" />
             </View>
             <AppText variant="caption" muted>
               {percent}%

@@ -31,7 +31,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
             onPress={() => onChange(option.value)}
             style={[styles.segment, active ? styles.active : styles.idle]}
           >
-            <AppText bold color={active ? theme.colors.onPrimary : theme.colors.text}>
+            <AppText bold color={active ? theme.colors.onPrimary : theme.colors.textMuted}>
               {option.label}
             </AppText>
           </Pressable>

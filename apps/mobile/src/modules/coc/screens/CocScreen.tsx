@@ -45,7 +45,7 @@ export function CocScreen() {
       <TopBar title={t('coc.title')} onBack={() => router.back()} />
 
       <View style={styles.banner}>
-        <IconTile icon="trophy" accent="amber" solid size={52} />
+        <IconTile icon="trophy" accent="blue" solid size={52} />
         <View style={styles.flex}>
           <AppText bold variant="bodyLarge" color={theme.colors.onPrimary}>
             {t('coc.title')}
@@ -66,9 +66,9 @@ export function CocScreen() {
 
       {hasCourses ? (
         <>
-          <ListRow icon="play" accent="emerald" title={t('coc.start')} subtitle={t('coc.start.sub')} onPress={() => setSheet('sets')} />
-          <ListRow icon="note" accent="cyan" title={t('coc.instructions')} subtitle={t('coc.instructions.sub')} onPress={() => setSheet('rules')} />
-          <ListRow icon="stats" accent="amber" title={t('coc.results')} subtitle={t('coc.results.sub')} onPress={() => setSheet('results')} />
+          <ListRow icon="play" accent="blue" title={t('coc.start')} subtitle={t('coc.start.sub')} onPress={() => setSheet('sets')} />
+          <ListRow icon="note" accent="blue" title={t('coc.instructions')} subtitle={t('coc.instructions.sub')} onPress={() => setSheet('rules')} />
+          <ListRow icon="stats" accent="blue" title={t('coc.results')} subtitle={t('coc.results.sub')} onPress={() => setSheet('results')} />
         </>
       ) : null}
 
@@ -79,13 +79,13 @@ export function CocScreen() {
             <ListRow
               key={set.id}
               icon={open ? 'trophy' : 'lock'}
-              accent={open ? 'fuchsia' : 'danger'}
+              accent="blue"
               title={set.title[language]}
               subtitle={t('coc.setMeta', { count: set.questionCount, minutes: set.minutes, courses: set.courseCount })}
               trailing={
                 <View style={styles.trailing}>
                   {open ? <DownloadButton unit={cocSetDownload(set, courseIds)} /> : null}
-                  {set.isFree && !paid ? <Badge label={t('exams.sample')} /> : null}
+                  {set.isFree && !paid ? <Badge label={t('exams.sample')} tone="primary" /> : null}
                 </View>
               }
               onPress={() => openSet(set)}
@@ -122,7 +122,7 @@ const useStyles = createStyles((theme) => ({
   flex: { flex: 1 },
   trailing: { flexDirection: 'row', alignItems: 'center' },
   banner: {
-    backgroundColor: theme.accents.fuchsia.main,
+    backgroundColor: theme.colors.primary,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
     flexDirection: 'row',

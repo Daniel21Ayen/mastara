@@ -17,7 +17,7 @@ export function Badge({ label, tone = 'primary' }: BadgeProps) {
   const tones = {
     primary: { background: theme.colors.primarySoft, text: theme.colors.primary },
     danger: { background: theme.colors.dangerSoft, text: theme.colors.danger },
-    muted: { background: theme.colors.border, text: theme.colors.text },
+    muted: { background: theme.colors.border, text: theme.colors.textMuted },
   } as const;
   const palette = tones[tone];
 

@@ -42,7 +42,7 @@ export function ReleaseDeviceSheet({ visible, onClose }: ReleaseDeviceSheetProps
     <BottomSheet visible={visible} title={t('profile.release.title')} onClose={onClose}>
       <AppText muted>{t('profile.release.body')}</AppText>
       {failed ? <AppText color={theme.colors.danger}>{t('error.generic')}</AppText> : null}
-      <AppButton label={t('profile.release.confirm')} onPress={() => void release()} loading={busy} />
+      <AppButton label={t('profile.release.confirm')} variant="danger" onPress={() => void release()} loading={busy} />
       <AppButton label={t('profile.cancel')} variant="outline" onPress={onClose} />
     </BottomSheet>
   );

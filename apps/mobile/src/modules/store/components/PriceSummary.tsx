@@ -41,7 +41,7 @@ export function PriceSummary({ quote }: { quote: OrderQuote }) {
       })}
       <View style={[styles.row, styles.total]}>
         <AppText bold>{t('store.total')}</AppText>
-        <AppText bold color={theme.colors.primary}>
+        <AppText bold color={theme.colors.text}>
           {t('store.etb', { amount: quote.total })}
         </AppText>
       </View>

@@ -18,7 +18,7 @@ interface ProductCardProps {
   onPress: () => void;
 }
 
-export function ProductCard({ icon, accent, title, subtitle, price, disabled = false, onPress }: ProductCardProps) {
+export function ProductCard({ icon, accent = 'blue', title, subtitle, price, disabled = false, onPress }: ProductCardProps) {
   const theme = useTheme();
   const styles = useStyles();
   const { t } = useI18n();
@@ -31,16 +31,23 @@ export function ProductCard({ icon, accent, title, subtitle, price, disabled = f
       onPress={onPress}
       style={({ pressed }) => [styles.card, disabled && styles.disabled, pressed && styles.pressed]}
     >
-      <IconTile icon={icon} accent={accent} solid size={48} />
+      <IconTile icon={icon} accent="blue" solid size={48} />
       <View style={styles.text}>
         <AppText bold>{title}</AppText>
         <AppText variant="caption" muted>
           {subtitle}
         </AppText>
       </View>
-      <AppText bold color={theme.accents[accent].main}>
-        {t('store.etb', { amount: price })}
-      </AppText>
+      <View style={styles.actionColumn}>
+        <AppText bold color={theme.colors.primary}>
+          {t('store.etb', { amount: price })}
+        </AppText>
+        <View style={styles.purchaseBtn}>
+          <AppText variant="caption" bold color={theme.colors.onPrimary}>
+            {t('locked.buy')}
+          </AppText>
+        </View>
+      </View>
     </Pressable>
   );
 }
@@ -48,6 +55,8 @@ export function ProductCard({ icon, accent, title, subtitle, price, disabled = f
 const useStyles = createStyles((theme) => ({
   card: {
     backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     flexDirection: 'row',
@@ -57,4 +66,14 @@ const useStyles = createStyles((theme) => ({
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
   text: { flex: 1, gap: 2 },
+  actionColumn: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  purchaseBtn: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.radius.sm,
+  },
 }));

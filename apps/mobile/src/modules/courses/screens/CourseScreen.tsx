@@ -7,8 +7,8 @@ import { createStyles, useTheme } from '@/core/theme';
 import { useIsCourseDownloaded } from '@/modules/downloads';
 import { ExamsTab } from '@/modules/exams/components/ExamsTab';
 import { TestsTab } from '@/modules/quizzes/components/TestsTab';
-import { AppButton, AppText, Icon, Screen, SegmentedControl, TopBar } from '@/shared/ui';
-import type { SegmentOption } from '@/shared/ui';
+import { AppButton, AppText, Icon, Screen, UnderlineTabs, TopBar } from '@/shared/ui';
+import type { UnderlineTabOption } from '@/shared/ui';
 
 import { CourseActionButton } from '../components/CourseActionButton';
 import { CourseHeader } from '../components/CourseHeader';
@@ -27,7 +27,7 @@ export function CourseScreen() {
   const [tab, setTab] = useState<CourseTabId>('MATERIAL');
   const isDownloaded = useIsCourseDownloaded(courseId ?? '');
 
-  const tabs: SegmentOption<CourseTabId>[] = [
+  const tabs: UnderlineTabOption<CourseTabId>[] = [
     { value: 'MATERIAL', label: t('course.tab.material') },
     { value: 'TESTS', label: t('course.tab.tests') },
     { value: 'EXAMS', label: t('course.tab.exams') },
@@ -58,15 +58,15 @@ export function CourseScreen() {
 
           {!isDownloaded && (
             <View style={styles.banner}>
-              <Icon name="download" size={18} color={theme.accents.amber.main} />
-              <AppText variant="caption" color={theme.accents.amber.main} bold style={styles.flex}>
+              <Icon name="download" size={18} color={theme.colors.primary} />
+              <AppText variant="caption" color={theme.colors.primary} bold style={styles.flex}>
                 {t('course.download.required.body') ||
                   'Each course must be downloaded before a student can access or select its materials.'}
               </AppText>
             </View>
           )}
 
-          <SegmentedControl options={tabs} value={tab} onChange={setTab} />
+          <UnderlineTabs options={tabs} value={tab} onChange={setTab} />
 
           {tab === 'MATERIAL' ? (
             <MaterialTab courseId={item.course.id} access={item.access} course={item.course} />
@@ -95,10 +95,11 @@ const useStyles = createStyles((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    backgroundColor: theme.accents.amber.soft,
-    borderColor: theme.accents.amber.track,
+    backgroundColor: theme.colors.primarySoft,
+    borderColor: theme.colors.primarySoft,
     borderWidth: 1,
-    padding: theme.spacing.sm,
     borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
 }));

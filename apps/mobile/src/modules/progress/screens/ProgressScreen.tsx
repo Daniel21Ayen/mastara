@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
-import { accentForKey, createStyles, useTheme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import type { ExamResultRecord } from '@/modules/exams/repo/examResult.repository';
 import { useTimeAgo } from '@/shared/hooks';
 import { AppButton, AppText, Badge, Card, ListRow, ProgressBar, Screen, ScreenHeader } from '@/shared/ui';
@@ -43,10 +43,10 @@ export function ProgressScreen() {
         <>
           <Card>
             <AppText bold>{t('progress.overall')}</AppText>
-            <AppText variant="title" color={theme.accents.emerald.main}>
+            <AppText variant="title" color={theme.colors.primary}>
               {data.percent}%
             </AppText>
-            <ProgressBar value={data.percent} accent="emerald" />
+            <ProgressBar value={data.percent} accent="blue" />
             <AppText variant="caption" muted>
               {t('progress.chapters', { done: data.done, total: data.total })}
             </AppText>
@@ -62,11 +62,11 @@ export function ProgressScreen() {
                     <AppText bold style={styles.flex}>
                       {item.course.title}
                     </AppText>
-                    <AppText bold color={theme.accents[accentForKey(item.course.id)].main}>
+                    <AppText bold color={theme.colors.primary}>
                       {percent}%
                     </AppText>
                   </View>
-                  <ProgressBar value={percent} accent={accentForKey(item.course.id)} />
+                  <ProgressBar value={percent} accent="blue" />
                 </Card>
               );
             })}

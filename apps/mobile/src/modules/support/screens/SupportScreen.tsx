@@ -37,7 +37,18 @@ export function SupportScreen() {
             icon="support"
             title={ticket.subject}
             subtitle={timeAgo(ticket.createdAt)}
-            trailing={<Badge label={t(`support.status.${ticket.status}`)} tone={ticket.status === 'ANSWERED' ? 'primary' : 'muted'} />}
+            trailing={
+              <Badge
+                label={t(`support.status.${ticket.status}`)}
+                tone={
+                  ticket.status === 'ANSWERED' || ticket.status === 'OPEN'
+                    ? 'primary'
+                    : ticket.status === 'RESOLVED'
+                      ? 'muted'
+                      : 'danger'
+                }
+              />
+            }
             onPress={() => router.push(`/support/${ticket.id}` as Href)}
           />
         ))}

@@ -16,17 +16,17 @@ interface QuickCardProps {
   alert?: boolean;
 }
 
-export function QuickCard({ icon, accent, title, subtitle, onPress, alert = false }: QuickCardProps) {
+export function QuickCard({ icon, accent = 'blue', title, subtitle, onPress, alert = false }: QuickCardProps) {
   const theme = useTheme();
   const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.card, { backgroundColor: theme.accents[accent].soft }, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <View style={styles.tile}>
-        <IconTile icon={icon} accent={accent} solid />
+        <IconTile icon={icon} accent={accent} solid={false} />
         {alert ? <View style={styles.dot} /> : null}
       </View>
       <AppText bold variant="caption">
@@ -43,6 +43,9 @@ const useStyles = createStyles((theme) => ({
   card: {
     flexGrow: 1,
     flexBasis: '45%',
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
     gap: theme.spacing.xs,

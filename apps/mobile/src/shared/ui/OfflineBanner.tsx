@@ -20,7 +20,7 @@ export function OfflineBanner() {
 
   return (
     <View accessibilityRole="alert" style={[styles.bar, { paddingTop: insets.top + theme.spacing.xs }]}>
-      <AppText variant="caption" bold color={theme.colors.onPrimary} style={styles.text}>
+      <AppText variant="caption" bold color={theme.colors.text} style={styles.text}>
         {t('offline.banner')}
       </AppText>
     </View>
@@ -28,6 +28,6 @@ export function OfflineBanner() {
 }
 
 const useStyles = createStyles((theme) => ({
-  bar: { backgroundColor: theme.colors.text, paddingBottom: theme.spacing.xs, paddingHorizontal: theme.spacing.md },
+  bar: { backgroundColor: theme.colors.border, paddingBottom: theme.spacing.xs, paddingHorizontal: theme.spacing.md },
   text: { textAlign: 'center' },
 }));

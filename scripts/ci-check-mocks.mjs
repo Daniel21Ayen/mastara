@@ -51,13 +51,11 @@ function scanDirectory(dir) {
       if (EXCLUDED_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) {
         continue;
       }
-      if (!/\.(ts|tsx|js|jsx)$/.test(entry.name)) {
-        continue;
+      if (/\.(ts|tsx|js|jsx)$/.test(entry.name)) {
+        checkFile(fullPath);
+      } else if (entry.name.endsWith('.css')) {
+        checkCssFile(fullPath);
       }
-
-      checkFile(fullPath);
-    } else if (entry.isFile() && entry.name.endsWith('.css')) {
-      checkCssFile(fullPath);
     }
   }
 }
@@ -106,6 +104,22 @@ function checkFile(filePath) {
           content: line.trim(),
           reason: 'Production useMocks branch detected',
         });
+      }
+    }
+
+    // Check for raw hex colors in mobile app files (enforcing the 4-color design tokens)
+    if (filePath.includes('apps/mobile') && !filePath.endsWith('pushNotifications.ts')) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('//') && !trimmed.startsWith('/*') && !trimmed.startsWith('*')) {
+        const matches = line.match(/#[0-9a-fA-F]{3,8}\b/g);
+        if (matches && matches.length > 0) {
+          violations.push({
+            file: path.relative(rootDir, filePath),
+            line: index + 1,
+            content: line.trim(),
+            reason: `Raw hex color ${matches.join(', ')} detected in mobile app; use theme.colors.*`,
+          });
+        }
       }
     }
   });

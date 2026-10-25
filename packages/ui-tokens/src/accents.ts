@@ -56,8 +56,8 @@ function build(main: Record<AccentName, string>, soft: number, track: number): R
   ) as Record<AccentName, Accent>;
 }
 
-export const lightAccents = build(LIGHT_MAIN, 0.14, 0.24);
-export const darkAccents = build(DARK_MAIN, 0.18, 0.32);
+export const lightAccents = build(LIGHT_MAIN, 0.10, 0.10);
+export const darkAccents = build(DARK_MAIN, 0.16, 0.20);
 
 /** Light accents, kept under the old name for code that does not switch themes. */
 export const accents = lightAccents;

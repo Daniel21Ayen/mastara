@@ -61,9 +61,9 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
     <>
       {transfer === 'downloading' ? (
         <View style={[styles.button, styles.busyContainer]}>
-          <ActivityIndicator size="small" color={theme.accents.cyan.main} />
+          <ActivityIndicator size="small" color={theme.colors.primary} />
           {!compact && (
-            <AppText variant="caption" bold color={theme.accents.cyan.main}>
+            <AppText variant="caption" bold color={theme.colors.primary}>
               {t('course.download.downloading')}
             </AppText>
           )}
@@ -83,7 +83,7 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
         >
           <Icon name="trash" size={compact ? 18 : 20} color={theme.colors.danger} />
           {!compact && (
-            <AppText variant="caption" bold color={theme.colors.danger}>
+            <AppText variant="caption" bold color={theme.colors.text}>
               {t('course.download.delete')}
             </AppText>
           )}
@@ -119,7 +119,7 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
           {t('course.download.deleteConfirmBody') ||
             `Are you sure you want to remove all offline materials and files for "${course.title}"?`}
         </AppText>
-        <AppButton label={t('download.delete.confirm')} onPress={() => void remove()} />
+        <AppButton label={t('download.delete.confirm')} variant="danger" onPress={() => void remove()} />
         <AppButton label={t('common.cancel')} variant="outline" onPress={() => setSheet(null)} />
       </BottomSheet>
 
@@ -153,15 +153,15 @@ const useStyles = createStyles((theme) => ({
     paddingVertical: 6,
   },
   busyContainer: {
-    borderColor: theme.accents.cyan.main,
-    backgroundColor: theme.accents.cyan.soft,
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primarySoft,
   },
   downloadButton: {
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.surface,
   },
   deleteButton: {
-    borderColor: theme.colors.danger,
+    borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
   },
   pressed: {

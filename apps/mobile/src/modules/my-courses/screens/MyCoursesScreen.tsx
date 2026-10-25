@@ -8,8 +8,8 @@ import { ActivityIndicator, FlatList, View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { useSession } from '@/core/session';
 import { createStyles, useTheme } from '@/core/theme';
-import { AppButton, AppText, Card, ScreenHeader, SegmentedControl, Screen } from '@/shared/ui';
-import type { SegmentOption } from '@/shared/ui';
+import { AppButton, AppText, Card, ScreenHeader, UnderlineTabs, Screen } from '@/shared/ui';
+import type { UnderlineTabOption } from '@/shared/ui';
 
 import { AddCoursesSheet } from '../components/AddCoursesSheet';
 import { CourseCard } from '../components/CourseCard';
@@ -27,7 +27,7 @@ export function MyCoursesScreen() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
-  const tabs: SegmentOption<CourseTab>[] = [
+  const tabs: UnderlineTabOption<CourseTab>[] = [
     { value: 'ALL', label: t('mycourses.tab.all') },
     { value: 'ONGOING', label: t('mycourses.tab.ongoing') },
     { value: 'COMPLETED', label: t('mycourses.tab.completed') },
@@ -42,7 +42,7 @@ export function MyCoursesScreen() {
         activeFilters={courses.activeFilters}
         onFilterPress={() => setFilterOpen(true)}
       />
-      <SegmentedControl
+      <UnderlineTabs
         options={tabs}
         value={courses.filters.tab}
         onChange={(tab) => courses.setFilters((prev) => ({ ...prev, tab }))}

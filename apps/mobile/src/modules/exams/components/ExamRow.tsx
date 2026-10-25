@@ -23,9 +23,9 @@ export function ExamRow({ exam, university, open, onPress }: ExamRowProps) {
   const kindLabel = t(`exams.tab.${exam.kind.toLowerCase() as 'mid' | 'final' | 'mock'}`);
 
   let trailing;
-  if (!open) trailing = <Icon name="lock" color={theme.colors.danger} />;
-  else if (exam.isFree) trailing = <Badge label={t('exams.sample')} />;
-  else trailing = <Icon name="chevron" color={theme.colors.textMuted} />;
+  if (!open) trailing = <Icon name="lock" color={theme.colors.textMuted} />;
+  else if (exam.isFree) trailing = <Badge label={t('exams.sample')} tone="primary" />;
+  else trailing = <Icon name="chevron" color={theme.colors.primary} />;
 
   return (
     <Pressable
@@ -33,7 +33,7 @@ export function ExamRow({ exam, university, open, onPress }: ExamRowProps) {
       onPress={() => onPress(exam, open)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <LetterTile label={university.shortName.slice(0, 2).toUpperCase()} accent={accentForKey(university.id)} round />
+      <LetterTile label={university.shortName.slice(0, 2).toUpperCase()} accent="blue" round />
       <View style={styles.text}>
         <AppText bold>{`${university.shortName} (${kindLabel})`}</AppText>
         <AppText variant="caption" muted>

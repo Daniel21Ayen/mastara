@@ -39,8 +39,8 @@ export function FeedbackPanel({
   const [ownOpen, setOwnOpen] = useState(false);
   const open = expanded ?? ownOpen;
   const toggle = onToggleExplanation ?? (() => setOwnOpen((value) => !value));
-  const tone = skipped ? theme.colors.text : correct ? theme.accents.emerald.main : theme.colors.danger;
-  const background = skipped ? theme.colors.background : correct ? theme.accents.emerald.soft : theme.colors.dangerSoft;
+  const tone = skipped ? theme.colors.text : correct ? theme.colors.primary : theme.colors.danger;
+  const background = skipped ? theme.colors.background : correct ? theme.colors.primarySoft : theme.colors.dangerSoft;
 
   return (
     <View

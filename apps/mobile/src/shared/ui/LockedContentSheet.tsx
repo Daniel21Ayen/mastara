@@ -7,6 +7,7 @@ import { createStyles, useTheme } from '@/core/theme';
 import { AppButton } from './AppButton';
 import { AppText } from './AppText';
 import { BottomSheet } from './BottomSheet';
+import { Icon } from './Icon';
 
 export interface LockedContentSheetProps {
   visible: boolean;
@@ -52,10 +53,10 @@ export function LockedContentSheet({
   };
 
   return (
-    <BottomSheet visible={visible} title={title} onClose={onClose}>
+    <BottomSheet visible={visible} title={title} titleColor={theme.colors.danger} onClose={onClose}>
       <View style={styles.container}>
         <View style={styles.iconCircle}>
-          <AppText style={styles.lockEmoji}>🔒</AppText>
+          <Icon name="lock" size={32} color={theme.colors.danger} />
         </View>
 
         <AppText variant="body" style={styles.description}>
@@ -81,16 +82,13 @@ const useStyles = createStyles((theme) => ({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: theme.colors.primarySoft,
+    backgroundColor: theme.colors.dangerSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  lockEmoji: {
-    fontSize: 32,
-  },
   description: {
     textAlign: 'center',
-    color: theme.colors.textMuted,
+    color: theme.colors.text,
     lineHeight: 22,
     paddingHorizontal: theme.spacing.md,
   },

@@ -28,16 +28,40 @@ export function TicketScreen() {
 
       {ticket ? (
         <>
-          <Badge label={t(`support.status.${ticket.status}`)} tone={ticket.status === 'ANSWERED' ? 'primary' : 'muted'} />
+          <Badge
+            label={t(`support.status.${ticket.status}`)}
+            tone={
+              ticket.status === 'ANSWERED' || ticket.status === 'OPEN'
+                ? 'primary'
+                : ticket.status === 'RESOLVED'
+                  ? 'muted'
+                  : 'danger'
+            }
+          />
           <View style={styles.list}>
-            {ticket.messages.map((message) => (
-              <Card key={message.id}>
-                <AppText variant="caption" bold color={message.from === 'ADMIN' ? theme.colors.primary : theme.colors.textMuted}>
-                  {`${message.from === 'ADMIN' ? t('support.admin') : t('support.you')} · ${timeAgo(message.createdAt)}`}
-                </AppText>
-                <AppText>{message.text}</AppText>
-              </Card>
-            ))}
+            {ticket.messages.map((message) => {
+              const isStudent = message.from !== 'ADMIN';
+              return (
+                <View
+                  key={message.id}
+                  style={[
+                    styles.bubble,
+                    isStudent ? styles.studentBubble : styles.replyBubble,
+                  ]}
+                >
+                  <AppText
+                    variant="caption"
+                    bold
+                    color={isStudent ? theme.colors.onPrimary : theme.colors.textMuted}
+                  >
+                    {`${isStudent ? t('support.you') : t('support.admin')} · ${timeAgo(message.createdAt)}`}
+                  </AppText>
+                  <AppText color={isStudent ? theme.colors.onPrimary : theme.colors.text}>
+                    {message.text}
+                  </AppText>
+                </View>
+              );
+            })}
           </View>
         </>
       ) : null}
@@ -46,5 +70,22 @@ export function TicketScreen() {
 }
 
 const useStyles = createStyles((theme) => ({
-  list: { gap: theme.spacing.sm },
+  list: { gap: theme.spacing.sm, marginTop: theme.spacing.md },
+  bubble: {
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    gap: theme.spacing.xs,
+  },
+  studentBubble: {
+    backgroundColor: theme.colors.primary,
+    alignSelf: 'flex-end',
+    maxWidth: '85%',
+  },
+  replyBubble: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+    maxWidth: '85%',
+  },
 }));

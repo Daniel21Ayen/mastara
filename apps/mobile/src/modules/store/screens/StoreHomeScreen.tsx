@@ -52,7 +52,7 @@ export function StoreHomeScreen() {
         <View style={styles.list}>
           <ProductCard
             icon="module"
-            accent="violet"
+            accent="blue"
             title={t('store.product.BUNDLE')}
             subtitle={t('store.product.BUNDLE.sub')}
             price={config.bundle.bundlePrice}
@@ -61,7 +61,7 @@ export function StoreHomeScreen() {
           />
           <ProductCard
             icon="star"
-            accent="amber"
+            accent="blue"
             title={t(both ? 'store.product.FULL_BOTH' : 'store.product.FULL_STREAM')}
             subtitle={t(both ? 'store.product.FULL_BOTH.sub' : 'store.product.FULL_STREAM.sub')}
             price={both ? config.fullBothPrice : config.fullStreamPrice}
@@ -69,7 +69,7 @@ export function StoreHomeScreen() {
           />
           <ProductCard
             icon="note"
-            accent="cyan"
+            accent="blue"
             title={t('store.product.SINGLE')}
             subtitle={t('store.product.SINGLE.sub')}
             price={config.singlePrice}

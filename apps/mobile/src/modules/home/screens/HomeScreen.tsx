@@ -42,14 +42,14 @@ export function HomeScreen() {
       <View style={styles.grid}>
         <QuickCard
           icon="course"
-          accent="violet"
+          accent="blue"
           title={t('home.quick.courses')}
           subtitle={t('home.quick.courses.sub', { n: profile?.courseIds.length ?? 0 })}
           onPress={() => router.push('/course' as Href)}
         />
         <QuickCard
           icon="stats"
-          accent="emerald"
+          accent="blue"
           title={t('home.quick.stats')}
           subtitle={t('home.quick.stats.sub', {
             done: data?.chaptersDone ?? 0,
@@ -59,7 +59,7 @@ export function HomeScreen() {
         />
         <QuickCard
           icon="store"
-          accent="orange"
+          accent="blue"
           title={t('home.quick.store')}
           subtitle={t('home.quick.store.sub', {
             active: data?.activeProducts ?? 0,
@@ -70,7 +70,7 @@ export function HomeScreen() {
         />
         <QuickCard
           icon="trophy"
-          accent="fuchsia"
+          accent="blue"
           title={t('home.coc.title')}
           subtitle={t('home.coc.sub')}
           onPress={() => router.push('/coc' as Href)}

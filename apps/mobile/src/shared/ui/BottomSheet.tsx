@@ -9,20 +9,25 @@ import { AppText } from './AppText';
 interface BottomSheetProps {
   visible: boolean;
   title: string;
+  titleColor?: string;
   onClose: () => void;
   children: ReactNode;
   /** Wrap children in a ScrollView. Leave off when children scroll on their own (for example a FlatList). */
   scroll?: boolean;
 }
 
-export function BottomSheet({ visible, title, onClose, children, scroll = false }: BottomSheetProps) {
+export function BottomSheet({ visible, title, titleColor, onClose, children, scroll = false }: BottomSheetProps) {
   const styles = useStyles();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modal}>
         <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
         <View style={styles.sheet}>
-          <AppText variant="heading" accessibilityRole="header" style={styles.title}>
+          <AppText
+            variant="heading"
+            accessibilityRole="header"
+            style={[styles.title, titleColor ? { color: titleColor } : null]}
+          >
             {title}
           </AppText>
           {scroll ? (

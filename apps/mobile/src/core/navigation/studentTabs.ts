@@ -16,7 +16,7 @@ export interface StudentTab {
 /** Bottom navigation. To add a tab: add a route file, an entry here, and a label key. */
 export const STUDENT_TABS: readonly StudentTab[] = [
   { name: 'home', labelKey: 'nav.home', icon: 'home', accent: 'blue' },
-  { name: 'course', labelKey: 'nav.course', icon: 'course', accent: 'violet' },
-  { name: 'progress', labelKey: 'nav.progress', icon: 'progress', accent: 'emerald' },
-  { name: 'profile', labelKey: 'nav.profile', icon: 'profile', accent: 'orange' },
+  { name: 'course', labelKey: 'nav.course', icon: 'course', accent: 'blue' },
+  { name: 'progress', labelKey: 'nav.progress', icon: 'progress', accent: 'blue' },
+  { name: 'profile', labelKey: 'nav.profile', icon: 'profile', accent: 'blue' },
 ];

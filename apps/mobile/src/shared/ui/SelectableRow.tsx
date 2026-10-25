@@ -59,7 +59,7 @@ const useStyles = createStyles((theme) => ({
     alignItems: 'center',
     gap: theme.spacing.md,
   },
-  rowSelected: { borderColor: theme.colors.primary },
+  rowSelected: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primarySoft },
   disabled: { opacity: 0.55 },
   box: {
     width: 24,

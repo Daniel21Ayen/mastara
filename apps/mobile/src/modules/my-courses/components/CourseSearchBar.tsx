@@ -21,7 +21,7 @@ export function CourseSearchBar({ value, onChangeText, activeFilters, onFilterPr
   return (
     <View style={styles.row}>
       <View style={styles.field}>
-        <Icon name="search" color={theme.colors.textMuted} />
+        <Icon name="search" color={theme.colors.primary} />
         <TextInput
           accessibilityLabel={t('mycourses.search')}
           placeholder={t('mycourses.search')}

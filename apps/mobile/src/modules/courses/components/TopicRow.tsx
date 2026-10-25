@@ -36,7 +36,7 @@ export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
       onPress={() => onPress(topic, open)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <IconTile icon={isModule ? 'module' : 'note'} accent={accentForKey(topic.id)} solid size={48} />
+      <IconTile icon={isModule ? 'module' : 'note'} accent="blue" solid={false} size={48} />
       <View style={styles.text}>
         <AppText bold lang={lang}>
           {title}
@@ -47,9 +47,9 @@ export function TopicRow({ topic, lang, access, onPress }: TopicRowProps) {
       </View>
       {open ? <DownloadButton unit={topicDownload(topic)} /> : null}
       {open ? (
-        topic.isFree ? <Badge label={t('topic.free')} /> : <Icon name="chevron" color={theme.colors.textMuted} />
+        topic.isFree ? <Badge label={t('topic.free')} tone="primary" /> : <Icon name="chevron" color={theme.colors.primary} />
       ) : (
-        <Icon name="lock" color={theme.colors.danger} />
+        <Icon name="lock" color={theme.colors.textMuted} />
       )}
     </Pressable>
   );

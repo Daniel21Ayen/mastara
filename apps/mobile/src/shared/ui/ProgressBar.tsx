@@ -24,12 +24,12 @@ export function ProgressBar({ value, tone = 'primary', accent = 'blue' }: Progre
     <View
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: clamped }}
-      style={[styles.track, { backgroundColor: onPrimary ? theme.colors.onPrimarySoft : colour.track }]}
+      style={[styles.track, { backgroundColor: onPrimary ? theme.colors.onPrimarySoft : theme.colors.primarySoft }]}
     >
       <View
         style={[
           styles.fill,
-          { width: `${clamped}%`, backgroundColor: onPrimary ? theme.colors.onPrimary : colour.main },
+          { width: `${clamped}%`, backgroundColor: onPrimary ? theme.colors.onPrimary : theme.colors.primary },
         ]}
       />
     </View>

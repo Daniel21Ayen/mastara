@@ -34,29 +34,29 @@ export function ConnectivityPill({ style, compact = false }: ConnectivityPillPro
   const { pending, rejected, syncing, lastSyncAt, syncNow } = useSync();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // Derive visual palette based on current status
-  let bg = theme.accents.emerald.soft;
-  let textColor = theme.accents.emerald.main;
-  let dotColor = theme.accents.emerald.main;
+  // Derive visual palette based on current status (Online: soft blue, Offline: soft ink)
+  let bg = theme.colors.primarySoft;
+  let textColor = theme.colors.primary;
+  let dotColor = theme.colors.primary;
   let label = t('sync.online');
   let iconName: 'wifi' | 'wifiOff' | 'sync' = 'wifi';
 
   if (syncing) {
-    bg = theme.accents.blue.soft;
-    textColor = theme.accents.blue.main;
-    dotColor = theme.accents.blue.main;
+    bg = theme.colors.primarySoft;
+    textColor = theme.colors.primary;
+    dotColor = theme.colors.primary;
     label = t('sync.syncing');
     iconName = 'sync';
   } else if (!online) {
-    bg = theme.accents.amber.soft;
-    textColor = theme.accents.amber.main;
-    dotColor = theme.accents.amber.main;
+    bg = theme.colors.border;
+    textColor = theme.colors.textMuted;
+    dotColor = theme.colors.textMuted;
     label = pending > 0 ? `${t('sync.offline')} (${pending})` : t('sync.offline');
     iconName = 'wifiOff';
   } else if (pending > 0) {
-    bg = theme.accents.amber.soft;
-    textColor = theme.accents.amber.main;
-    dotColor = theme.accents.amber.main;
+    bg = theme.colors.border;
+    textColor = theme.colors.textMuted;
+    dotColor = theme.colors.textMuted;
     label = `${pending} ${pending === 1 ? 'change' : 'changes'}`;
     iconName = 'sync';
   }

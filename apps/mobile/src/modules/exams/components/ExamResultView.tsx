@@ -52,32 +52,34 @@ export function ExamResultView({ score, sittingId, courseTitles, onReview, onBac
   const percent = percentOf(score.correct, score.total);
   const lines = Object.entries(score.byCourse);
 
-  // Status banner styling & messages
-  let bannerBg = theme.accents.emerald.soft;
-  let bannerText = theme.accents.emerald.main;
+  // Status banner styling & messages (Online: soft blue, Offline: soft ink)
+  let bannerBg = theme.colors.primarySoft;
+  let bannerText = theme.colors.primary;
   let bannerTitle = t('exam.result.title');
   let bannerSub = t('exam.result.syncedNotice');
   let bannerIcon: 'check' | 'wifiOff' | 'sync' = 'check';
 
   if (syncing) {
-    bannerBg = theme.accents.blue.soft;
-    bannerText = theme.accents.blue.main;
+    bannerBg = theme.colors.primarySoft;
+    bannerText = theme.colors.primary;
     bannerTitle = t('sync.syncing');
     bannerSub = t('exam.result.syncingNotice');
     bannerIcon = 'sync';
   } else if (!online) {
-    bannerBg = theme.accents.amber.soft;
-    bannerText = theme.accents.amber.main;
+    bannerBg = theme.colors.border;
+    bannerText = theme.colors.textMuted;
     bannerTitle = t('exam.result.offlineTitle');
     bannerSub = t('exam.result.offlineNotice');
     bannerIcon = 'wifiOff';
   } else if (sittingPending) {
-    bannerBg = theme.accents.amber.soft;
-    bannerText = theme.accents.amber.main;
+    bannerBg = theme.colors.border;
+    bannerText = theme.colors.textMuted;
     bannerTitle = t('exam.result.statusPending');
     bannerSub = t('exam.result.offlineNotice');
     bannerIcon = 'sync';
   }
+
+  const wrongCount = score.total - score.correct;
 
   return (
     <View style={styles.wrap}>
@@ -117,10 +119,17 @@ export function ExamResultView({ score, sittingId, courseTitles, onReview, onBac
         <AppText variant="caption" muted bold>
           {online && !sittingPending ? t('exam.result.statusSynced') : t('exam.result.statusPending')}
         </AppText>
-        <AppText variant="title" color={theme.accents.fuchsia.main}>
-          {t('result.score', { correct: score.correct, total: score.total })}
-        </AppText>
-        <ProgressBar value={percent} accent="fuchsia" />
+        <View style={styles.scoreRow}>
+          <AppText variant="title" color={theme.colors.primary}>
+            {t('result.score', { correct: score.correct, total: score.total })}
+          </AppText>
+          {wrongCount > 0 ? (
+            <AppText bold color={theme.colors.danger}>
+              {wrongCount} {t('practice.incorrect')}
+            </AppText>
+          ) : null}
+        </View>
+        <ProgressBar value={percent} accent="blue" />
         <AppText muted>{t('result.percent', { n: percent })}</AppText>
       </Card>
 
@@ -131,11 +140,16 @@ export function ExamResultView({ score, sittingId, courseTitles, onReview, onBac
             <View key={courseId} style={styles.line}>
               <View style={styles.lineText}>
                 <AppText variant="caption">{courseTitles[courseId] ?? courseId}</AppText>
-                <AppText variant="caption" bold>
+                <AppText variant="caption" bold color={theme.colors.primary}>
                   {line.correct}/{line.total}
+                  {line.total - line.correct > 0 ? (
+                    <AppText variant="caption" bold color={theme.colors.danger}>
+                      {` (${line.total - line.correct} wrong)`}
+                    </AppText>
+                  ) : null}
                 </AppText>
               </View>
-              <ProgressBar value={percentOf(line.correct, line.total)} />
+              <ProgressBar value={percentOf(line.correct, line.total)} accent="blue" />
             </View>
           ))}
         </Card>
@@ -175,5 +189,6 @@ const useStyles = createStyles((theme) => ({
     marginTop: theme.spacing.xs,
   },
   line: { gap: theme.spacing.xs },
+  scoreRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: theme.spacing.sm },
   lineText: { flexDirection: 'row', justifyContent: 'space-between' },
 }));

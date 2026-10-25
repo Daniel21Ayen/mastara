@@ -75,7 +75,9 @@ export function SelectField({
               }}
               style={[styles.option, item.value === value && styles.optionActive]}
             >
-              <AppText bold={item.value === value}>{item.label}</AppText>
+              <AppText bold={item.value === value} color={item.value === value ? theme.colors.primary : theme.colors.text}>
+                {item.label}
+              </AppText>
             </Pressable>
           )}
           ListEmptyComponent={

@@ -32,12 +32,14 @@ export function ReceiptPicker({ receipt, busy, failed, error, onPick }: ReceiptP
         </View>
       ) : null}
 
-      <AppButton
-        label={receipt ? t('checkout.receipt.change') : t('checkout.receipt.add')}
-        variant="outline"
-        loading={busy}
-        onPress={onPick}
-      />
+      <View style={styles.uploadArea}>
+        <AppButton
+          label={receipt ? t('checkout.receipt.change') : t('checkout.receipt.add')}
+          variant="outline"
+          loading={busy}
+          onPress={onPick}
+        />
+      </View>
 
       {failed ? <AppText variant="caption" color={theme.colors.danger}>{t('checkout.receipt.failed')}</AppText> : null}
       {error ? <AppText variant="caption" color={theme.colors.danger}>{error}</AppText> : null}
@@ -47,6 +49,16 @@ export function ReceiptPicker({ receipt, busy, failed, error, onPick }: ReceiptP
 
 const useStyles = createStyles((theme) => ({
   wrap: { gap: theme.spacing.sm },
+  uploadArea: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primarySoft,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   preview: { gap: theme.spacing.xs },
   image: { width: '100%', height: 160, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft },
 }));

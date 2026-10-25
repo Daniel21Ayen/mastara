@@ -52,7 +52,7 @@ export const pushNotificationService = {
             name: 'General',
             importance: Notifications.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#2563EB',
+            lightColor: '#1a56db',
           });
           await Notifications.setNotificationChannelAsync('payments', {
             name: 'Payments & Approvals',

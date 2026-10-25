@@ -36,7 +36,7 @@ export function HomeHeader({ name, hasUnread, onBellPress, onAvatarPress }: Home
           onPress={onBellPress}
           style={styles.round}
         >
-          <Icon name="bell" color={theme.accents.amber.main} size={22} />
+          <Icon name="bell" color={theme.colors.primary} size={22} />
           {hasUnread ? <View style={styles.dot} /> : null}
         </Pressable>
 
@@ -68,11 +68,11 @@ const useStyles = createStyles((theme) => ({
     width: theme.minTouchTarget,
     height: theme.minTouchTarget,
     borderRadius: theme.radius.pill,
-    backgroundColor: theme.accents.amber.soft,
+    backgroundColor: theme.colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatar: { backgroundColor: theme.accents.violet.main },
+  avatar: { backgroundColor: theme.colors.primary },
   dot: {
     position: 'absolute',
     top: 10,

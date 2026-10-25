@@ -6,13 +6,26 @@ import type { AccentName } from '@/core/theme';
 
 import { AppText } from './AppText';
 
-/** Filled coloured circle with a white number, for chapters and steps. */
-export function NumberCircle({ value, accent = 'blue' }: { value: number; accent?: AccentName }) {
+interface NumberCircleProps {
+  value: number | string;
+  active?: boolean;
+  accent?: AccentName;
+}
+
+/** Filled coloured circle with a white number for current step/question, or outline with ink number. */
+export function NumberCircle({ value, active = true, accent = 'blue' }: NumberCircleProps) {
   const theme = useTheme();
   const styles = useStyles();
   return (
-    <View style={[styles.circle, { backgroundColor: theme.accents[accent].main }]}>
-      <AppText bold color={theme.colors.onPrimary} variant="bodyLarge">
+    <View
+      style={[
+        styles.circle,
+        active
+          ? { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+          : { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+      ]}
+    >
+      <AppText bold color={active ? theme.colors.onPrimary : theme.colors.text} variant="bodyLarge">
         {value}
       </AppText>
     </View>
@@ -26,5 +39,6 @@ const useStyles = createStyles((theme) => ({
     borderRadius: theme.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
   },
 }));

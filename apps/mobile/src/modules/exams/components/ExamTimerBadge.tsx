@@ -22,7 +22,7 @@ export function ExamTimerBadge({ remainingMs }: { remainingMs: number }) {
       accessibilityLabel={`${t('exam.timeLeft')} ${text}`}
       style={[styles.badge, low ? styles.low : styles.normal]}
     >
-      <AppText bold color={low ? theme.colors.danger : theme.colors.primary}>
+      <AppText bold color={low ? theme.colors.danger : theme.colors.text}>
         {text}
       </AppText>
     </View>
@@ -31,6 +31,6 @@ export function ExamTimerBadge({ remainingMs }: { remainingMs: number }) {
 
 const useStyles = createStyles((theme) => ({
   badge: { borderRadius: theme.radius.pill, paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs },
-  normal: { backgroundColor: theme.colors.primarySoft },
-  low: { backgroundColor: theme.colors.dangerSoft },
+  normal: { backgroundColor: theme.colors.surfaceSubtle, borderWidth: 1, borderColor: theme.colors.border },
+  low: { backgroundColor: theme.colors.dangerSoft, borderWidth: 1, borderColor: theme.colors.danger },
 }));

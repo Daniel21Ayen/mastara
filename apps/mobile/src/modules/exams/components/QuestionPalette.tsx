@@ -37,12 +37,11 @@ export function QuestionPalette({ cells, onSelect }: QuestionPaletteProps) {
               onPress={() => onSelect(index)}
               style={[
                 styles.cell,
-                cell.answered ? styles.answered : styles.open,
+                cell.current ? styles.current : cell.answered ? styles.answered : styles.open,
                 cell.flagged && styles.flagged,
-                cell.current && styles.current,
               ]}
             >
-              <AppText bold color={cell.answered ? theme.colors.onPrimary : theme.colors.text}>
+              <AppText bold color={cell.current ? theme.colors.onPrimary : theme.colors.text}>
                 {cell.number}
               </AppText>
             </Pressable>
@@ -51,6 +50,7 @@ export function QuestionPalette({ cells, onSelect }: QuestionPaletteProps) {
       </View>
 
       <View style={styles.legend}>
+        <LegendItem style={styles.current} label={t('exam.cell', { n: 1 })} />
         <LegendItem style={styles.answered} label={t('exam.legend.answered')} />
         <LegendItem style={[styles.open, styles.legendOpen]} label={t('exam.legend.open')} />
         <LegendItem style={[styles.open, styles.flagged]} label={t('exam.legend.flagged')} />
@@ -77,15 +77,15 @@ const useStyles = createStyles((theme) => ({
   cell: {
     width: 48,
     height: 48,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.pill,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  answered: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  current: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  answered: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
   open: { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
   flagged: { borderColor: theme.colors.danger },
-  current: { borderWidth: 4 },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.lg },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
   legendOpen: {},

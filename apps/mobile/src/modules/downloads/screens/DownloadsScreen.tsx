@@ -8,9 +8,9 @@ import { Pressable, View } from 'react-native';
 import { downloadStore } from '@/core/downloads';
 import type { DownloadedUnit, DownloadKind } from '@/core/downloads';
 import { useI18n } from '@/core/i18n';
-import { accentForKey, createStyles, useTheme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { useTimeAgo } from '@/shared/hooks';
-import { AppButton, AppText, BottomSheet, Card, Icon, IconTile, Screen, TopBar } from '@/shared/ui';
+import { AppButton, AppText, BottomSheet, Card, Icon, IconTile, ProgressBar, Screen, TopBar } from '@/shared/ui';
 import type { IconName } from '@/shared/ui';
 
 import { useDownloadList } from '../hooks/useDownloads';
@@ -95,7 +95,7 @@ export function DownloadsScreen() {
 
       <Card>
         <View style={styles.summary}>
-          <IconTile icon="download" solid size={48} />
+          <IconTile icon="download" accent="blue" solid size={48} />
           <View style={styles.flex}>
             <AppText bold variant="bodyLarge">
               {t('downloads.summary', { count: units.length, size: formatBytes(totalBytes) })}
@@ -105,8 +105,9 @@ export function DownloadsScreen() {
             </AppText>
           </View>
         </View>
+        <ProgressBar value={totalBytes > 0 ? 100 : 0} accent="blue" />
         {units.length > 0 ? (
-          <AppButton label={t('downloads.deleteAll')} variant="outline" onPress={() => setDeleting('ALL')} />
+          <AppButton label={t('downloads.deleteAll')} variant="danger" onPress={() => setDeleting('ALL')} />
         ) : null}
       </Card>
 
@@ -124,16 +125,17 @@ export function DownloadsScreen() {
               const { title, subtitle } = nameOf(unit);
               return (
                 <View key={unit.unitId} style={styles.row}>
-                  <IconTile icon={section.icon} accent={accentForKey(unit.unitId)} />
+                  <IconTile icon={section.icon} accent="blue" />
                   <View style={styles.flex}>
                     <AppText bold>{title}</AppText>
                     <AppText variant="caption" muted>
                       {subtitle}
                     </AppText>
-                    <AppText variant="caption" muted>
+                    <AppText variant="caption" color={theme.colors.text}>
                       {`${formatBytes(unit.bytes)} · ${timeAgo(new Date(unit.downloadedAt).toISOString())}`}
                     </AppText>
                   </View>
+                  <Icon name="check" size={20} color={theme.colors.primary} />
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={t('downloads.delete')}
@@ -141,7 +143,7 @@ export function DownloadsScreen() {
                     onPress={() => setDeleting(unit)}
                     style={styles.trash}
                   >
-                    <Icon name="trash" size={24} color={theme.colors.danger} />
+                    <Icon name="trash" size={22} color={theme.colors.danger} />
                   </Pressable>
                 </View>
               );
@@ -156,7 +158,7 @@ export function DownloadsScreen() {
         onClose={() => setDeleting(null)}
       >
         <AppText muted>{deleting === 'ALL' ? t('downloads.deleteAll.body') : t('download.delete.body')}</AppText>
-        <AppButton label={t('download.delete.confirm')} onPress={() => void confirmDelete()} />
+        <AppButton label={t('download.delete.confirm')} variant="danger" onPress={() => void confirmDelete()} />
         <AppButton label={t('common.cancel')} variant="outline" onPress={() => setDeleting(null)} />
       </BottomSheet>
     </Screen>

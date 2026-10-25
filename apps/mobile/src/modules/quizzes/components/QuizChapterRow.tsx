@@ -25,10 +25,10 @@ export function QuizChapterRow({ chapter, access, best, onPress }: QuizChapterRo
   const open = canOpenContent(access, chapter.isFree);
 
   let trailing;
-  if (!open) trailing = <Icon name="lock" color={theme.colors.danger} />;
-  else if (best) trailing = <Badge label={t('tests.best', { score: `${best.correct}/${best.total}` })} />;
-  else if (chapter.isFree && access !== 'PAID') trailing = <Badge label={t('topic.free')} />;
-  else trailing = <Icon name="chevron" color={theme.colors.textMuted} />;
+  if (!open) trailing = <Icon name="lock" color={theme.colors.textMuted} />;
+  else if (best) trailing = <Badge label={t('tests.best', { score: `${best.correct}/${best.total}` })} tone="primary" />;
+  else if (chapter.isFree && access !== 'PAID') trailing = <Badge label={t('topic.free')} tone="primary" />;
+  else trailing = <Icon name="chevron" color={theme.colors.primary} />;
 
   return (
     <Pressable
@@ -36,7 +36,7 @@ export function QuizChapterRow({ chapter, access, best, onPress }: QuizChapterRo
       onPress={() => onPress(chapter, open)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <NumberCircle value={chapter.chapterNumber} accent={accentForKey(chapter.id)} />
+      <NumberCircle value={chapter.chapterNumber} active={open} accent="blue" />
       <View style={styles.text}>
         <AppText bold>{`${t('tests.quiz', { n: chapter.quizNo })} · ${t('tests.chapter', { n: chapter.chapterNumber })}`}</AppText>
         <AppText variant="caption" muted>

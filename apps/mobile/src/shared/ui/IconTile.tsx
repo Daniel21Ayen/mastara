@@ -11,42 +11,42 @@ import type { IconName } from './Icon';
 /** Each icon has its own colour unless a screen picks another (for example a course colour). */
 export const ICON_ACCENT: Record<IconName, AccentName> = {
   home: 'blue',
-  course: 'violet',
-  progress: 'emerald',
-  profile: 'cyan',
-  bell: 'amber',
+  course: 'blue',
+  progress: 'blue',
+  profile: 'blue',
+  bell: 'blue',
   search: 'blue',
   filter: 'blue',
   chevron: 'blue',
-  check: 'emerald',
+  check: 'blue',
   close: 'danger',
-  play: 'orange',
-  store: 'orange',
-  exam: 'amber',
-  stats: 'emerald',
-  lock: 'danger',
+  play: 'blue',
+  store: 'blue',
+  exam: 'blue',
+  stats: 'blue',
+  lock: 'blue',
   back: 'blue',
-  module: 'cyan',
+  module: 'blue',
   note: 'blue',
-  flag: 'orange',
-  grid: 'lime',
-  trophy: 'fuchsia',
-  language: 'violet',
-  phone: 'cyan',
-  shield: 'emerald',
-  support: 'lime',
-  receipt: 'orange',
-  clock: 'amber',
-  star: 'amber',
-  quiz: 'cyan',
-  review: 'fuchsia',
-  palette: 'orange',
-  download: 'cyan',
-  downloaded: 'emerald',
+  flag: 'blue',
+  grid: 'blue',
+  trophy: 'blue',
+  language: 'blue',
+  phone: 'blue',
+  shield: 'blue',
+  support: 'blue',
+  receipt: 'blue',
+  clock: 'blue',
+  star: 'blue',
+  quiz: 'blue',
+  review: 'blue',
+  palette: 'blue',
+  download: 'blue',
+  downloaded: 'blue',
   trash: 'danger',
   sync: 'blue',
-  wifi: 'emerald',
-  wifiOff: 'amber',
+  wifi: 'blue',
+  wifiOff: 'blue',
 };
 
 interface IconTileProps {
@@ -64,7 +64,20 @@ interface IconTileProps {
 export function IconTile({ icon, accent, solid = false, size = 44, round = false }: IconTileProps) {
   const theme = useTheme();
   const styles = useStyles();
+  const isLockNeutral = icon === 'lock' && !accent && !solid;
   const colour = theme.accents[accent ?? ICON_ACCENT[icon]];
+
+  const bgColor = isLockNeutral
+    ? theme.colors.borderSubtle
+    : solid
+      ? colour.main
+      : colour.soft;
+
+  const iconColor = isLockNeutral
+    ? theme.colors.textMuted
+    : solid
+      ? theme.colors.onPrimary
+      : colour.main;
 
   return (
     <View
@@ -74,11 +87,11 @@ export function IconTile({ icon, accent, solid = false, size = 44, round = false
           width: size,
           height: size,
           borderRadius: round ? theme.radius.pill : theme.radius.md,
-          backgroundColor: solid ? colour.main : colour.soft,
+          backgroundColor: bgColor,
         },
       ]}
     >
-      <Icon name={icon} size={Math.round(size * 0.5)} color={solid ? theme.colors.onPrimary : colour.main} />
+      <Icon name={icon} size={Math.round(size * 0.5)} color={iconColor} />
     </View>
   );
 }

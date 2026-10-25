@@ -63,10 +63,9 @@ export function ProfileScreen() {
       </Card>
 
       <View style={styles.list}>
-        <ListRow icon="course" accent="violet" title={t('profile.academic')} subtitle={academicLine} onPress={go('/settings/academic')} />
+        <ListRow icon="course" title={t('profile.academic')} subtitle={academicLine} onPress={go('/settings/academic')} />
         <ListRow
           icon="module"
-          accent="cyan"
           title={t('profile.myCourses')}
           subtitle={t('profile.myCourses.sub', { n: profile?.courseIds.length ?? 0 })}
           onPress={go('/course')}
@@ -117,7 +116,7 @@ export function ProfileScreen() {
         <AppButton label={t('profile.release')} variant="outline" onPress={() => setReleaseOpen(true)} />
       </Card>
 
-      <AppButton label={t('common.logout')} onPress={signOut} />
+      <AppButton label={t('common.logout')} variant="danger" onPress={signOut} />
 
       <ReleaseDeviceSheet visible={releaseOpen} onClose={() => setReleaseOpen(false)} />
     </Screen>

@@ -26,12 +26,12 @@ const ICON: Record<NotificationKind, IconName> = {
 };
 
 const ACCENT: Record<NotificationKind, AccentName> = {
-  WELCOME: 'amber',
-  PAYMENT_PENDING: 'orange',
-  PAYMENT_APPROVED: 'emerald',
+  WELCOME: 'blue',
+  PAYMENT_PENDING: 'blue',
+  PAYMENT_APPROVED: 'blue',
   PAYMENT_REJECTED: 'danger',
-  ACCESS_EXPIRING: 'fuchsia',
-  EXAM_RESULT: 'violet',
+  ACCESS_EXPIRING: 'blue',
+  EXAM_RESULT: 'blue',
 };
 
 export function NotificationRow({ item, onPress }: NotificationRowProps) {
@@ -52,7 +52,7 @@ export function NotificationRow({ item, onPress }: NotificationRowProps) {
       onPress={() => onPress(item)}
       style={[styles.row, !item.read && styles.unread]}
     >
-      <IconTile icon={ICON[item.kind]} accent={ACCENT[item.kind]} solid />
+      <IconTile icon={ICON[item.kind]} accent={ACCENT[item.kind]} solid={false} />
       <View style={styles.text}>
         <AppText bold>{t(`notif.${item.kind}.title`)}</AppText>
         <AppText variant="caption" muted>
@@ -71,14 +71,17 @@ const useStyles = createStyles((theme) => ({
   row: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     padding: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.md,
   },
-  unread: { borderColor: theme.colors.primarySoft },
+  unread: {
+    backgroundColor: theme.colors.primarySoft,
+    borderColor: theme.colors.primary,
+  },
   text: { flex: 1, gap: 2 },
-  dot: { width: 10, height: 10, borderRadius: theme.radius.pill, backgroundColor: theme.colors.danger },
+  dot: { width: 10, height: 10, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary },
 }));

@@ -49,6 +49,8 @@ export function TextField({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.textMuted}
+        cursorColor={theme.colors.primary}
+        selectionColor={theme.colors.primarySoft}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}

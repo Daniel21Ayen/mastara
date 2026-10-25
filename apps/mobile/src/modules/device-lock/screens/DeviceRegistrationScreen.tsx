@@ -2,17 +2,20 @@
 import { ERROR_CODES } from '@mastara/domain';
 import { useState } from 'react';
 
+import { View } from 'react-native';
+
 import { getDeviceId, getDeviceName } from '@/core/device';
 import { useI18n } from '@/core/i18n';
 import { isApiError } from '@/core/network';
 import { useSession } from '@/core/session';
-import { useTheme } from '@/core/theme';
+import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Card, Screen, ScreenHeader } from '@/shared/ui';
 
 import { deviceApi } from '../api/device.api';
 
 export function DeviceRegistrationScreen() {
   const theme = useTheme();
+  const styles = useStyles();
   const { t } = useI18n();
   const { user, bindDevice, lockDevice } = useSession();
   const [loading, setLoading] = useState(false);
@@ -44,13 +47,23 @@ export function DeviceRegistrationScreen() {
         <AppText bold>{t('device.thisPhone')}</AppText>
         <AppText muted>{getDeviceName()}</AppText>
       </Card>
-      <Card>
-        <AppText variant="caption" muted>
+      <View style={styles.infoBox}>
+        <AppText variant="caption" color={theme.colors.primary}>
           {t('device.switchNote')}
         </AppText>
-      </Card>
+      </View>
       {failed ? <AppText color={theme.colors.danger}>{t('error.generic')}</AppText> : null}
       <AppButton label={t('device.action')} onPress={register} loading={loading} />
     </Screen>
   );
 }
+
+const useStyles = createStyles((theme) => ({
+  infoBox: {
+    backgroundColor: theme.colors.primarySoft,
+    borderColor: theme.colors.primary,
+    borderWidth: 1,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.md,
+  },
+}));
