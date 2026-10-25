@@ -4,8 +4,10 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from "@nestjs/common";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
+import { RedisService } from "../../../infrastructure/redis/redis.service";
 import { PublicationStatus, Role, Stream } from "@mastara/database";
 import {
   AdminCourseDto,
@@ -77,6 +79,7 @@ export class CatalogService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    @Optional() private readonly redisService?: RedisService,
   ) {}
 
   // --------------------------------------------------------------------------
@@ -1165,6 +1168,10 @@ export class CatalogService {
       metadata: { target: `${course.code} · ${uniCode}`, title: course.title_en },
     });
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     return this._mapToAdminCourse(course);
   }
 
@@ -1248,6 +1255,10 @@ export class CatalogService {
       },
     });
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     return this._mapToAdminCourse(updated);
   }
 
@@ -1279,6 +1290,11 @@ export class CatalogService {
     }
 
     await this.prisma.course.delete({ where: { id } });
+
+    if (this.redisService) {
+      await this.redisService.recordTombstone(id, "COURSE");
+      await this.redisService.invalidateCatalogCache();
+    }
 
     const uniCode = course.semester.program.university.code;
     await this.auditService.log({

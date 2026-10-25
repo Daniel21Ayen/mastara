@@ -8,6 +8,7 @@ import { DatabaseModule } from "./infrastructure/database/database.module";
 import { StorageModule } from "./infrastructure/storage/storage.module";
 import { PushModule } from "./infrastructure/push/push.module";
 import { QueueModule } from "./infrastructure/queue/queue.module";
+import { RedisModule } from "./infrastructure/redis/redis.module";
 import { HealthModule } from "./modules/platform/health/health.module";
 import { AuditModule } from "./modules/platform/audit/audit.module";
 import { DashboardModule } from "./modules/platform/dashboard/dashboard.module";
@@ -23,6 +24,7 @@ import { SyncModule } from "./modules/sync/sync.module";
 import { EngagementModule } from "./modules/engagement/engagement.module";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { CsrfMutationGuard } from "./common/guards/csrf-mutation.guard";
+import { ThrottlerUserGuard } from "./common/guards/throttler-user.guard";
 import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
 
 @Module({
@@ -40,6 +42,7 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     ]),
 
     DatabaseModule,
+    RedisModule,
     StorageModule,
     PushModule,
     QueueModule,
@@ -73,6 +76,10 @@ import { HttpExceptionFilter } from "./common/filters/error-codes.filter";
     {
       provide: APP_GUARD,
       useClass: CsrfMutationGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerUserGuard,
     },
     {
       provide: APP_FILTER,

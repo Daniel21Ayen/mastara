@@ -199,6 +199,23 @@ export class AttemptsService {
           );
         }
 
+        const activeEntitlement = await this.prisma.entitlement.findFirst({
+          where: {
+            student_id: studentId,
+            status: EntitlementStatus.ACTIVE,
+            expires_at: { gt: new Date() },
+          },
+          select: { id: true },
+        });
+
+        const hasSample = cocSet.coc_set_questions.some((q) => q.is_sample);
+        if (!activeEntitlement && !hasSample) {
+          throw new ForbiddenException({
+            errorCode: "CONTENT_LOCKED",
+            message: "This COC set requires an active subscription or entitlement",
+          });
+        }
+
         totalQuestions = cocSet.coc_set_questions.length;
         durationMin = cocSet.duration_min;
         if (cocSet.is_timed && durationMin > 0) {
@@ -262,6 +279,35 @@ export class AttemptsService {
 
       case AttemptCategory.PRACTICE: {
         if (dto.topicId) {
+          const topic = await this.prisma.topic.findUnique({
+            where: { id: dto.topicId },
+            include: { module: { select: { course_id: true } } },
+          });
+
+          if (!topic) {
+            throw new NotFoundException(`Topic not found with ID ${dto.topicId}`);
+          }
+
+          if (!topic.is_free_trial) {
+            const activeEntitlement = await this.prisma.entitlement.findFirst({
+              where: {
+                student_id: studentId,
+                course_id: topic.module.course_id,
+                status: EntitlementStatus.ACTIVE,
+                expires_at: { gt: new Date() },
+              },
+              select: { id: true },
+            });
+
+            if (!activeEntitlement) {
+              throw new ForbiddenException({
+                errorCode: "CONTENT_LOCKED",
+                message:
+                  "This practice chapter requires an active course entitlement",
+              });
+            }
+          }
+
           totalQuestions = await this.prisma.question.count({
             where: { topic_id: dto.topicId, is_active: true },
           });

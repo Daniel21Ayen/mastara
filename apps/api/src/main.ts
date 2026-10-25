@@ -3,6 +3,7 @@ import { ValidationPipe, Logger, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
+import compression from "compression";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
@@ -10,8 +11,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Security Headers via Helmet
+  // Security Headers via Helmet & Gzip Compression
   app.use(helmet());
+  app.use(compression());
 
   // Strict CORS Configuration from CORS_ORIGIN
   const rawCorsOrigin = configService.get<string>("CORS_ORIGIN", "");

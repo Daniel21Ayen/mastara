@@ -4,8 +4,10 @@ import {
   ForbiddenException,
   BadRequestException,
   Logger,
+  Optional,
 } from "@nestjs/common";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
+import { RedisService } from "../../../infrastructure/redis/redis.service";
 import { EntitlementStatus, PublicationStatus, Role, ContentKind } from "@mastara/database";
 import {
   canOpenContent,
@@ -99,6 +101,7 @@ export class ContentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    @Optional() private readonly redisService?: RedisService,
   ) {}
 
   // ============================================================================
@@ -607,6 +610,10 @@ export class ContentService {
       },
     });
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     return {
       id: module.id,
       courseId: module.course_id,
@@ -678,6 +685,10 @@ export class ContentService {
         reason: input.reason,
       },
     });
+
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
 
     return {
       id: updated.id,
@@ -759,6 +770,10 @@ export class ContentService {
         target: `Topic ${parentModule.sort_order}.${chapterNumber} · ${parentModule.course.code}`,
       },
     });
+
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
 
     return {
       id: topic.id,
@@ -1025,6 +1040,10 @@ export class ContentService {
       },
     });
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     const targetModule =
       input.moduleId === topic.module_id
         ? topic.module
@@ -1114,6 +1133,10 @@ export class ContentService {
             : `Amharic note · ${finalContent.title}`,
       },
     });
+
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
 
     return {
       id: topic.id,

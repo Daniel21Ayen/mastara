@@ -1,16 +1,21 @@
 import {
   Controller,
   Get,
+  Headers,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Query,
+  Res,
 } from "@nestjs/common";
+import { Response } from "express";
 import {
   ApiOperation,
   ApiParam,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { Public } from "../../../common/decorators/public.decorator";
 import {
   CatalogService,
@@ -19,12 +24,69 @@ import {
   SemesterResponse,
   CourseResponse,
 } from "../services/catalog.service";
+import { CatalogSnapshotService } from "../services/catalog-snapshot.service";
 import { GetCoursesQueryDto } from "../dto/get-courses-query.dto";
+import { CatalogSnapshotQueryDto } from "../dto/catalog-snapshot-query.dto";
+import { CatalogSnapshotResponse } from "@mastara/contracts";
 
 @ApiTags("Academic Catalog")
 @Controller("catalog")
 export class CatalogController {
-  constructor(private readonly catalogService: CatalogService) {}
+  constructor(
+    private readonly catalogService: CatalogService,
+    private readonly catalogSnapshotService: CatalogSnapshotService,
+  ) {}
+
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
+  @Get("snapshot")
+  @ApiOperation({
+    summary:
+      "Get lightweight catalog metadata snapshot supporting delta sync and 304 ETag caching",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Catalog metadata snapshot payload",
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_MODIFIED,
+    description: "No metadata has changed since the version / ETag provided",
+  })
+  async getSnapshot(
+    @Query() query: CatalogSnapshotQueryDto,
+    @Headers("if-none-match") ifNoneMatch?: string,
+    @Res({ passthrough: true }) res?: Response,
+  ): Promise<CatalogSnapshotResponse | void> {
+    const { snapshot, etag } = await this.catalogSnapshotService.getSnapshot(query);
+
+    if (res) {
+      res.setHeader("ETag", etag);
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=60, stale-while-revalidate=300",
+      );
+    }
+
+    // Check ETag match: returns 304 with no body
+    if (ifNoneMatch) {
+      const cleanMatch = ifNoneMatch.replace(/^W\//, "").replace(/"/g, "").trim();
+      const cleanEtag = etag.replace(/^W\//, "").replace(/"/g, "").trim();
+      const cleanVersion = snapshot.version.replace(/"/g, "").trim();
+
+      if (
+        cleanMatch === cleanEtag ||
+        cleanMatch === cleanVersion ||
+        cleanMatch.startsWith(cleanVersion)
+      ) {
+        if (res) {
+          res.status(HttpStatus.NOT_MODIFIED);
+        }
+        return;
+      }
+    }
+
+    return snapshot;
+  }
 
   @Public()
   @Get("universities")

@@ -100,29 +100,31 @@ export class CocService {
       throw new NotFoundException(`COC set not found with ID ${setId}`);
     }
 
-    const isFree = set.coc_set_questions.some((q) => q.is_sample);
-    if (!isFree) {
-      const activeEntitlement = await this.prisma.entitlement.findFirst({
-        where: {
-          student_id: studentId,
-          status: EntitlementStatus.ACTIVE,
-          expires_at: { gt: new Date() },
-        },
-        select: { id: true },
-      });
+    const activeEntitlement = await this.prisma.entitlement.findFirst({
+      where: {
+        student_id: studentId,
+        status: EntitlementStatus.ACTIVE,
+        expires_at: { gt: new Date() },
+      },
+      select: { id: true },
+    });
 
-      if (!activeEntitlement) {
-        throw new ForbiddenException({
-          errorCode: "CONTENT_LOCKED",
-          message: "This COC set requires an active subscription or entitlement",
-        });
-      }
+    const sampleQuestions = set.coc_set_questions.filter((q) => q.is_sample);
+    if (!activeEntitlement && sampleQuestions.length === 0) {
+      throw new ForbiddenException({
+        errorCode: "CONTENT_LOCKED",
+        message: "This COC set requires an active subscription or entitlement",
+      });
     }
+
+    const targetQuestions = activeEntitlement
+      ? set.coc_set_questions
+      : sampleQuestions;
 
     const courseTitles: Record<string, string> = {};
     const questions: QuestionResponse[] = [];
 
-    for (const csq of set.coc_set_questions) {
+    for (const csq of targetQuestions) {
       const cocQ = csq.coc_question;
       if (cocQ.course) {
         courseTitles[cocQ.course.id] = cocQ.course.title_en;

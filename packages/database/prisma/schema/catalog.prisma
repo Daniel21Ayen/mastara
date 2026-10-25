@@ -122,6 +122,7 @@ model Course {
   @@index([semester_id, stream, status])
   @@index([university_id])
   @@index([is_promotional])
+  @@index([updated_at])
   @@map("courses")
 }
 
@@ -141,4 +142,15 @@ model StudentCourse {
   @@unique([student_id, course_id])
   @@index([student_id, is_active])
   @@map("student_courses")
+}
+
+model CatalogTombstone {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entity_id  String
+  kind       String
+  deleted_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([deleted_at])
+  @@index([entity_id])
+  @@map("catalog_tombstones")
 }

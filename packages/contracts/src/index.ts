@@ -16,3 +16,4 @@ export * from './adminExports';
 export * from './pagination';
 export * from './catalog';
 export * from './canonicalContracts';
+export * from './catalogSnapshot';

@@ -8,6 +8,7 @@
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "jest",
     "test:integration": "ts-node -r tsconfig-paths/register -P tsconfig.test.json test/run-all.ts",

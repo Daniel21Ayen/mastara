@@ -36,6 +36,7 @@ model Module {
 
   @@unique([course_id, code])
   @@index([course_id, status, sort_order])
+  @@index([updated_at])
   @@map("modules")
 }
 
@@ -61,6 +62,8 @@ model Topic {
 
   @@unique([module_id, chapter_number])
   @@index([module_id, sort_order])
+  @@index([updated_at])
+  @@index([module_id, updated_at])
   @@map("topics")
 }
 

@@ -122,6 +122,8 @@ model QuizChapter {
 
   @@unique([course_id, quiz_no, chapter_number])
   @@index([course_id, quiz_no])
+  @@index([updated_at])
+  @@index([course_id, updated_at])
   @@map("quiz_chapters")
 }
 
@@ -148,6 +150,8 @@ model Exam {
 
   @@index([course_id, kind, status])
   @@index([university_id])
+  @@index([updated_at])
+  @@index([course_id, updated_at])
   @@map("exams")
 }
 
@@ -201,6 +205,8 @@ model CocSet {
   attempts          Attempt[]
 
   @@index([status, year])
+  @@index([updated_at])
+  @@index([status, updated_at])
   @@map("coc_sets")
 }
 

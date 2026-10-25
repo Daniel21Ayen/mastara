@@ -29,7 +29,7 @@ export interface SignedEntitlementToken {
 
 // Embedded public key for offline entitlement token verification
 export const EMBEDDED_ENTITLEMENT_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEA/Xj5ZIOzrucHMsM+q6jZfWTL8isgEr7GEN5S6mHltYM=
+MCowBQYDK2VwAyEAa7PQpZCr+4YZJ+UrA26wEMpARyNy7ehQPdM1x0W2Xio=
 -----END PUBLIC KEY-----`;
 
 export function canonicalPayloadString(payload: EntitlementTokenPayload): string {
@@ -50,14 +50,15 @@ export function signEntitlementToken(
   payload: EntitlementTokenPayload,
   privateKeyPem = process.env.ENTITLEMENT_PRIVATE_KEY,
 ): SignedEntitlementToken {
-  if (!privateKeyPem) {
+  const resolvedKey = privateKeyPem?.replace(/\\n/g, '\n');
+  if (!resolvedKey) {
     throw new Error('ENTITLEMENT_PRIVATE_KEY environment variable or parameter is required to sign tokens');
   }
   const data = Buffer.from(canonicalPayloadString(payload), 'utf8');
   if (!cryptoModule) {
     throw new Error('Cryptographic signing is only available in server-side Node.js environment');
   }
-  const signature = cryptoModule.sign(null, data, privateKeyPem).toString('hex');
+  const signature = cryptoModule.sign(null, data, resolvedKey).toString('hex');
   return {
     payload,
     signature,

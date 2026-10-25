@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { EntitlementStatus, OrderStatus, PublicationStatus, Stream } from "@mastara/database";
-import { AccessState } from "@mastara/domain";
+import { AccessState, SignedEntitlementToken, signEntitlementToken } from "@mastara/domain";
 
 export interface MyCourseResponse {
   course: {
@@ -13,6 +13,7 @@ export interface MyCourseResponse {
   };
   access: AccessState;
   expiresAt?: string;
+  expiresAtMs?: number;
   daysLeft?: number;
   chaptersDone: number;
   chaptersTotal: number;
@@ -33,6 +34,8 @@ export interface HomeSummaryResponse {
   activeProducts: number;
   pendingProducts: number;
   recent: RecentItemResponse[];
+  entitlementToken?: SignedEntitlementToken;
+  expiresAtMs?: number;
 }
 
 @Injectable()
@@ -208,6 +211,7 @@ export class LearningService {
         },
         access,
         expiresAt: expiry ? expiry.toISOString() : undefined,
+        expiresAtMs: expiry ? expiry.getTime() : undefined,
         daysLeft,
         chaptersDone,
         chaptersTotal,
@@ -230,16 +234,44 @@ export class LearningService {
       0,
     );
 
-    // 3. Count active products
-    const activeProducts = await this.prisma.entitlement.count({
+    // 3. Count active products and fetch active entitlements for offline signing
+    const activeEntitlements = await this.prisma.entitlement.findMany({
       where: {
         student_id: studentId,
         status: EntitlementStatus.ACTIVE,
         expires_at: { gt: new Date() },
       },
+      select: {
+        course_id: true,
+        expires_at: true,
+      },
     });
 
-    // 4. Count pending products / orders
+    const activeProducts = activeEntitlements.length;
+
+    // 4. Offline Entitlement Token Signing
+    let entitlementToken: SignedEntitlementToken | undefined;
+    let expiresAtMs: number | undefined;
+
+    if (activeEntitlements.length > 0) {
+      const courseIds = activeEntitlements.map((e) => e.course_id);
+      const maxExpiry = new Date(
+        Math.max(...activeEntitlements.map((e) => e.expires_at.getTime())),
+      );
+      expiresAtMs = maxExpiry.getTime();
+      try {
+        entitlementToken = signEntitlementToken({
+          studentId,
+          courseIds,
+          expiresAt: maxExpiry.toISOString(),
+          serverTime: Date.now(),
+        });
+      } catch (err: any) {
+        this.logger.error(`Failed to sign offline entitlement token: ${err.message}`);
+      }
+    }
+
+    // 5. Count pending products / orders
     const pendingProducts = await this.prisma.order.count({
       where: {
         student_id: studentId,
@@ -249,7 +281,7 @@ export class LearningService {
       },
     });
 
-    // 5. Recent reading activity
+    // 6. Recent reading activity
     const recentProgress = await this.prisma.readingProgress.findMany({
       where: { student_id: studentId },
       orderBy: { last_read_at: "desc" },
@@ -290,6 +322,8 @@ export class LearningService {
       activeProducts,
       pendingProducts,
       recent,
+      entitlementToken,
+      expiresAtMs,
     };
   }
 }

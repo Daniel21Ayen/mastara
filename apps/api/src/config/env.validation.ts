@@ -22,6 +22,7 @@ export const envSchema = z.object({
   CSRF_HMAC_SECRET: z.string().min(32).optional(),
   TOTP_ENCRYPTION_KEY: z.string().min(32).optional(),
   S3_PRIVATE_RECEIPTS_BUCKET: z.string().optional(),
+  ENTITLEMENT_PRIVATE_KEY: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

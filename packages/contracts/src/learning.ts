@@ -12,6 +12,8 @@ export const myCourseSchema = z.object({
   expiresAt: z.string().optional(),
   /** Whole days until `expiresAt`, rounded up. Display only; the server may omit it and the phone derives it. */
   daysLeft: z.number().int().optional(),
+  /** Milliseconds timestamp of expiration for offline calculation */
+  expiresAtMs: z.number().optional(),
   chaptersDone: z.number().int().min(0),
   chaptersTotal: z.number().int().min(0),
 });
@@ -33,6 +35,8 @@ export const homeSummarySchema = z.object({
   activeProducts: z.number().int(),
   pendingProducts: z.number().int(),
   recent: z.array(recentItemSchema),
+  entitlementToken: z.any().optional(),
+  expiresAtMs: z.number().optional(),
 });
 
 export type MyCourse = z.infer<typeof myCourseSchema>;
