@@ -3,7 +3,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { ScanPageItem } from '../lib/samplePages';
-import { renderPageToCanvas } from '../lib/pdfGenerator';
 import styles from './ScanWizard.module.css';
 
 interface PageSheetCanvasProps {
@@ -14,7 +13,7 @@ interface PageSheetCanvasProps {
 }
 
 export function PageSheetCanvas({ page, pageIndex, totalPages, zoom }: PageSheetCanvasProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -23,24 +22,45 @@ export function PageSheetCanvas({ page, pageIndex, totalPages, zoom }: PageSheet
     setLoading(true);
     setError(false);
 
-    renderPageToCanvas(page)
-      .then((canvas) => {
-        if (!active) return;
-        const container = containerRef.current;
-        if (!container) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
 
-        // Clear existing canvas
-        container.innerHTML = '';
-        canvas.className = styles.pageCanvas || '';
-        container.appendChild(canvas);
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (!active) return;
-        console.error('Failed to render page canvas:', err);
+    img.onload = () => {
+      if (!active) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const rot = ((page.rotation % 360) + 360) % 360;
+      const isQuarterTurn = rot === 90 || rot === 270;
+      const width = isQuarterTurn ? img.naturalHeight : img.naturalWidth;
+      const height = isQuarterTurn ? img.naturalWidth : img.naturalHeight;
+
+      canvas.width = Math.max(1, width);
+      canvas.height = Math.max(1, height);
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
         setError(true);
         setLoading(false);
-      });
+        return;
+      }
+
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rot * Math.PI) / 180);
+      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+      ctx.restore();
+
+      setLoading(false);
+    };
+
+    img.onerror = () => {
+      if (!active) return;
+      setError(true);
+      setLoading(false);
+    };
+
+    img.src = page.url;
 
     return () => {
       active = false;
@@ -61,13 +81,18 @@ export function PageSheetCanvas({ page, pageIndex, totalPages, zoom }: PageSheet
         <span className={styles.pageSheetMeta}>{page.name}</span>
       </div>
 
-      <div ref={containerRef} className={styles.pageCanvasWrapper}>
+      <div className={styles.pageCanvasWrapper}>
         {loading && (
           <div className={styles.pageLoadingSkeleton}>
             <span className={styles.loadingSpinner} />
             <span>Rendering page {pageIndex + 1}...</span>
           </div>
         )}
+        <canvas
+          ref={canvasRef}
+          className={styles.pageCanvas}
+          style={{ display: loading || error ? 'none' : 'block' }}
+        />
         {error && (
           <div className={styles.pageErrorFallback}>
             {/* Fallback to direct img */}
