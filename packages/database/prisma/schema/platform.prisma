@@ -118,3 +118,10 @@ model Broadcast {
   @@index([created_at])
   @@map("broadcasts")
 }
+
+model Counter {
+  name  String @id @db.VarChar(64)
+  value BigInt @default(0)
+
+  @@map("counters")
+}

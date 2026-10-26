@@ -471,14 +471,14 @@ export class StudentsService {
     const firstName = nameParts[0] || "Student";
     const lastName = nameParts.slice(1).join(" ") || "User";
 
-    const counterRow = await this.prisma.$queryRawUnsafe<Array<{ current_value: number }>>(
-      `INSERT INTO counters (name, current_value)
+    const counterRow = await this.prisma.$queryRawUnsafe<Array<{ value: number }>>(
+      `INSERT INTO counters (name, value)
        VALUES ('student_ms_code', 1)
        ON CONFLICT (name)
-       DO UPDATE SET current_value = counters.current_value + 1
-       RETURNING current_value;`
+       DO UPDATE SET value = counters.value + 1
+       RETURNING value;`
     );
-    const studentNumber = Number(counterRow[0]?.current_value ?? 1);
+    const studentNumber = Number(counterRow[0]?.value ?? 1);
 
     const student = await this.prisma.student.create({
       data: {

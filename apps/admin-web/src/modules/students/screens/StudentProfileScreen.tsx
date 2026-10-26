@@ -144,20 +144,25 @@ export function StudentProfileScreen({ id }: { id: string }) {
               rows={[
                 {
                   label: adminText('admin.students.col.id') || 'Student ID',
-                  value: (
-                    <span
-                      style={{
-                        fontFamily: 'monospace',
-                        fontWeight: 700,
-                        color: 'var(--color-primary, #2563eb)',
-                        background: '#eff6ff',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      {student.studentCode || student.id}
-                    </span>
-                  ),
+                  value:
+                    student.studentCode ? (
+                      <span
+                        style={{
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          color: 'var(--color-primary, #2563eb)',
+                          background: '#eff6ff',
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        {student.studentCode}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--color-text-muted, #94a3b8)', fontStyle: 'italic' }}>
+                        —
+                      </span>
+                    ),
                 },
                 {
                   label: adminText('admin.student.profile.university'),

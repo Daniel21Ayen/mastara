@@ -10,7 +10,7 @@
     "start:prod": "node dist/main",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "test": "tsx test/stage1-admin-roles-matrix.spec.ts",
+    "test": "tsx test/stage1-admin-roles-matrix.spec.ts && tsx --tsconfig tsconfig.json test/pagination-and-server-rules.spec.ts && tsx test/question-numbering.spec.ts",
     "test:roles": "tsx test/stage1-admin-roles-matrix.spec.ts",
     "test:integration": "ts-node -r tsconfig-paths/register -P tsconfig.test.json test/run-all.ts",
     "test:all": "npm run test && npm run test:integration"

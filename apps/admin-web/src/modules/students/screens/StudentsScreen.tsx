@@ -49,18 +49,23 @@ export function StudentsScreen() {
     {
       key: 'id',
       header: adminText('admin.students.col.id'),
-      render: (row) => (
-        <span
-          style={{
-            fontFamily: 'monospace',
-            fontWeight: 700,
-            color: 'var(--color-primary, #2563eb)',
-            letterSpacing: '0.025em',
-          }}
-        >
-          {row.studentCode ?? row.id}
-        </span>
-      ),
+      render: (row) =>
+        row.studentCode ? (
+          <span
+            style={{
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              color: 'var(--color-primary, #2563eb)',
+              letterSpacing: '0.025em',
+            }}
+          >
+            {row.studentCode}
+          </span>
+        ) : (
+          <span style={{ color: 'var(--color-text-muted, #94a3b8)', fontStyle: 'italic' }}>
+            —
+          </span>
+        ),
     },
     { key: 'name', header: adminText('admin.students.col.name'), render: (row) => row.name },
     {

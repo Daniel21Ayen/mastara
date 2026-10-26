@@ -61,7 +61,7 @@ enum AttemptState {
 model Question {
   id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   question_number       Int               @default(autoincrement())
-  display_number        Int?
+  display_number        Int               @default(1)
   kind                  QuestionKind      @default(MID)
   university_id         String?           @db.Uuid
   program_id            String?           @db.Uuid
@@ -99,6 +99,7 @@ model Question {
   exam_questions     ExamQuestion[]
   exam_set_questions ExamSetQuestion[]
 
+  @@unique([course_id, topic_id, display_number])
   @@index([question_number])
   @@index([kind, status])
   @@index([course_id, topic_id, is_active])

@@ -400,14 +400,42 @@ export class AdminTestsService {
 
     const created = await this.prisma.$transaction(async (tx) => {
       let allocatedDisplayNumber = input.displayNumber;
-      if (!allocatedDisplayNumber) {
-        const count = await tx.question.count({
+      const counterKey = input.topicId
+        ? `question_num_${input.topicId}`
+        : `question_num_${input.courseId}`;
+
+      if (allocatedDisplayNumber) {
+        const existing = await tx.question.findFirst({
           where: {
             course_id: input.courseId,
-            topic_id: input.topicId,
+            topic_id: input.topicId ?? null,
+            display_number: allocatedDisplayNumber,
           },
         });
-        allocatedDisplayNumber = count + 1;
+        if (existing) {
+          throw new BadRequestException({
+            errorCode: ADMIN_ERROR_CODES.VALIDATION_FAILED,
+            message: `Display number ${allocatedDisplayNumber} is already in use in this set.`,
+          });
+        }
+        await tx.$queryRawUnsafe(
+          `INSERT INTO counters (name, value)
+           VALUES ($1, $2)
+           ON CONFLICT (name)
+           DO UPDATE SET value = GREATEST(counters.value, $2);`,
+          counterKey,
+          allocatedDisplayNumber,
+        );
+      } else {
+        const counterRow = await tx.$queryRawUnsafe<Array<{ value: bigint | number }>>(
+          `INSERT INTO counters (name, value)
+           VALUES ($1, 1)
+           ON CONFLICT (name)
+           DO UPDATE SET value = counters.value + 1
+           RETURNING value;`,
+          counterKey,
+        );
+        allocatedDisplayNumber = Number(counterRow[0]?.value ?? 1);
       }
 
       const q = await tx.question.create({
@@ -469,16 +497,36 @@ export class AdminTestsService {
       await tx.question.delete({ where: { id } });
 
       // Renumber: subsequent questions in the set decrement by 1 to keep continuous sequence
-      if (q.display_number && q.topic_id) {
+      if (q.display_number) {
+        const whereClause: any = {
+          display_number: { gt: q.display_number },
+        };
+        if (q.topic_id) {
+          whereClause.topic_id = q.topic_id;
+        } else if (q.course_id) {
+          whereClause.course_id = q.course_id;
+          whereClause.topic_id = null;
+        }
+
         await tx.question.updateMany({
-          where: {
-            topic_id: q.topic_id,
-            display_number: { gt: q.display_number },
-          },
+          where: whereClause,
           data: {
             display_number: { decrement: 1 },
           },
         });
+
+        // Decrement set counter
+        const counterKey = q.topic_id
+          ? `question_num_${q.topic_id}`
+          : `question_num_${q.course_id}`;
+        if (counterKey) {
+          await tx.$queryRawUnsafe(
+            `UPDATE counters
+             SET value = GREATEST(0, value - 1)
+             WHERE name = $1;`,
+            counterKey,
+          );
+        }
       }
 
       await tx.auditLog.create({
@@ -499,7 +547,7 @@ export class AdminTestsService {
   async backfillDisplayNumbers(): Promise<number> {
     return this.prisma.$transaction(async (tx) => {
       const questionsWithoutNumber = await tx.question.findMany({
-        where: { display_number: null },
+        where: { display_number: null as any },
         orderBy: [{ topic_id: "asc" }, { created_at: "asc" }],
       });
 
@@ -1350,11 +1398,23 @@ export class AdminTestsService {
     } else if (dto.courseId) {
       // Standalone question insertion for course inside atomic transaction
       await this.prisma.$transaction(async (tx) => {
+        const counterKey = `question_num_${dto.courseId}`;
         for (const qInput of parsedQuestions) {
           const studentType = this.toPrismaQuestionType(qInput.form);
+          const counterRow = await tx.$queryRawUnsafe<Array<{ value: bigint | number }>>(
+            `INSERT INTO counters (name, value)
+             VALUES ($1, 1)
+             ON CONFLICT (name)
+             DO UPDATE SET value = counters.value + 1
+             RETURNING value;`,
+            counterKey,
+          );
+          const allocatedNum = Number(counterRow[0]?.value ?? 1);
+
           await tx.question.create({
             data: {
               course_id: dto.courseId!,
+              display_number: allocatedNum,
               type: studentType as any,
               prompt_en: qInput.prompt.trim(),
               options: qInput.options,
