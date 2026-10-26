@@ -93,7 +93,26 @@ test('offline account: LOCAL_ONLY lifecycle with zero network requests before pu
 
     // Network request was made only for the purchase registration
     assert.equal(networkRequests.length, 1);
-    assert.equal(networkRequests[0]?.path, '/auth/register');
+    assert.equal(networkRequests[0]?.path, '/auth/register-offline');
+
+    // 6. Test offline login in airplane mode (FR-A01, FR-A05)
+    // Offline sign-in succeeds only with the matching password
+    const offlineLoginSuccess = await authApi.login({
+      identifier: '0911223344',
+      password: 'StrongPassword123!',
+    });
+    assert.equal(offlineLoginSuccess.user.identifier, '0911223344');
+
+    // Invalid password must fail offline
+    await assert.rejects(
+      async () => {
+        await authApi.login({
+          identifier: '0911223344',
+          password: 'WrongPassword!',
+        });
+      },
+      (err: any) => err.message.includes('Invalid credentials') || err.message.includes('failed') || err.code === 'UNAUTHORIZED',
+    );
   } finally {
     httpClient.post = origPost;
     httpClient.get = origGet;

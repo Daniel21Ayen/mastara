@@ -54,7 +54,7 @@ export const realAuthApi: AuthApi & { register(input: RegisterInput & { localAcc
     return res;
   },
   async register(input) {
-    const res = await httpClient.post<AuthResult>('/auth/register', {
+    const res = await httpClient.post<AuthResult>('/auth/register-offline', {
       name: input.name.trim(),
       identifier: input.identifier.trim(),
       password: input.password,

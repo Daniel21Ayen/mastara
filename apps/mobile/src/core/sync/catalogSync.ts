@@ -10,6 +10,8 @@ import { getDb } from '@/core/db/database';
 import { dbUser } from '@/core/db/userScope';
 import { httpClient, isOnline } from '@/core/network';
 
+import seedCatalog from '../../../assets/seedCatalog.json';
+
 export interface LocalCatalogItem {
   user_id: string;
   id: string;
@@ -233,10 +235,61 @@ export async function syncCatalog(
 // Offline / Local Catalog Query APIs
 // -----------------------------------------------------------------------------
 
+/**
+ * Ensures the bundled seed catalog is populated into SQLite on fresh launch
+ * when the app has never connected to the network (SRS 6.4).
+ */
+export async function ensureCatalogSeeded(userId?: string): Promise<void> {
+  const effectiveUserId = userId || dbUser() || 'anonymous';
+  try {
+    const db = await getDb();
+    const countRow = await db.getFirstAsync<{ cnt: number }>(
+      'SELECT count(*) AS cnt FROM catalog_item WHERE user_id = ?',
+      [effectiveUserId],
+    );
+    if ((countRow?.cnt ?? 0) === 0 && seedCatalog?.items && Array.isArray(seedCatalog.items)) {
+      await db.withTransactionAsync(async () => {
+        for (const item of seedCatalog.items) {
+          const titleStr = typeof item.title === 'string' ? item.title : JSON.stringify(item.title);
+          const metaStr = item.meta ? JSON.stringify(item.meta) : null;
+          await db.runAsync(
+            `INSERT OR REPLACE INTO catalog_item
+              (user_id, id, kind, course_id, parent_id, title, position, is_free, meta, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              effectiveUserId,
+              item.id,
+              item.kind,
+              item.courseId,
+              item.parentId ?? null,
+              titleStr,
+              item.order ?? 0,
+              item.isFree ? 1 : 0,
+              metaStr,
+              Date.now(),
+            ],
+          );
+        }
+        await db.runAsync(
+          `INSERT INTO catalog_state (user_id, version, synced_at)
+           VALUES (?, ?, ?)
+           ON CONFLICT(user_id) DO UPDATE SET
+             version = excluded.version,
+             synced_at = excluded.synced_at`,
+          [effectiveUserId, seedCatalog.version || 'v-seed-baseline-3.2', Date.now()],
+        );
+      });
+    }
+  } catch (err) {
+    console.warn('[catalogSync] Failed to seed catalog:', err);
+  }
+}
+
 export async function getLocalCatalogCourses(userId?: string): Promise<LocalCatalogItem[]> {
   try {
     const db = await getDb();
     const uid = userId || dbUser() || 'anonymous';
+    await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
         WHERE user_id = ? AND kind = 'COURSE'
@@ -255,6 +308,7 @@ export async function getLocalCatalogModules(
   try {
     const db = await getDb();
     const uid = userId || dbUser() || 'anonymous';
+    await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
         WHERE user_id = ? AND course_id = ? AND kind = 'MODULE'
@@ -274,6 +328,7 @@ export async function getLocalCatalogTopics(
   try {
     const db = await getDb();
     const uid = userId || dbUser() || 'anonymous';
+    await ensureCatalogSeeded(uid);
     if (moduleId) {
       return await db.getAllAsync<LocalCatalogItem>(
         `SELECT * FROM catalog_item
@@ -300,6 +355,7 @@ export async function getLocalCatalogQuizChapters(
   try {
     const db = await getDb();
     const uid = userId || dbUser() || 'anonymous';
+    await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
         WHERE user_id = ? AND course_id = ? AND kind = 'QUIZ_CHAPTER'
@@ -318,6 +374,7 @@ export async function getLocalCatalogExams(
   try {
     const db = await getDb();
     const uid = userId || dbUser() || 'anonymous';
+    await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
         WHERE user_id = ? AND course_id = ? AND kind = 'EXAM'
@@ -333,6 +390,7 @@ export async function getLocalCatalogCocSets(userId?: string): Promise<LocalCata
   try {
     const db = await getDb();
     const uid = userId || dbUser() || 'anonymous';
+    await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
         WHERE user_id = ? AND kind = 'COC_SET'

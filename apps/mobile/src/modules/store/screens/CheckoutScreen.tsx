@@ -118,6 +118,8 @@ export function CheckoutScreen() {
           // If phone number already registered under another account, avoid dead end
           if (
             err?.status === 409 ||
+            err?.code === 'PHONE_ALREADY_REGISTERED' ||
+            err?.errorCode === 'PHONE_ALREADY_REGISTERED' ||
             err?.code === 'PHONE_COLLISION' ||
             err?.message?.includes('already registered') ||
             err?.message?.includes('already exists')

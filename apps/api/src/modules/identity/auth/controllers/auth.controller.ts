@@ -10,19 +10,19 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
-  @Post("register")
+  @Post("register-offline")
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: "Register a new student with phone or email and password" })
+  @ApiOperation({ summary: "Register an offline student upon first purchase with localAccountId idempotency" })
   @ApiResponse({
     status: HttpStatus.CREATED,
     type: AuthResponseDto,
-    description: "Student registered successfully",
+    description: "Student registered successfully upon first purchase",
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
-    description: "Phone or email already registered",
+    description: "Phone or email already registered (PHONE_ALREADY_REGISTERED)",
   })
-  async register(@Body() dto: RegisterDto): Promise<AuthResponseDto> {
+  async registerOffline(@Body() dto: RegisterDto): Promise<AuthResponseDto> {
     return this.authService.register(dto);
   }
 

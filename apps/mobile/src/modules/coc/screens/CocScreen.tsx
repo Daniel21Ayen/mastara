@@ -8,10 +8,9 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { createStyles, useTheme } from '@/core/theme';
-import { LockedSheet } from '@/modules/access';
 import { examResultRepository, type ExamResultRecord } from '@/modules/exams/repo/examResult.repository';
 import { useAsync, useTimeAgo } from '@/shared/hooks';
-import { AppText, Badge, BottomSheet, Card, ErrorNotice, IconTile, ListRow, Screen, TopBar } from '@/shared/ui';
+import { AppText, Badge, BottomSheet, Card, ErrorNotice, IconTile, ListRow, LockedContentSheet, Screen, TopBar } from '@/shared/ui';
 
 import { useCocSets } from '../hooks/useCocData';
 import { DownloadButton } from '@/modules/downloads';
@@ -113,7 +112,11 @@ export function CocScreen() {
         ))}
       </BottomSheet>
 
-      <LockedSheet visible={sheet === 'locked'} onClose={() => setSheet(null)} />
+      <LockedContentSheet
+        visible={sheet === 'locked'}
+        courseId={courseIds[0]}
+        onClose={() => setSheet(null)}
+      />
     </Screen>
   );
 }

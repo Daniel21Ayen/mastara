@@ -31,16 +31,14 @@ export function LockedContentSheet({
 
   const isAmharic = language === 'am';
 
-  const title = isAmharic ? 'ይዘቱ ተቆልፏል' : 'Content Locked';
+  const title = isAmharic ? 'የተቆለፈ ይዘት' : 'Locked Content';
   const description = isAmharic
-    ? courseTitle
-      ? `ይህ ይዘት የ${courseTitle} ፕሪሚየም ኮርስ አካል ነው። ሙሉ ትምህርቶችን፣ ሙከራዎችን እና የፈተና ጥያቄዎችን ለመጠቀም ኮርሱን ይግዙ።`
-      : 'ይህ ይዘት የፕሪሚየም ኮርስ አካል ነው። ሙሉ ትምህርቶችን፣ ሙከራዎችን እና የፈተና ጥያቄዎችን ለመጠቀም ኮርሱን ይግዙ።'
+    ? 'ይህን ይዘት መከፈት አይችሉም።'
     : courseTitle
-      ? `This content is part of the premium course "${courseTitle}". Unlock full access to all lessons, quizzes, exam papers, and solutions by purchasing this course.`
-      : 'This content is part of a premium course. Unlock full access to all lessons, quizzes, exam papers, and solutions by purchasing the course.';
+      ? `You cannot access this content for "${courseTitle}".`
+      : 'You cannot access this content.';
 
-  const purchaseLabel = isAmharic ? 'ኮርሱን ይግዙ' : 'Purchase Course';
+  const purchaseLabel = isAmharic ? 'ከዮርሱን ይግዙ' : 'Purchase Course';
   const dismissLabel = isAmharic ? 'ዝጋ' : 'Dismiss';
 
   const handlePurchase = () => {

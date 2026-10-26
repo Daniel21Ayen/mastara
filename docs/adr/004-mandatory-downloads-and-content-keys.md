@@ -1,7 +1,7 @@
 # ADR 004: Mandatory Offline Downloads and Cryptographic Content Keys (Revision of D5, FR-C07, NFR-04)
 
 ## Status
-Accepted (October 22, 2026)
+Superseded by Rule D24 (October 25, 2026). Mandatory downloads requirement replaced by Rule D24 (online students may open content without downloading; offline students open only downloaded content). The 5-state download machine (not_downloaded, downloading, downloaded, update_available, failed) and the cryptographic content key rules in this ADR remain valid.
 
 ## Context
 Initial specifications assumed streaming media and live cloud document rendering. In practice, campus internet is intermittent, expensive, and subject to packet loss. Attempting to view un-downloaded materials caused spinning loaders, empty screens, and failed exam attempts. Furthermore, paid content required offline cryptographic protection against extraction.

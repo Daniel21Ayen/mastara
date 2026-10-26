@@ -1,0 +1,1913 @@
+{
+  "version": "v-seed-baseline-3.2",
+  "generatedAt": "2026-10-26T13:07:39.366Z",
+  "metadata": {
+    "universities": [
+      {
+        "id": "univ-aau",
+        "name": "Addis Ababa University",
+        "amharic": "አዲስ አበባ ዩኒቨርሲቲ",
+        "code": "AAU"
+      },
+      {
+        "id": "univ-ju",
+        "name": "Jimma University",
+        "amharic": "ጅማ ዩኒቨርሲቲ",
+        "code": "JU"
+      },
+      {
+        "id": "univ-hu",
+        "name": "Hawassa University",
+        "amharic": "ሀዋሳ ዩኒቨርሲቲ",
+        "code": "HU"
+      },
+      {
+        "id": "univ-amu",
+        "name": "Arba Minch University",
+        "amharic": "አርባ ምንጭ ዩኒቨርሲቲ",
+        "code": "AMU"
+      },
+      {
+        "id": "univ-bdu",
+        "name": "Bahir Dar University",
+        "amharic": "ባህር ዳር ዩኒቨርሲቲ",
+        "code": "BDU"
+      }
+    ],
+    "programs": [
+      {
+        "id": "prog-eng",
+        "name": "Engineering & Technology",
+        "amharic": "ኢንጂነሪንግና ቴክኖሎጂ"
+      },
+      {
+        "id": "prog-med",
+        "name": "Health & Medical Sciences",
+        "amharic": "ህክምናና ጤና ሳይንስ"
+      },
+      {
+        "id": "prog-cs",
+        "name": "Computing & Informatics",
+        "amharic": "ኮምፒውቲንግና ኢንፎርማቲክስ"
+      },
+      {
+        "id": "prog-nat",
+        "name": "Natural & Computational Sciences",
+        "amharic": "የተፈጥሮ ሳይንስ"
+      }
+    ],
+    "semesters": [
+      {
+        "id": "sem-1",
+        "name": "Semester 1",
+        "amharic": "ሴሚስተር 1"
+      },
+      {
+        "id": "sem-2",
+        "name": "Semester 2",
+        "amharic": "ሴሚስተር 2"
+      }
+    ]
+  },
+  "items": [
+    {
+      "id": "course-math-101",
+      "kind": "COURSE",
+      "courseId": "course-math-101",
+      "parentId": null,
+      "title": {
+        "en": "Mathematics for Natural Sciences",
+        "am": "የተፈጥሮ ሳይንስ ሂሳብ"
+      },
+      "order": 1,
+      "type": "NATURAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "code": "MATH101",
+        "stream": "NATURAL",
+        "accent": "blue",
+        "icon": "calculate",
+        "freeAccess": false
+      }
+    },
+    {
+      "id": "course-math-101-mod-1",
+      "kind": "MODULE",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Module 1: Core Principles",
+        "am": "ሞጁል 1፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 1,
+      "type": "MODULE",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-math-101-mod-1-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101-mod-1",
+      "title": {
+        "en": "Chapter 1.1: Detailed Analysis",
+        "am": "ምዕራፍ 1.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-math-101-mod-1-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101-mod-1",
+      "title": {
+        "en": "Chapter 1.2: Detailed Analysis",
+        "am": "ምዕራፍ 1.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-math-101-mod-2",
+      "kind": "MODULE",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Module 2: Core Principles",
+        "am": "ሞጁል 2፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 2,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-math-101-mod-2-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101-mod-2",
+      "title": {
+        "en": "Chapter 2.1: Detailed Analysis",
+        "am": "ምዕራፍ 2.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-math-101-mod-2-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101-mod-2",
+      "title": {
+        "en": "Chapter 2.2: Detailed Analysis",
+        "am": "ምዕራፍ 2.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-math-101-mod-3",
+      "kind": "MODULE",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Module 3: Core Principles",
+        "am": "ሞጁል 3፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 3,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 3,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-math-101-mod-3-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101-mod-3",
+      "title": {
+        "en": "Chapter 3.1: Detailed Analysis",
+        "am": "ምዕራፍ 3.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-math-101-mod-3-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101-mod-3",
+      "title": {
+        "en": "Chapter 3.2: Detailed Analysis",
+        "am": "ምዕራፍ 3.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-math-101-quiz-1",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Quiz Chapter 1",
+        "am": "የፈተና ምዕራፍ 1"
+      },
+      "order": 1,
+      "type": "QUIZ",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 1,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-math-101-quiz-2",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Quiz Chapter 2",
+        "am": "የፈተና ምዕራፍ 2"
+      },
+      "order": 2,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 2,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-math-101-quiz-3",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Quiz Chapter 3",
+        "am": "የፈተና ምዕራፍ 3"
+      },
+      "order": 3,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 3,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-math-101-exam-mid",
+      "kind": "EXAM",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Midterm Examination",
+        "am": "የመካከለኛ ፈተና"
+      },
+      "order": 1,
+      "type": "MID",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-math-101-exam-final",
+      "kind": "EXAM",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Final Examination",
+        "am": "የፍፃሜ ፈተና"
+      },
+      "order": 2,
+      "type": "FINAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-math-101-exam-mock",
+      "kind": "EXAM",
+      "courseId": "course-math-101",
+      "parentId": "course-math-101",
+      "title": {
+        "en": "Model Mock Exam",
+        "am": "የሞዴል ፈተና"
+      },
+      "order": 3,
+      "type": "MOCK",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-phys-101",
+      "kind": "COURSE",
+      "courseId": "course-phys-101",
+      "parentId": null,
+      "title": {
+        "en": "General Physics",
+        "am": "አጠቃላይ ፊዚክስ"
+      },
+      "order": 2,
+      "type": "NATURAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "code": "PHYS101",
+        "stream": "NATURAL",
+        "accent": "indigo",
+        "icon": "atom",
+        "freeAccess": false
+      }
+    },
+    {
+      "id": "course-phys-101-mod-1",
+      "kind": "MODULE",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Module 1: Core Principles",
+        "am": "ሞጁል 1፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 1,
+      "type": "MODULE",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-phys-101-mod-1-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101-mod-1",
+      "title": {
+        "en": "Chapter 1.1: Detailed Analysis",
+        "am": "ምዕራፍ 1.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-phys-101-mod-1-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101-mod-1",
+      "title": {
+        "en": "Chapter 1.2: Detailed Analysis",
+        "am": "ምዕራፍ 1.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-phys-101-mod-2",
+      "kind": "MODULE",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Module 2: Core Principles",
+        "am": "ሞጁል 2፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 2,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-phys-101-mod-2-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101-mod-2",
+      "title": {
+        "en": "Chapter 2.1: Detailed Analysis",
+        "am": "ምዕራፍ 2.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-phys-101-mod-2-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101-mod-2",
+      "title": {
+        "en": "Chapter 2.2: Detailed Analysis",
+        "am": "ምዕራፍ 2.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-phys-101-mod-3",
+      "kind": "MODULE",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Module 3: Core Principles",
+        "am": "ሞጁል 3፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 3,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 3,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-phys-101-mod-3-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101-mod-3",
+      "title": {
+        "en": "Chapter 3.1: Detailed Analysis",
+        "am": "ምዕራፍ 3.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-phys-101-mod-3-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101-mod-3",
+      "title": {
+        "en": "Chapter 3.2: Detailed Analysis",
+        "am": "ምዕራፍ 3.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-phys-101-quiz-1",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Quiz Chapter 1",
+        "am": "የፈተና ምዕራፍ 1"
+      },
+      "order": 1,
+      "type": "QUIZ",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 1,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-phys-101-quiz-2",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Quiz Chapter 2",
+        "am": "የፈተና ምዕራፍ 2"
+      },
+      "order": 2,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 2,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-phys-101-quiz-3",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Quiz Chapter 3",
+        "am": "የፈተና ምዕራፍ 3"
+      },
+      "order": 3,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 3,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-phys-101-exam-mid",
+      "kind": "EXAM",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Midterm Examination",
+        "am": "የመካከለኛ ፈተና"
+      },
+      "order": 1,
+      "type": "MID",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-phys-101-exam-final",
+      "kind": "EXAM",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Final Examination",
+        "am": "የፍፃሜ ፈተና"
+      },
+      "order": 2,
+      "type": "FINAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-phys-101-exam-mock",
+      "kind": "EXAM",
+      "courseId": "course-phys-101",
+      "parentId": "course-phys-101",
+      "title": {
+        "en": "Model Mock Exam",
+        "am": "የሞዴል ፈተና"
+      },
+      "order": 3,
+      "type": "MOCK",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-eng-101",
+      "kind": "COURSE",
+      "courseId": "course-eng-101",
+      "parentId": null,
+      "title": {
+        "en": "Communicative English Skills",
+        "am": "የመግባቢያ እንግሊዝኛ ክህሎት"
+      },
+      "order": 3,
+      "type": "COMMON",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "code": "ENGL101",
+        "stream": "COMMON",
+        "accent": "teal",
+        "icon": "book",
+        "freeAccess": true
+      }
+    },
+    {
+      "id": "course-eng-101-mod-1",
+      "kind": "MODULE",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Module 1: Core Principles",
+        "am": "ሞጁል 1፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 1,
+      "type": "MODULE",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-eng-101-mod-1-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101-mod-1",
+      "title": {
+        "en": "Chapter 1.1: Detailed Analysis",
+        "am": "ምዕራፍ 1.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-eng-101-mod-1-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101-mod-1",
+      "title": {
+        "en": "Chapter 1.2: Detailed Analysis",
+        "am": "ምዕራፍ 1.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-eng-101-mod-2",
+      "kind": "MODULE",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Module 2: Core Principles",
+        "am": "ሞጁል 2፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 2,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-eng-101-mod-2-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101-mod-2",
+      "title": {
+        "en": "Chapter 2.1: Detailed Analysis",
+        "am": "ምዕራፍ 2.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-eng-101-mod-2-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101-mod-2",
+      "title": {
+        "en": "Chapter 2.2: Detailed Analysis",
+        "am": "ምዕራፍ 2.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-eng-101-mod-3",
+      "kind": "MODULE",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Module 3: Core Principles",
+        "am": "ሞጁል 3፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 3,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 3,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-eng-101-mod-3-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101-mod-3",
+      "title": {
+        "en": "Chapter 3.1: Detailed Analysis",
+        "am": "ምዕራፍ 3.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-eng-101-mod-3-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101-mod-3",
+      "title": {
+        "en": "Chapter 3.2: Detailed Analysis",
+        "am": "ምዕራፍ 3.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-eng-101-quiz-1",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Quiz Chapter 1",
+        "am": "የፈተና ምዕራፍ 1"
+      },
+      "order": 1,
+      "type": "QUIZ",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 1,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-eng-101-quiz-2",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Quiz Chapter 2",
+        "am": "የፈተና ምዕራፍ 2"
+      },
+      "order": 2,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 2,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-eng-101-quiz-3",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Quiz Chapter 3",
+        "am": "የፈተና ምዕራፍ 3"
+      },
+      "order": 3,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 3,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-eng-101-exam-mid",
+      "kind": "EXAM",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Midterm Examination",
+        "am": "የመካከለኛ ፈተና"
+      },
+      "order": 1,
+      "type": "MID",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-eng-101-exam-final",
+      "kind": "EXAM",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Final Examination",
+        "am": "የፍፃሜ ፈተና"
+      },
+      "order": 2,
+      "type": "FINAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-eng-101-exam-mock",
+      "kind": "EXAM",
+      "courseId": "course-eng-101",
+      "parentId": "course-eng-101",
+      "title": {
+        "en": "Model Mock Exam",
+        "am": "የሞዴል ፈተና"
+      },
+      "order": 3,
+      "type": "MOCK",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-cs-101",
+      "kind": "COURSE",
+      "courseId": "course-cs-101",
+      "parentId": null,
+      "title": {
+        "en": "Introduction to Computing",
+        "am": "የኮምፒውተር መግቢያ"
+      },
+      "order": 4,
+      "type": "NATURAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "code": "COSC101",
+        "stream": "NATURAL",
+        "accent": "purple",
+        "icon": "code",
+        "freeAccess": false
+      }
+    },
+    {
+      "id": "course-cs-101-mod-1",
+      "kind": "MODULE",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Module 1: Core Principles",
+        "am": "ሞጁል 1፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 1,
+      "type": "MODULE",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-cs-101-mod-1-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101-mod-1",
+      "title": {
+        "en": "Chapter 1.1: Detailed Analysis",
+        "am": "ምዕራፍ 1.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-cs-101-mod-1-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101-mod-1",
+      "title": {
+        "en": "Chapter 1.2: Detailed Analysis",
+        "am": "ምዕራፍ 1.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-cs-101-mod-2",
+      "kind": "MODULE",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Module 2: Core Principles",
+        "am": "ሞጁል 2፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 2,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-cs-101-mod-2-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101-mod-2",
+      "title": {
+        "en": "Chapter 2.1: Detailed Analysis",
+        "am": "ምዕራፍ 2.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-cs-101-mod-2-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101-mod-2",
+      "title": {
+        "en": "Chapter 2.2: Detailed Analysis",
+        "am": "ምዕራፍ 2.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-cs-101-mod-3",
+      "kind": "MODULE",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Module 3: Core Principles",
+        "am": "ሞጁል 3፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 3,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 3,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-cs-101-mod-3-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101-mod-3",
+      "title": {
+        "en": "Chapter 3.1: Detailed Analysis",
+        "am": "ምዕራፍ 3.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-cs-101-mod-3-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101-mod-3",
+      "title": {
+        "en": "Chapter 3.2: Detailed Analysis",
+        "am": "ምዕራፍ 3.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-cs-101-quiz-1",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Quiz Chapter 1",
+        "am": "የፈተና ምዕራፍ 1"
+      },
+      "order": 1,
+      "type": "QUIZ",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 1,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-cs-101-quiz-2",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Quiz Chapter 2",
+        "am": "የፈተና ምዕራፍ 2"
+      },
+      "order": 2,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 2,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-cs-101-quiz-3",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Quiz Chapter 3",
+        "am": "የፈተና ምዕራፍ 3"
+      },
+      "order": 3,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 3,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-cs-101-exam-mid",
+      "kind": "EXAM",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Midterm Examination",
+        "am": "የመካከለኛ ፈተና"
+      },
+      "order": 1,
+      "type": "MID",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-cs-101-exam-final",
+      "kind": "EXAM",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Final Examination",
+        "am": "የፍፃሜ ፈተና"
+      },
+      "order": 2,
+      "type": "FINAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-cs-101-exam-mock",
+      "kind": "EXAM",
+      "courseId": "course-cs-101",
+      "parentId": "course-cs-101",
+      "title": {
+        "en": "Model Mock Exam",
+        "am": "የሞዴል ፈተና"
+      },
+      "order": 3,
+      "type": "MOCK",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-psyc-101",
+      "kind": "COURSE",
+      "courseId": "course-psyc-101",
+      "parentId": null,
+      "title": {
+        "en": "General Psychology",
+        "am": "አጠቃላይ ሳይኮሎጂ"
+      },
+      "order": 5,
+      "type": "COMMON",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "code": "PSYC101",
+        "stream": "COMMON",
+        "accent": "amber",
+        "icon": "brain",
+        "freeAccess": false
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-1",
+      "kind": "MODULE",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Module 1: Core Principles",
+        "am": "ሞጁል 1፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 1,
+      "type": "MODULE",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-1-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101-mod-1",
+      "title": {
+        "en": "Chapter 1.1: Detailed Analysis",
+        "am": "ምዕራፍ 1.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-1-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101-mod-1",
+      "title": {
+        "en": "Chapter 1.2: Detailed Analysis",
+        "am": "ምዕራፍ 1.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-2",
+      "kind": "MODULE",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Module 2: Core Principles",
+        "am": "ሞጁል 2፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 2,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-2-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101-mod-2",
+      "title": {
+        "en": "Chapter 2.1: Detailed Analysis",
+        "am": "ምዕራፍ 2.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-2-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101-mod-2",
+      "title": {
+        "en": "Chapter 2.2: Detailed Analysis",
+        "am": "ምዕራፍ 2.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-3",
+      "kind": "MODULE",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Module 3: Core Principles",
+        "am": "ሞጁል 3፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 3,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 3,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-3-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101-mod-3",
+      "title": {
+        "en": "Chapter 3.1: Detailed Analysis",
+        "am": "ምዕራፍ 3.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-psyc-101-mod-3-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101-mod-3",
+      "title": {
+        "en": "Chapter 3.2: Detailed Analysis",
+        "am": "ምዕራፍ 3.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-psyc-101-quiz-1",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Quiz Chapter 1",
+        "am": "የፈተና ምዕራፍ 1"
+      },
+      "order": 1,
+      "type": "QUIZ",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 1,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-psyc-101-quiz-2",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Quiz Chapter 2",
+        "am": "የፈተና ምዕራፍ 2"
+      },
+      "order": 2,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 2,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-psyc-101-quiz-3",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Quiz Chapter 3",
+        "am": "የፈተና ምዕራፍ 3"
+      },
+      "order": 3,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 3,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-psyc-101-exam-mid",
+      "kind": "EXAM",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Midterm Examination",
+        "am": "የመካከለኛ ፈተና"
+      },
+      "order": 1,
+      "type": "MID",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-psyc-101-exam-final",
+      "kind": "EXAM",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Final Examination",
+        "am": "የፍፃሜ ፈተና"
+      },
+      "order": 2,
+      "type": "FINAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-psyc-101-exam-mock",
+      "kind": "EXAM",
+      "courseId": "course-psyc-101",
+      "parentId": "course-psyc-101",
+      "title": {
+        "en": "Model Mock Exam",
+        "am": "የሞዴል ፈተና"
+      },
+      "order": 3,
+      "type": "MOCK",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-crit-101",
+      "kind": "COURSE",
+      "courseId": "course-crit-101",
+      "parentId": null,
+      "title": {
+        "en": "Critical Thinking & Logic",
+        "am": "ክሪቲካል ቲንኪንግና ሎጂክ"
+      },
+      "order": 6,
+      "type": "COMMON",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "code": "PHIL101",
+        "stream": "COMMON",
+        "accent": "rose",
+        "icon": "bulb",
+        "freeAccess": false
+      }
+    },
+    {
+      "id": "course-crit-101-mod-1",
+      "kind": "MODULE",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Module 1: Core Principles",
+        "am": "ሞጁል 1፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 1,
+      "type": "MODULE",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-crit-101-mod-1-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101-mod-1",
+      "title": {
+        "en": "Chapter 1.1: Detailed Analysis",
+        "am": "ምዕራፍ 1.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": true
+      }
+    },
+    {
+      "id": "course-crit-101-mod-1-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101-mod-1",
+      "title": {
+        "en": "Chapter 1.2: Detailed Analysis",
+        "am": "ምዕራፍ 1.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-crit-101-mod-2",
+      "kind": "MODULE",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Module 2: Core Principles",
+        "am": "ሞጁል 2፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 2,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-crit-101-mod-2-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101-mod-2",
+      "title": {
+        "en": "Chapter 2.1: Detailed Analysis",
+        "am": "ምዕራፍ 2.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-crit-101-mod-2-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101-mod-2",
+      "title": {
+        "en": "Chapter 2.2: Detailed Analysis",
+        "am": "ምዕራፍ 2.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-crit-101-mod-3",
+      "kind": "MODULE",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Module 3: Core Principles",
+        "am": "ሞጁል 3፡ መሰረታዊ መርሆዎች"
+      },
+      "order": 3,
+      "type": "MODULE",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 3,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-crit-101-mod-3-top-1",
+      "kind": "TOPIC",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101-mod-3",
+      "title": {
+        "en": "Chapter 3.1: Detailed Analysis",
+        "am": "ምዕራፍ 3.1፡ ዝርዝር ትንታኔ"
+      },
+      "order": 1,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 1,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-crit-101-mod-3-top-2",
+      "kind": "TOPIC",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101-mod-3",
+      "title": {
+        "en": "Chapter 3.2: Detailed Analysis",
+        "am": "ምዕራፍ 3.2፡ ዝርዝር ትንታኔ"
+      },
+      "order": 2,
+      "type": "CHAPTER",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "number": 2,
+        "isFreeTrial": false
+      }
+    },
+    {
+      "id": "course-crit-101-quiz-1",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Quiz Chapter 1",
+        "am": "የፈተና ምዕራፍ 1"
+      },
+      "order": 1,
+      "type": "QUIZ",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 1,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-crit-101-quiz-2",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Quiz Chapter 2",
+        "am": "የፈተና ምዕራፍ 2"
+      },
+      "order": 2,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 2,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-crit-101-quiz-3",
+      "kind": "QUIZ_CHAPTER",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Quiz Chapter 3",
+        "am": "የፈተና ምዕራፍ 3"
+      },
+      "order": 3,
+      "type": "QUIZ",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "quizNumber": 3,
+        "questionCount": 15,
+        "durationMinutes": 20
+      }
+    },
+    {
+      "id": "course-crit-101-exam-mid",
+      "kind": "EXAM",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Midterm Examination",
+        "am": "የመካከለኛ ፈተና"
+      },
+      "order": 1,
+      "type": "MID",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-crit-101-exam-final",
+      "kind": "EXAM",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Final Examination",
+        "am": "የፍፃሜ ፈተና"
+      },
+      "order": 2,
+      "type": "FINAL",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "course-crit-101-exam-mock",
+      "kind": "EXAM",
+      "courseId": "course-crit-101",
+      "parentId": "course-crit-101",
+      "title": {
+        "en": "Model Mock Exam",
+        "am": "የሞዴል ፈተና"
+      },
+      "order": 3,
+      "type": "MOCK",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 30,
+        "durationMinutes": 60
+      }
+    },
+    {
+      "id": "coc-sample-set",
+      "kind": "COC_SET",
+      "courseId": "COC",
+      "parentId": null,
+      "title": {
+        "en": "COC Sample Preparation Set",
+        "am": "የሲኦሲ የሙከራ ጥያቄዎች"
+      },
+      "order": 1,
+      "type": "COC",
+      "isFree": true,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 50,
+        "durationMinutes": 90
+      }
+    },
+    {
+      "id": "coc-2024-full",
+      "kind": "COC_SET",
+      "courseId": "COC",
+      "parentId": null,
+      "title": {
+        "en": "National COC Comprehensive 2024",
+        "am": "የብሔራዊ ሲኦሲ ሙሉ ፈተና 2024"
+      },
+      "order": 2,
+      "type": "COC",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2024,
+        "questionCount": 50,
+        "durationMinutes": 90
+      }
+    },
+    {
+      "id": "coc-2023-full",
+      "kind": "COC_SET",
+      "courseId": "COC",
+      "parentId": null,
+      "title": {
+        "en": "National COC Comprehensive 2023",
+        "am": "የብሔራዊ ሲኦሲ ሙሉ ፈተና 2023"
+      },
+      "order": 3,
+      "type": "COC",
+      "isFree": false,
+      "updatedAt": 1793020059366,
+      "meta": {
+        "year": 2023,
+        "questionCount": 50,
+        "durationMinutes": 90
+      }
+    }
+  ]
+}

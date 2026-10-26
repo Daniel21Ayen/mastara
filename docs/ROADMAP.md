@@ -37,21 +37,18 @@ Screen numbers are the numbers on the approved Admin design sheets. SRS referenc
 
 Rules for every F11 phase: follow the module template, keep the four colours, put all text in `packages/i18n/src/admin/en.json`, add Zod shapes to `packages/contracts`, put rules in `packages/domain`, and write an audit entry (`recordAudit`) for every sensitive action.
 
-## Backend
+## Backend & Consolidation
 
-| Phase | Scope |
-|---|---|
-| B1 | API setup: NestJS, PostgreSQL schema (Prisma), local Redis queue, health check |
-| B2 | Identity and device lock |
-| B3 | Catalog, My Course List, content |
-| B4 | Assessment: quizzes, exams, COC, attempts |
-| B5 | Commerce: products, orders, receipts, entitlements, expiry job |
-| B6 | Sync endpoint, scan-to-PDF worker, notifications, audit |
-| I1 | Connect mobile and admin to the real API (turn `EXPO_PUBLIC_USE_MOCKS` off) |
-| I2 | Hardening: security, app size under 50 MB, memory, pilot |
+| Phase | Scope | Status |
+|---|---|---|
+| B1 | API setup: NestJS, PostgreSQL schema (Prisma), local Redis queue, health check | ✅ Complete |
+| B2 | Identity and device lock | ✅ Complete |
+| B3 | Catalog, My Course List, content | ✅ Complete |
+| B4 | Assessment: quizzes, exams, COC, attempts | ✅ Complete |
+| B5 | Commerce: products, orders, receipts, entitlements, expiry job | ✅ Complete |
+| B6 | Sync endpoint, scan-to-PDF worker, notifications, audit | ✅ Complete |
+| I1 | Connect mobile and admin to the real API | ✅ Complete |
+| I2 | Hardening: security, app size under 20 MB, memory, pilot | ✅ Complete |
+| Phase 1 | Roles and permissions (FR-G60–G63): AdminUser table, TOTP 2FA, Maker-Checker, permissions matrix | ✅ Complete |
+| Phase 2 | Catalog on phone, access function (FR-C20–C25), Rule D24 online streaming & offline downloads | 🔄 In Progress |
 
-## Still open before the backend
-
-- Run the native clock on a real Android phone (development build) and the KaTeX bundle on a real device: both need a device to confirm.
-- Encrypted database needs a development build (`EXPO_PUBLIC_DB_ENCRYPTION=true`).
-- F11f to F11i Admin web on mock data (see the table above).

@@ -90,7 +90,7 @@ export class AuthService {
     if (existingStudent) {
       throw new ConflictException({
         statusCode: 409,
-        errorCode: "PHONE_COLLISION",
+        errorCode: "PHONE_ALREADY_REGISTERED",
         message: "A student with this phone number or email is already registered. Please sign in or contact an administrator.",
       });
     }

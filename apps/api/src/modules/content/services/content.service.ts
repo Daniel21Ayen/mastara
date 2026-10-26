@@ -10,6 +10,7 @@ import { PrismaService } from "../../../infrastructure/database/prisma.service";
 import { RedisService } from "../../../infrastructure/redis/redis.service";
 import { EntitlementStatus, PublicationStatus, Role, ContentKind } from "@mastara/database";
 import {
+  canOpen,
   canOpenContent,
   AccessState,
   CatalogStatus,
@@ -256,7 +257,18 @@ export class ContentService {
       topic.module.course_id,
     );
 
-    if (!canOpenContent(accessState, isFree)) {
+    const accessDecision = canOpen(
+      {
+        id: studentId,
+        hasActiveEntitlement: () => accessState === 'PAID',
+      },
+      {
+        courseId: topic.module.course_id,
+        isItemFree: isFree,
+      },
+    );
+
+    if (!accessDecision.canOpen) {
       throw new ForbiddenException({
         errorCode: "CONTENT_LOCKED",
         message:

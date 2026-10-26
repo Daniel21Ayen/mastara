@@ -71,6 +71,7 @@ Offline login. Test it in airplane mode.
 Entitlement token. Check that GET /entitlements/token exists and that the app rejects a rolled-back device clock.
 Delete behaviour. Delete must remove the files and the SQLite rows.
 Update available. An update must replace the old copy in one step.
+
 Phase 3: IDs, numbers, import and pagination (FR-G11 to G55)
 Question numbers. display_number is nullable and there is no per-set counter.
 Allocate it from counters in the same transaction.
@@ -89,6 +90,8 @@ Check this on every other list.
 Where: apps/api/src/common/pagination/.
 Admin table component: it must keep the page in the URL, reset to page 1 on filter change, and step back after a delete empties a page.
 Student ID display. Show the ID first in the admin Students list, with no ID for local-only students.
+implement this quickly and clearly to make as mastara SRS 3.2
+
 Phase 4: design tokens and admin theme (FR-G65)
 Hardcoded colours in admin. There are 298 hex values in apps/admin-web/src.
 The biggest file is modules/scans/lib/samplePages.ts with 196. That is sample data, so move it out of app code or exclude it.
@@ -103,6 +106,9 @@ Dark theme. I found no dark-theme code in the admin portal. Add the same dark to
 Status tones. Create one shared status-to-tone function, used by admin badges and mobile chips.
 Course accent. Replace Course.color (hex) with accent (one of eight names) and icon. Add free_access to the course.
 Active state. The active content tab and active sidebar child must share one colour token.
+implement this quickly and clearly to make as mastara SRS 3.2
+
+
 Phase 5: refunds, review workflow, audit
 Refunds. I found no refund model, only mentions in payment-proofs code. Add a Refund model with states REQUESTED, APPROVED or REJECTED, PAID_OUT and ENTITLEMENT_REVOKED.
 Roles: Operations requests, Super Admin approves, and approval revokes the entitlement.
@@ -110,6 +116,9 @@ Where: a new API module and a Refunds tab under Payments.
 Audit log. Add actor_role and scope, and log denied requests on sensitive routes.
 Missing admin phases. Pricing and audit (F11h) and notifications, tickets and reports (F11i) are not done.
 Student data deletion. Add a 7-day deletion process.
+implement this quickly and clearly to make as mastara SRS 3.2
+
+
 Phase 6: performance and pilot
 Targets:
 APK at most 20 MB. check-app-size.mjs exists. The old docs/APP-SIZE.md says 50 MB, so update it.
@@ -121,6 +130,9 @@ Mocks. Make CI fail if a production bundle contains a mocks path. scripts/ci-che
 Seed and test accounts. Remove built-in or default credentials and require seed passwords from configuration in production.
 Pilot. Run it at one university on a real budget Android phone.
 Order I would work ain
+implement this quickly and clearly to make as mastara SRS 3.2
+
+
 Fix the documents (SRS file, ADR 004, ROADMAP) and clean the repo.
 Phase 2, because it changes what students see most.
 Phase 1 (admin table and 2FA), then Phase 3.

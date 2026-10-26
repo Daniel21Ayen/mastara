@@ -11,6 +11,8 @@ export const ERROR_CODES = {
   NETWORK_OFFLINE: 'NETWORK_OFFLINE',
   /** Offline, and this content was never downloaded to the phone. */
   CONTENT_NOT_DOWNLOADED: 'CONTENT_NOT_DOWNLOADED',
+  PHONE_ALREADY_REGISTERED: 'PHONE_ALREADY_REGISTERED',
+  CONTENT_LOCKED: 'CONTENT_LOCKED',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

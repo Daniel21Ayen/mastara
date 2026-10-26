@@ -10,9 +10,8 @@ import { ActivityIndicator, View } from 'react-native';
 import { useI18n } from '@/core/i18n';
 import { useOnline } from '@/core/network';
 import { createStyles, useTheme } from '@/core/theme';
-import { LockedSheet, NeedsInternetSheet } from '@/modules/access';
+import { LockedContentSheet, NeedsInternetSheet, AppText, ErrorNotice, IconTile, UnderlineTabs } from '@/shared/ui';
 import { useDownloadedIds } from '@/modules/downloads';
-import { AppText, ErrorNotice, IconTile, UnderlineTabs } from '@/shared/ui';
 import type { UnderlineTabOption } from '@/shared/ui';
 
 import { useExams } from '../hooks/useExams';
@@ -112,7 +111,7 @@ export function ExamsTab({ courseId, access, course }: ExamsTabProps) {
         />
       ))}
 
-      <LockedSheet
+      <LockedContentSheet
         visible={lockedOpen}
         courseId={courseId}
         courseTitle={course?.title}

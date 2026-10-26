@@ -11,7 +11,7 @@ import { PaginationQueryDto } from "../../../../common/pagination";
 
 @ApiTags("Commerce: Entitlements")
 @ApiBearerAuth()
-@Controller("commerce/entitlements")
+@Controller(["entitlements", "commerce/entitlements"])
 export class EntitlementsController {
   constructor(private readonly entitlementsService: EntitlementsService) {}
 
