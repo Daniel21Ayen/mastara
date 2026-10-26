@@ -218,7 +218,7 @@ export function ContentQuizStudioScreen({ quizNo }: Props) {
           <h1 className={styles.title}>Quizzes</h1>
           <span className={styles.draftBadge}>Draft v3</span>
           {saveStatus && (
-            <span style={{ fontSize: '0.85rem', color: '#1a56db', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 600 }}>
               ✓ {saveStatus}
             </span>
           )}

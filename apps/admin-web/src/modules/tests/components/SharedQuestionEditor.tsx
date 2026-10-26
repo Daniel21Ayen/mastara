@@ -213,7 +213,7 @@ export function SharedQuestionEditor({
             }
             placeholder="e.g. photosynthesis, Photosynthesis"
           />
-          <small style={{ color: '#64748b' }}>Separate alternative acceptable spellings with commas</small>
+          <small style={{ color: 'var(--color-text-muted)' }}>Separate alternative acceptable spellings with commas</small>
         </div>
       )}
 

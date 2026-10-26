@@ -55,14 +55,14 @@ export function StudentsScreen() {
             style={{
               fontFamily: 'monospace',
               fontWeight: 700,
-              color: 'var(--color-primary, #2563eb)',
+              color: 'var(--color-primary)',
               letterSpacing: '0.025em',
             }}
           >
             {row.studentCode}
           </span>
         ) : (
-          <span style={{ color: 'var(--color-text-muted, #94a3b8)', fontStyle: 'italic' }}>
+          <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
             —
           </span>
         ),
@@ -171,19 +171,19 @@ export function StudentsScreen() {
           padding: '0.875rem 1.25rem',
           marginBottom: '1.25rem',
           borderRadius: '8px',
-          background: 'var(--color-surface, #ffffff)',
-          border: '1px solid var(--color-border, #e2e8f0)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: '280px' }}>
           <span style={{ fontSize: '1.25rem' }}>🎓</span>
-          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary, #475569)', lineHeight: 1.45 }}>
-            <strong style={{ color: 'var(--color-text-primary, #0f172a)' }}>
+          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.45 }}>
+            <strong style={{ color: 'var(--color-text)' }}>
               Registration & Student ID Policy:
             </strong>{' '}
             Students accessing free content do not need to register. Student accounts and official sequential IDs (
-            <code style={{ fontWeight: 700, color: 'var(--color-primary, #2563eb)', background: '#eff6ff', padding: '2px 5px', borderRadius: '4px' }}>
+            <code style={{ fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-soft)', padding: '2px 5px', borderRadius: '4px' }}>
               MS0001+
             </code>
             ) are automatically assigned once students purchase locked courses.
@@ -196,9 +196,9 @@ export function StudentsScreen() {
               fontWeight: 600,
               padding: '0.25rem 0.625rem',
               borderRadius: '9999px',
-              background: '#ecfdf5',
-              color: '#059669',
-              border: '1px solid #a7f3d0',
+              background: 'var(--color-success-soft)',
+              color: 'var(--color-success)',
+              border: '1px solid var(--color-border)',
             }}
           >
             Auto-Increment: MS0001
@@ -209,9 +209,9 @@ export function StudentsScreen() {
               fontWeight: 600,
               padding: '0.25rem 0.625rem',
               borderRadius: '9999px',
-              background: '#eff6ff',
-              color: '#2563eb',
-              border: '1px solid #bfdbfe',
+              background: 'var(--color-primary-soft)',
+              color: 'var(--color-primary)',
+              border: '1px solid var(--color-border)',
             }}
           >
             Registered via Locked Courses

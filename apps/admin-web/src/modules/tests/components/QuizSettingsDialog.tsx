@@ -83,11 +83,11 @@ export function QuizSettingsDialog({ courseId, quiz, onSaved, onClose }: QuizSet
     >
       <div
         style={{
-          background: '#f0fdf4',
-          border: '1px solid #bbf7d0',
+          background: 'var(--color-success-soft)',
+          border: '1px solid var(--color-border)',
           borderRadius: '8px',
           padding: '0.85rem 1rem',
-          color: '#166534',
+          color: 'var(--color-success)',
           fontSize: '0.825rem',
           lineHeight: '1.45',
           marginBottom: '1rem',

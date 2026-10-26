@@ -1,14 +1,19 @@
 // packages/ui-tokens/src/colors.ts
 /**
- * The ONLY four colours in the app. Everything else is derived from these with transparency.
- * Add a new colour here only after the design owner agrees.
+ * The canonical four brand colours: primary #1a56db, ink #0f172a, white #ffffff, danger #b91c1c.
+ * Everything else is a tint or semantic token.
  */
-export const palette = {
+export const brand = {
   primary: '#1a56db',
   ink: '#0f172a',
   white: '#ffffff',
   danger: '#b91c1c',
+} as const;
+
+export const palette = {
+  ...brand,
   success: '#16a34a',
+  warning: '#b45309',
 } as const;
 
 function channel(hex: string, index: 0 | 1 | 2): number {
@@ -87,6 +92,7 @@ export const darkPalette = {
   primary: '#7aa5ff',
   danger: '#ff8a80',
   success: '#4ade80',
+  warning: '#fcd34d',
 } as const;
 
 /** Dark mode: same names, readable on a dark page. */

@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Alert, Platform } from 'react-native';
+import { palette } from '@mastara/ui-tokens';
 
 import { env } from '@/core/config/env';
 import { httpClient } from '@/core/network';
@@ -52,7 +53,7 @@ export const pushNotificationService = {
             name: 'General',
             importance: Notifications.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#1a56db',
+            lightColor: palette.primary,
           });
           await Notifications.setNotificationChannelAsync('payments', {
             name: 'Payments & Approvals',

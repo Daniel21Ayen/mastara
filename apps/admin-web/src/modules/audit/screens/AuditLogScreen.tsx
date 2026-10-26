@@ -303,7 +303,7 @@ export function AuditLogScreen() {
             </div>
 
             <div>
-              <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '6px', color: '#64748b' }}>
+              <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '6px', color: 'var(--color-text-muted)' }}>
                 RAW AUDIT RECORD PAYLOAD
               </div>
               <pre className={styles.jsonBox}>

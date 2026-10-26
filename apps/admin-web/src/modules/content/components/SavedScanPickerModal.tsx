@@ -74,7 +74,7 @@ export function SavedScanPickerModal({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
+        backgroundColor: 'var(--color-overlay)',
         backdropFilter: 'blur(4px)',
         zIndex: 1050,
         display: 'flex',
@@ -90,7 +90,7 @@ export function SavedScanPickerModal({
     >
       <div
         style={{
-          background: '#ffffff',
+          background: 'var(--color-surface)',
           width: '100%',
           maxWidth: '560px',
           borderRadius: '14px',
@@ -98,24 +98,24 @@ export function SavedScanPickerModal({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--color-border)',
         }}
       >
         <div
           style={{
             padding: '16px 20px',
-            borderBottom: '1px solid #e2e8f0',
+            borderBottom: '1px solid var(--color-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: '#f8fafc',
+            background: 'var(--color-surface-subtle)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: '#1a56db' }}>
+            <span style={{ color: 'var(--color-primary)' }}>
               <Icon name="scan" size={20} />
             </span>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>
               Select Scanned PDF to Attach
             </h3>
           </div>
@@ -127,7 +127,7 @@ export function SavedScanPickerModal({
               border: 'none',
               cursor: 'pointer',
               fontSize: '1.2rem',
-              color: '#64748b',
+              color: 'var(--color-text-muted)',
             }}
           >
             ✕
@@ -144,10 +144,12 @@ export function SavedScanPickerModal({
               width: '100%',
               padding: '9px 14px',
               borderRadius: '8px',
-              border: '1px solid #cbd5e1',
+              border: '1px solid var(--color-border)',
               fontSize: '0.875rem',
               marginBottom: '14px',
               boxSizing: 'border-box',
+              background: 'var(--color-surface)',
+              color: 'var(--color-text)',
             }}
           />
 
@@ -165,13 +167,13 @@ export function SavedScanPickerModal({
                   justifyContent: 'space-between',
                   padding: '10px 14px',
                   borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  background: '#ffffff',
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-surface)',
                   cursor: 'pointer',
                   transition: 'background 0.15s ease',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-surface-subtle)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-surface)')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div
@@ -179,8 +181,8 @@ export function SavedScanPickerModal({
                       width: '32px',
                       height: '32px',
                       borderRadius: '6px',
-                      background: '#eff6ff',
-                      color: '#2563eb',
+                      background: 'var(--color-primary-soft)',
+                      color: 'var(--color-primary)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -190,10 +192,10 @@ export function SavedScanPickerModal({
                     <Icon name="scan" size={16} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#0f172a' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text)' }}>
                       {scan.title}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                       {scan.course} · {scan.pagesCount} pages · {scan.sizeKb} KB
                     </div>
                   </div>
@@ -206,9 +208,9 @@ export function SavedScanPickerModal({
                     fontSize: '0.75rem',
                     fontWeight: 600,
                     borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    background: '#ffffff',
-                    color: '#1a56db',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface)',
+                    color: 'var(--color-primary)',
                     cursor: 'pointer',
                   }}
                 >
@@ -222,8 +224,8 @@ export function SavedScanPickerModal({
         <div
           style={{
             padding: '12px 20px',
-            borderTop: '1px solid #e2e8f0',
-            background: '#f8fafc',
+            borderTop: '1px solid var(--color-border)',
+            background: 'var(--color-surface-subtle)',
             display: 'flex',
             justifyContent: 'flex-end',
           }}
@@ -234,11 +236,12 @@ export function SavedScanPickerModal({
             style={{
               padding: '6px 14px',
               borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              background: '#ffffff',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface)',
               fontSize: '0.8125rem',
               fontWeight: 600,
               cursor: 'pointer',
+              color: 'var(--color-text-muted)',
             }}
           >
             Cancel

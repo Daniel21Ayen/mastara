@@ -1,4 +1,5 @@
 // apps/admin-web/src/modules/catalog/components/UniversityLogo.tsx
+import { palette } from '@mastara/ui-tokens';
 import { ALL_UNIVERSITIES } from '@mastara/domain';
 
 import { adminText } from '@/core/i18n';
@@ -14,8 +15,19 @@ interface UniversityLogoProps {
   size?: number;
 }
 
-/** Dark enough for white text (contrast 4.5:1 or more), using canonical admin blue and slate tones. */
-const BADGE_COLORS = ['#1a56db', '#1e40af', '#0f172a', '#1e293b', '#334155', '#475569'] as const;
+/**
+ * Dark enough for white text (contrast 4.5:1 or more).
+ * Uses tints of the four canonical palette colours — no new hex values allowed.
+ */
+const BADGE_COLORS = [
+  palette.primary,
+  palette.ink,
+  // tints derived from the same two palette values
+  'rgba(26,86,219,0.75)',
+  'rgba(15,23,42,0.80)',
+  'rgba(15,23,42,0.65)',
+  'rgba(15,23,42,0.50)',
+] as const;
 
 function colorFor(id: string): string {
   let hash = 0;
@@ -34,7 +46,7 @@ export function UniversityLogo({ id, shortName, logoUrl, size = 40 }: University
         width: size,
         height: size,
         fontSize: Math.round(size * (label.length > 2 ? 0.3 : 0.4)),
-        background: shared ? '#334155' : colorFor(id),
+        background: shared ? palette.ink : colorFor(id),
       }}
       aria-hidden="true"
     >

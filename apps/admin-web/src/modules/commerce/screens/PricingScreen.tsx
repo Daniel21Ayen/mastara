@@ -557,7 +557,7 @@ export function PricingScreen() {
             </div>
 
             <div className={styles.modalBody}>
-              <p style={{ margin: 0, fontSize: '13.5px', color: '#64748b' }}>
+              <p style={{ margin: 0, fontSize: '13.5px', color: 'var(--color-text-muted)' }}>
                 All student payments counted towards the total ETB revenue. Courses have been unlocked for these students.
               </p>
 
@@ -578,7 +578,7 @@ export function PricingScreen() {
                     <tr key={item.id}>
                       <td>
                         <strong>{item.studentName}</strong>
-                        <div style={{ fontSize: '11px', color: '#64748b' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
                           ID: {item.studentId}
                         </div>
                       </td>

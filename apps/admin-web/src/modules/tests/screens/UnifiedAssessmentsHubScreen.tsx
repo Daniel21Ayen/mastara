@@ -2,8 +2,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { assessmentKindTone } from '@mastara/ui-tokens';
 import { adminText } from '@/core/i18n';
 import {
+  Badge,
   Button,
   Card,
   DataTable,
@@ -288,36 +290,17 @@ export function UnifiedAssessmentsHubScreen() {
       header: 'Title & Assessment Type',
       render: (row) => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.title}</span>
+          <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{row.title}</span>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <span
-              style={{
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                padding: '2px 6px',
-                borderRadius: '4px',
-                background:
-                  row.kind === 'QUIZ'
-                    ? '#eff6ff'
-                    : row.kind === 'FINAL'
-                      ? '#fef2f2'
-                      : '#f0fdf4',
-                color:
-                  row.kind === 'QUIZ'
-                    ? '#1d4ed8'
-                    : row.kind === 'FINAL'
-                      ? '#b91c1c'
-                      : '#15803d',
-              }}
-            >
+            <Badge tone={assessmentKindTone(row.kind)} style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px' }}>
               {row.kind}
-            </span>
+            </Badge>
             {row.durationMinutes ? (
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                 ⏱ {row.durationMinutes} min (Timed)
               </span>
             ) : (
-              <span style={{ fontSize: '0.75rem', color: '#166534', fontWeight: 500 }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 500 }}>
                 ✓ Entitlement Untimed
               </span>
             )}
@@ -330,11 +313,11 @@ export function UnifiedAssessmentsHubScreen() {
       header: 'Parent Module / Course',
       render: (row) => (
         <div>
-          <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#1e293b' }}>
+          <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--color-text)' }}>
             {row.courseCode} · {row.courseTitle}
           </div>
           {row.chapterNumber && (
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
               Chapter {row.chapterNumber}
             </div>
           )}
@@ -345,7 +328,7 @@ export function UnifiedAssessmentsHubScreen() {
       key: 'questionCount',
       header: 'Questions',
       render: (row) => (
-        <span style={{ fontWeight: 600, color: '#334155' }}>
+        <span style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>
           {row.questionCount} {row.questionCount === 1 ? 'item' : 'items'}
         </span>
       ),
@@ -354,7 +337,7 @@ export function UnifiedAssessmentsHubScreen() {
       key: 'totalMarks',
       header: 'Total Marks',
       render: (row) => (
-        <span style={{ fontWeight: 600, color: '#0f172a' }}>
+        <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>
           {row.totalMarks} pts
         </span>
       ),
@@ -379,9 +362,9 @@ export function UnifiedAssessmentsHubScreen() {
               gap: '4px',
               padding: '5px 9px',
               borderRadius: '6px',
-              background: '#ffffff',
-              border: '1px solid #cbd5e1',
-              color: '#334155',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer',
@@ -400,9 +383,9 @@ export function UnifiedAssessmentsHubScreen() {
               gap: '4px',
               padding: '5px 9px',
               borderRadius: '6px',
-              background: '#1a56db',
-              border: '1px solid #1a56db',
-              color: '#ffffff',
+              background: 'var(--color-primary)',
+              border: '1px solid var(--color-primary)',
+              color: 'var(--color-on-primary)',
               fontSize: '0.75rem',
               fontWeight: 600,
               cursor: 'pointer',
@@ -450,7 +433,7 @@ export function UnifiedAssessmentsHubScreen() {
           <p className={styles.kindCount}>{assessments.length} configured</p>
         </div>
         <div className={styles.kind}>
-          <span className={styles.kindIcon} style={{ background: '#f0fdf4', color: '#166534' }}>
+          <span className={styles.kindIcon} style={{ background: 'var(--color-success-soft)', color: 'var(--color-success)' }}>
             <Icon name="check" size={24} />
           </span>
           <h2 className={styles.kindName}>Published Live</h2>
@@ -459,7 +442,7 @@ export function UnifiedAssessmentsHubScreen() {
           </p>
         </div>
         <div className={styles.kind}>
-          <span className={styles.kindIcon} style={{ background: '#fef3c7', color: '#92400e' }}>
+          <span className={styles.kindIcon} style={{ background: 'rgba(245,158,11,0.12)', color: 'var(--color-text-muted)' }}>
             <Icon name="fileText" size={24} />
           </span>
           <h2 className={styles.kindName}>Draft Sets</h2>

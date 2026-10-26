@@ -407,7 +407,7 @@ function FormBody({ kind, set }: BodyProps) {
                   />
                 </div>
                 {selectedMidFinalCourse && (
-                  <p style={{ margin: '-4px 0 8px', fontSize: '0.8rem', color: '#64748b' }}>
+                  <p style={{ margin: '-4px 0 8px', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                     Linked scope: <strong>{selectedMidFinalCourse.universityShortName}</strong> ·{' '}
                     <strong>{selectedMidFinalCourse.programName || 'Common Courses'}</strong> · Semester{' '}
                     {selectedMidFinalCourse.semesterNumber} · {selectedMidFinalCourse.stream}

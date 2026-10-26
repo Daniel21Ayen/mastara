@@ -62,4 +62,35 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    /**
+     * No bare hex colour literals in app code.
+     * Colours must come from `packages/ui-tokens` (via CSS custom properties or the token API).
+     * SVG fill/stroke attributes are excluded – SVG does not support CSS variables inline.
+     * The samplePages sample-data file and ui-tokens source itself are also excluded.
+     */
+    files: [
+      'apps/admin-web/src/**/*.{ts,tsx}',
+      'apps/mobile/src/**/*.{ts,tsx}',
+      'apps/mobile/app/**/*.{ts,tsx}',
+    ],
+    ignores: [
+      'packages/ui-tokens/src/**',
+      'apps/admin-web/src/modules/scans/lib/samplePages.ts',
+      'apps/mobile/src/core/theme/**',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          // Matches string literals like '#1a56db', '#fff', '#AABBCC' that are NOT inside JSX attributes
+          // named fill, stroke, stopColor (SVG presentation attributes).
+          selector:
+            "Literal[value=/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/]:not(JSXAttribute[name.name=/^(fill|stroke|stopColor|color)$/] > JSXExpressionContainer > Literal)",
+          message:
+            "Hardcoded hex colour detected. Use a CSS custom property (var(--color-*)) or import from '@mastara/ui-tokens'.",
+        },
+      ],
+    },
+  },
 );

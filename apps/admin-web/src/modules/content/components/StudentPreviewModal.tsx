@@ -59,7 +59,7 @@ export function StudentPreviewModal({
   // Render text segments with KaTeX / Unicode math support
   const renderMathContent = (text: string) => {
     if (!text.trim()) {
-      return <p style={{ fontStyle: 'italic', color: '#94a3b8' }}>No chapter content provided yet.</p>;
+      return <p style={{ fontStyle: 'italic', color: 'var(--color-text-muted)' }}>No chapter content provided yet.</p>;
     }
 
     const segments = parseMath(text);
@@ -181,9 +181,9 @@ export function StudentPreviewModal({
             {downloadNotice && (
               <div
                 style={{
-                  background: '#f0fdf4',
-                  border: '1px solid #bbf7d0',
-                  color: '#15803d',
+                  background: 'var(--color-success-soft)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-success)',
                   padding: '8px 14px',
                   borderRadius: '8px',
                   fontSize: '0.8125rem',

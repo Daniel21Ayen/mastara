@@ -3,8 +3,8 @@
 
 import { createCourseSchema, updateCourseSchema } from '@mastara/contracts';
 import type { AdminCourse } from '@mastara/contracts';
-import { ALL_UNIVERSITIES, FREE_TRIAL_MAX_ITEMS, STREAMS } from '@mastara/domain';
-import type { CatalogStatus, Stream } from '@mastara/domain';
+import { ALL_UNIVERSITIES, COURSE_ACCENTS, FREE_TRIAL_MAX_ITEMS, STREAMS } from '@mastara/domain';
+import type { CatalogStatus, CourseAccent, Stream } from '@mastara/domain';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -31,6 +31,9 @@ type Field =
   | 'code'
   | 'title'
   | 'stream'
+  | 'accent'
+  | 'icon'
+  | 'freeAccess'
   | 'freeTrialItems';
 
 interface CourseFormDialogProps {
@@ -53,6 +56,9 @@ export function CourseFormDialog({ course, onSaved, onClose }: CourseFormDialogP
   const [code, setCode] = useState(course?.code ?? '');
   const [title, setTitle] = useState(course?.title ?? '');
   const [stream, setStream] = useState<Stream>(course?.stream ?? 'COMMON');
+  const [accent, setAccent] = useState<CourseAccent>((course?.accent as CourseAccent) ?? 'blue');
+  const [icon, setIcon] = useState(course?.icon ?? 'book');
+  const [freeAccess, setFreeAccess] = useState(Boolean(course?.freeAccess));
   const [freeTrial, setFreeTrial] = useState(String(course?.freeTrialItems ?? 0));
   const [status, setStatus] = useState<CatalogStatus>(course?.status ?? 'DRAFT');
   const [reason, setReason] = useState('');
@@ -80,6 +86,9 @@ export function CourseFormDialog({ course, onSaved, onClose }: CourseFormDialogP
       code,
       title,
       stream,
+      accent,
+      icon,
+      freeAccess,
       freeTrialItems: freeTrial.trim() === '' ? Number.NaN : Number(freeTrial),
       status,
     };
@@ -242,6 +251,33 @@ export function CourseFormDialog({ course, onSaved, onClose }: CourseFormDialogP
             value={stream}
             onChange={(event) => setStream(event.target.value as Stream)}
           />
+          <SelectField
+            label="Accent Colour"
+            options={COURSE_ACCENTS.map((name) => ({
+              value: name,
+              label: name.charAt(0).toUpperCase() + name.slice(1),
+            }))}
+            value={accent}
+            onChange={(event) => setAccent(event.target.value as CourseAccent)}
+          />
+          <TextField
+            label="Icon"
+            autoComplete="off"
+            value={icon}
+            onChange={(event) => setIcon(event.target.value)}
+            error={errors.icon}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0' }}>
+            <input
+              id="course-free-access"
+              type="checkbox"
+              checked={freeAccess}
+              onChange={(e) => setFreeAccess(e.target.checked)}
+            />
+            <label htmlFor="course-free-access" style={{ fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}>
+              Free Access (Course is 100% free to all students)
+            </label>
+          </div>
           <TextField
             label={adminText('admin.catalog.courses.freeTrialField')}
             hint={adminText('admin.catalog.courses.freeTrialHint', { max: FREE_TRIAL_MAX_ITEMS })}

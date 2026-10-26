@@ -4,7 +4,7 @@ import type { HTMLAttributes } from 'react';
 import styles from './Badge.module.css';
 
 /** Status chips use tints of the four palette colours, never extra colours. Always pair with text. */
-export type BadgeTone = 'neutral' | 'primary' | 'danger';
+export type BadgeTone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   tone?: BadgeTone;

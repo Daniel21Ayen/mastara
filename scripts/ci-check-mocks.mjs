@@ -107,8 +107,12 @@ function checkFile(filePath) {
       }
     }
 
-    // Check for raw hex colors in mobile app files (enforcing the 4-color design tokens)
-    if (filePath.includes('apps/mobile') && !filePath.endsWith('pushNotifications.ts')) {
+    // Check for raw hex colors in app source files (enforcing design tokens outside packages/ui-tokens)
+    if (
+      (filePath.includes('apps/mobile') || filePath.includes('apps/admin-web')) &&
+      !filePath.endsWith('samplePages.ts') &&
+      !filePath.endsWith('.css')
+    ) {
       const trimmed = line.trim();
       if (!trimmed.startsWith('//') && !trimmed.startsWith('/*') && !trimmed.startsWith('*')) {
         const matches = line.match(/#[0-9a-fA-F]{3,8}\b/g);
@@ -117,7 +121,7 @@ function checkFile(filePath) {
             file: path.relative(rootDir, filePath),
             line: index + 1,
             content: line.trim(),
-            reason: `Raw hex color ${matches.join(', ')} detected in mobile app; use theme.colors.*`,
+            reason: `Raw hex color ${matches.join(', ')} detected; use @mastara/ui-tokens or CSS tokens`,
           });
         }
       }

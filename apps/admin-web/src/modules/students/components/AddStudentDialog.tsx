@@ -95,10 +95,10 @@ export function AddStudentDialog({ onCreated, onClose }: AddStudentDialogProps) 
             style={{
               padding: '0.625rem 0.875rem',
               borderRadius: '6px',
-              background: '#f0fdf4',
-              border: '1px solid #bbf7d0',
+              background: 'var(--color-success-soft)',
+              border: '1px solid var(--color-border)',
               fontSize: '0.8125rem',
-              color: '#166534',
+              color: 'var(--color-success)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',

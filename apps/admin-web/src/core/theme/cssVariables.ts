@@ -1,33 +1,27 @@
 // apps/admin-web/src/core/theme/cssVariables.ts
 import * as tokens from '@mastara/ui-tokens';
-import { fontSize, palette, radius, spacing, withAlpha } from '@mastara/ui-tokens';
-
-/**
- * The student app's light/dark refactor (R2) replaced the single `colors` object with `lightColors` and
- * `darkColors` (same names). The portal is light only, so it reads `lightColors` when it exists and
- * falls back to the older `colors`. This keeps one source of colours for both apps.
- */
-const named = tokens as unknown as Record<string, Record<string, string> | undefined>;
-const colors: Record<string, string> = named.lightColors ?? named.colors ?? {};
+import { darkColors, darkPalette, fontSize, lightColors, palette, radius, spacing, withAlpha } from '@mastara/ui-tokens';
 
 function kebab(name: string): string {
   return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
-function group(prefix: string, values: Record<string, string | number>, unit = ''): string[] {
+function group(prefix: string, values: object, unit = ''): string[] {
   return Object.entries(values).map(
     ([name, value]) => `--${prefix}-${kebab(name)}: ${value}${unit};`,
   );
 }
 
 /**
- * Builds the `:root` rule from `packages/ui-tokens`, so the web portal uses exactly the same four
- * colours as the app. Style sheets use `var(--color-primary)` and never type a colour value.
+ * Builds :root (light) and [data-theme=dark] rules from `packages/ui-tokens`.
+ * Style sheets always use `var(--color-*)` — they never contain a literal colour value.
  */
 export function buildCssVariables(): string {
-  const lines = [
-    ...group('color', colors),
+  const lightLines = [
+    ...group('color', lightColors),
     `--color-text-soft: ${withAlpha(palette.ink, 0.1)};`,
+    `--color-warning: ${palette.warning};`,
+    '--color-warning-soft: rgba(245, 158, 11, 0.12);',
     ...group('space', spacing, 'px'),
     ...group('radius', radius, 'px'),
     ...group('font-size', fontSize, 'px'),
@@ -35,5 +29,19 @@ export function buildCssVariables(): string {
     '--sidebar-width: 232px;',
     '--topbar-height: 64px;',
   ];
-  return `:root {\n  ${lines.join('\n  ')}\n}`;
+
+  const darkLines = [
+    ...group('color', darkColors),
+    `--color-text-soft: ${withAlpha(darkColors.text, 0.12)};`,
+    `--color-warning: ${darkPalette.warning};`,
+    '--color-warning-soft: rgba(251, 191, 36, 0.16);',
+  ];
+
+  return (
+    `:root {\n  ${lightLines.join('\n  ')}\n}\n\n` +
+    `[data-theme=dark] {\n  ${darkLines.join('\n  ')}\n}`
+  );
 }
+
+/** @deprecated Use buildCssVariables() which now supports both light and dark. */
+export const _tokens = tokens;

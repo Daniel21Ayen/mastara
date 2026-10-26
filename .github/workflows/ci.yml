@@ -32,6 +32,9 @@ jobs:
       - name: CI Mock Gate (Zero Mocks in Production)
         run: npm run check:mocks
 
+      - name: Design Tokens Hex Check (Zero Hex Outside ui-tokens)
+        run: npm run check:hex
+
       - name: Monorepo Typecheck
         run: npm run typecheck
 

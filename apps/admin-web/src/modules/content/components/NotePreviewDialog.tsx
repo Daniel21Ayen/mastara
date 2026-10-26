@@ -41,7 +41,7 @@ export function NotePreviewDialog({ title, body, lang = 'en', onClose }: NotePre
             ))}
           </div>
 
-          <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '4px' }}>
+          <div style={{ display: 'inline-flex', background: 'var(--color-surface-subtle)', padding: '3px', borderRadius: '8px', gap: '4px' }}>
             <button
               type="button"
               onClick={() => setViewport('desktop')}
@@ -55,8 +55,8 @@ export function NotePreviewDialog({ title, body, lang = 'en', onClose }: NotePre
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                background: viewport === 'desktop' ? '#ffffff' : 'transparent',
-                color: viewport === 'desktop' ? '#0f172a' : '#64748b',
+                background: viewport === 'desktop' ? 'var(--color-surface)' : 'transparent',
+                color: viewport === 'desktop' ? 'var(--color-text)' : 'var(--color-text-muted)',
                 boxShadow: viewport === 'desktop' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               }}
             >
@@ -76,8 +76,8 @@ export function NotePreviewDialog({ title, body, lang = 'en', onClose }: NotePre
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                background: viewport === 'mobile' ? '#ffffff' : 'transparent',
-                color: viewport === 'mobile' ? '#0f172a' : '#64748b',
+                background: viewport === 'mobile' ? 'var(--color-surface)' : 'transparent',
+                color: viewport === 'mobile' ? 'var(--color-text)' : 'var(--color-text-muted)',
                 boxShadow: viewport === 'mobile' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               }}
             >
@@ -92,10 +92,10 @@ export function NotePreviewDialog({ title, body, lang = 'en', onClose }: NotePre
             maxWidth: viewport === 'mobile' ? '375px' : '100%',
             margin: viewport === 'mobile' ? '0 auto' : undefined,
             transition: 'max-width 0.2s ease',
-            border: viewport === 'mobile' ? '2px solid #cbd5e1' : 'none',
+            border: viewport === 'mobile' ? '2px solid var(--color-border)' : 'none',
             borderRadius: viewport === 'mobile' ? '18px' : '0',
             padding: viewport === 'mobile' ? '1.25rem' : '0',
-            background: viewport === 'mobile' ? '#ffffff' : 'transparent',
+            background: viewport === 'mobile' ? 'var(--color-surface)' : 'transparent',
           }}
         >
         <h3 className={styles.previewTitle} lang={shown}>

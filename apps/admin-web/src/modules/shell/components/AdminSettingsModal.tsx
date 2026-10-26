@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { Icon } from '@/shared/ui';
+import { useTheme } from '@/core/theme';
 import styles from './AdminSettingsModal.module.css';
 
 interface AdminSettingsModalProps {
@@ -16,6 +17,7 @@ export function AdminSettingsModal({ isOpen, onClose }: AdminSettingsModalProps)
   const [autoRefreshQueue, setAutoRefreshQueue] = useState(true);
   const [currency, setCurrency] = useState('ETB');
   const [saved, setSaved] = useState(false);
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   if (!isOpen) return null;
 
@@ -89,6 +91,25 @@ export function AdminSettingsModal({ isOpen, onClose }: AdminSettingsModalProps)
                   type="checkbox"
                   checked={soundEnabled}
                   onChange={(e) => setSoundEnabled(e.target.checked)}
+                />
+                <span className={styles.slider} />
+              </label>
+            </div>
+          </div>
+
+          {/* Appearance */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Appearance</h3>
+            <div className={styles.settingRow}>
+              <div className={styles.settingInfo}>
+                <strong>Dark Theme</strong>
+                <p>Switch the Admin Portal between light and dark colour schemes.</p>
+              </div>
+              <label className={styles.toggle}>
+                <input
+                  type="checkbox"
+                  checked={isDark}
+                  onChange={toggleTheme}
                 />
                 <span className={styles.slider} />
               </label>

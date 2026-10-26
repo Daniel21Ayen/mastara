@@ -109,6 +109,15 @@ export class AdminCourseDto {
   @ApiProperty({ enum: ["NATURAL", "SOCIAL", "COMMON"], example: "NATURAL" })
   stream!: "NATURAL" | "SOCIAL" | "COMMON";
 
+  @ApiPropertyOptional({ example: "blue" })
+  accent!: string;
+
+  @ApiPropertyOptional({ example: "book" })
+  icon!: string;
+
+  @ApiPropertyOptional({ example: false })
+  freeAccess!: boolean;
+
   @ApiProperty({ example: true })
   promotional!: boolean;
 
@@ -205,6 +214,21 @@ export class CreateCourseDto {
   @IsEnum(["NATURAL", "SOCIAL", "COMMON"])
   stream!: "NATURAL" | "SOCIAL" | "COMMON";
 
+  @ApiPropertyOptional({ example: "blue" })
+  @IsOptional()
+  @IsString()
+  accent?: string;
+
+  @ApiPropertyOptional({ example: "book" })
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  @IsBoolean()
+  freeAccess?: boolean;
+
   @ApiProperty({ example: 3, minimum: 0, maximum: 20 })
   @Type(() => Number)
   @IsInt()
@@ -231,6 +255,21 @@ export class UpdateCourseDto {
   @ApiProperty({ enum: ["NATURAL", "SOCIAL", "COMMON"], example: "NATURAL" })
   @IsEnum(["NATURAL", "SOCIAL", "COMMON"])
   stream!: "NATURAL" | "SOCIAL" | "COMMON";
+
+  @ApiPropertyOptional({ example: "blue" })
+  @IsOptional()
+  @IsString()
+  accent?: string;
+
+  @ApiPropertyOptional({ example: "book" })
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  @IsBoolean()
+  freeAccess?: boolean;
 
   @ApiProperty({ example: 3, minimum: 0, maximum: 20 })
   @Type(() => Number)

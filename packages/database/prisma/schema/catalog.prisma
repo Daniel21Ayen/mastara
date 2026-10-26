@@ -96,7 +96,8 @@ model Course {
   description_am    String?           @db.Text
   stream            Stream
   icon              String            @default("book")
-  color             String            @default("#1a56db")
+  accent            String            @default("blue")
+  free_access       Boolean           @default(false)
   free_trial_items  Int               @default(3)
   is_promotional    Boolean           @default(false)
   trial_expiry_days Int?

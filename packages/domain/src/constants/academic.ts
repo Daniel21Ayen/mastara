@@ -11,3 +11,15 @@ export type ExamKind = (typeof EXAM_KINDS)[number];
 
 export const QUIZ_NUMBERS = [1, 2, 3] as const;
 export type QuizNumber = (typeof QUIZ_NUMBERS)[number];
+
+export const COURSE_ACCENTS = [
+  'blue',
+  'violet',
+  'emerald',
+  'orange',
+  'cyan',
+  'amber',
+  'fuchsia',
+  'lime',
+] as const;
+export type CourseAccent = (typeof COURSE_ACCENTS)[number];

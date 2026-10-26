@@ -32,7 +32,7 @@ export default function ForbiddenPage() {
           height: '64px',
           borderRadius: '50%',
           background: 'rgba(239, 68, 68, 0.1)',
-          color: '#ef4444',
+          color: 'var(--color-danger)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -43,13 +43,13 @@ export default function ForbiddenPage() {
         🛡️
       </div>
 
-      <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-on-surface, #0f172a)', margin: 0 }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>
         403 — Access Denied
       </h1>
 
       <p
         style={{
-          color: 'var(--color-on-surface-subtle, #64748b)',
+          color: 'var(--color-text-muted)',
           fontSize: '1rem',
           maxWidth: '480px',
           margin: '12px 0 24px',
@@ -67,8 +67,8 @@ export default function ForbiddenPage() {
             display: 'inline-block',
             padding: '10px 24px',
             borderRadius: '8px',
-            background: 'var(--color-primary, #1a56db)',
-            color: '#ffffff',
+            background: 'var(--color-primary)',
+            color: 'var(--color-on-primary)',
             fontWeight: 600,
             textDecoration: 'none',
           }}

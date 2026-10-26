@@ -19,6 +19,16 @@
   color: var(--color-primary);
 }
 
+.success {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.warning {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
 .danger {
   background: var(--color-danger-soft);
   color: var(--color-danger);

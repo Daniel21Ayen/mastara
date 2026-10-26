@@ -150,8 +150,8 @@ export function StudentProfileScreen({ id }: { id: string }) {
                         style={{
                           fontFamily: 'monospace',
                           fontWeight: 700,
-                          color: 'var(--color-primary, #2563eb)',
-                          background: '#eff6ff',
+                          color: 'var(--color-primary)',
+                          background: 'var(--color-primary-soft)',
                           padding: '2px 8px',
                           borderRadius: '4px',
                         }}
@@ -159,7 +159,7 @@ export function StudentProfileScreen({ id }: { id: string }) {
                         {student.studentCode}
                       </span>
                     ) : (
-                      <span style={{ color: 'var(--color-text-muted, #94a3b8)', fontStyle: 'italic' }}>
+                      <span style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
                         —
                       </span>
                     ),

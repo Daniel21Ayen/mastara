@@ -193,7 +193,7 @@ export function ReportsScreen() {
                       className={styles.progressBarFill}
                       style={{
                         width: `${methodPct}%`,
-                        backgroundColor: item.methodName.includes('Telebirr') ? '#2563eb' : '#7c3aed',
+                        backgroundColor: item.methodName.includes('Telebirr') ? 'var(--color-primary)' : 'var(--color-primary-hover)',
                       }}
                     />
                   </div>
@@ -244,7 +244,7 @@ export function ReportsScreen() {
                           className={styles.progressBarFill}
                           style={{
                             width: `${course.completionRate}%`,
-                            backgroundColor: course.completionRate >= 75 ? '#16a34a' : '#eab308',
+                            backgroundColor: course.completionRate >= 75 ? 'var(--color-success)' : 'var(--color-warning)',
                           }}
                         />
                       </div>

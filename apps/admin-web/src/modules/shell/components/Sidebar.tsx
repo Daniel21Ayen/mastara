@@ -97,12 +97,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
             <path
               d="M15 6.5C11.5 3 4 3 2.5 5.5v16.5c2.5 0 8.5 0 12.5 3.5 4-3.5 10-3.5 12.5-3.5V5.5c-1.5-2.5-9-2.5-12.5 1z"
-              fill="#1a56db"
+              fill="var(--color-primary)"
             />
-            <path d="M15 25.5V6.5" stroke="#1648b8" strokeWidth="1.5" />
+            <path d="M15 25.5V6.5" stroke="var(--color-primary-hover)" strokeWidth="1.5" />
             <path
               d="M15 1.5l1.2 2.3 2.6.4-1.9 1.8.4 2.6-2.3-1.2-2.3 1.2.4-2.6-1.9-1.8 2.6-.4L15 1.5z"
-              fill="#FBBF24"
+              fill="var(--color-primary)"
             />
           </svg>
         </div>

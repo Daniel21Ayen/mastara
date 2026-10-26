@@ -24,6 +24,7 @@
     "dev:worker": "npm run dev --workspace=@mastara/worker",
     "db:migrate:deploy": "npm run migrate:deploy --workspace=@mastara/database",
     "check:mocks": "node scripts/ci-check-mocks.mjs",
+    "check:hex": "eslint apps/admin-web/src apps/mobile/src --quiet",
     "generate:seed": "node scripts/generate-seed-catalog.mjs",
     "postinstall": "node scripts/apply-patches.mjs"
   },

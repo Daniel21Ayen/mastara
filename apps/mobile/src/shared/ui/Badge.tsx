@@ -1,25 +1,31 @@
 // apps/mobile/src/shared/ui/Badge.tsx
 import { View } from 'react-native';
 
+import type { StatusTone } from '@mastara/ui-tokens';
 import { createStyles, useTheme } from '@/core/theme';
 
 import { AppText } from './AppText';
 
+export type MobileBadgeTone = StatusTone | 'muted';
+
 interface BadgeProps {
   label: string;
-  tone?: 'primary' | 'danger' | 'muted';
+  tone?: MobileBadgeTone;
 }
 
 export function Badge({ label, tone = 'primary' }: BadgeProps) {
   const theme = useTheme();
   const styles = useStyles();
 
-  const tones = {
+  const tones: Record<MobileBadgeTone, { background: string; text: string }> = {
     primary: { background: theme.colors.primarySoft, text: theme.colors.primary },
+    success: { background: theme.colors.successSoft, text: theme.colors.success },
+    warning: { background: theme.colors.primarySoft, text: theme.colors.primary },
     danger: { background: theme.colors.dangerSoft, text: theme.colors.danger },
+    neutral: { background: theme.colors.border, text: theme.colors.textMuted },
     muted: { background: theme.colors.border, text: theme.colors.textMuted },
-  } as const;
-  const palette = tones[tone];
+  };
+  const palette = tones[tone] ?? tones.primary;
 
   return (
     <View style={[styles.base, { backgroundColor: palette.background }]}>

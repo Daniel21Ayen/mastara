@@ -154,7 +154,7 @@ export function BulkImportDialog({
         {/* Body */}
         <div className={styles.body}>
           {fileError ? (
-            <div style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#991b1b', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px', fontSize: '0.9rem', fontWeight: 600 }}>
+            <div style={{ background: 'var(--color-danger-soft)', border: '1px solid var(--color-danger)', color: 'var(--color-danger)', padding: '10px 14px', borderRadius: '8px', marginBottom: '12px', fontSize: '0.9rem', fontWeight: 600 }}>
               ⚠️ {fileError}
             </div>
           ) : null}

@@ -286,10 +286,10 @@ export function AssessmentDrawerWorkflow({
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                   <div>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>
                       Questions in this Assessment ({questions.length})
                     </h3>
-                    <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                       Reorder, configure types, and preview KaTeX formulas.
                     </p>
                   </div>
@@ -333,7 +333,7 @@ export function AssessmentDrawerWorkflow({
                             <KaTeXRenderer text={q.prompt} />
                           </div>
                           {q.options && q.options.length > 0 && (
-                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '6px' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '6px' }}>
                               {q.options.length} answer options provided
                             </div>
                           )}

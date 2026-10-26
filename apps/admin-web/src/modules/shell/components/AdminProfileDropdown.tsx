@@ -3,6 +3,7 @@
 
 import React from 'react';
 import type { AdminUser } from '@mastara/contracts';
+import { useTheme } from '@/core/theme';
 import { Icon } from '@/shared/ui';
 import styles from './AdminProfileDropdown.module.css';
 
@@ -23,6 +24,8 @@ export function AdminProfileDropdown({
   onOpenSettings,
   onLogout,
 }: AdminProfileDropdownProps) {
+  const { isDark, toggle: toggleTheme } = useTheme();
+
   if (!isOpen) return null;
 
   return (
@@ -78,6 +81,22 @@ export function AdminProfileDropdown({
           <Icon name="chevronRight" size={14} />
         </button>
 
+        <button
+          type="button"
+          className={styles.menuItem}
+          onClick={toggleTheme}
+        >
+          <div className={styles.itemIcon}>
+            <Icon name="palette" size={16} />
+          </div>
+          <div className={styles.itemText}>
+            <span>{isDark ? 'Light Theme' : 'Dark Theme'}</span>
+            <small>{isDark ? 'Switch to light mode' : 'Switch to dark mode'}</small>
+          </div>
+          <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: 'var(--color-primary-soft)', color: 'var(--color-primary)' }}>
+            {isDark ? 'DARK' : 'LIGHT'}
+          </span>
+        </button>
       </div>
 
       <div className={styles.divider} />
