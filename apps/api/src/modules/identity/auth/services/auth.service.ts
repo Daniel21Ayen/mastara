@@ -241,19 +241,71 @@ export class AuthService {
   async adminLogin(dto: LoginDto): Promise<AdminAuthResponseDto> {
     const trimmedIdentifier = dto.identifier.trim();
     const normalizedEmail = trimmedIdentifier.toLowerCase();
+    let normalizedPhone: string | undefined;
+    const isPhone = trimmedIdentifier.startsWith("+251") || trimmedIdentifier.startsWith("09") || trimmedIdentifier.startsWith("251");
+    if (isPhone) {
+      normalizedPhone = trimmedIdentifier.startsWith("09")
+        ? `+251${trimmedIdentifier.slice(1)}`
+        : trimmedIdentifier.startsWith("251")
+          ? `+${trimmedIdentifier}`
+          : trimmedIdentifier;
+    }
 
     // Query separate admin_user table per SRS 10.3
-    const user = await this.prisma.adminUser.findFirst({
+    let user: any = await this.prisma.adminUser.findFirst({
       where: {
-        OR: [
-          { email: { equals: normalizedEmail, mode: "insensitive" } },
-          { email: trimmedIdentifier },
-        ],
+        OR: isPhone
+          ? [
+              { phone_number: normalizedPhone || trimmedIdentifier } as any,
+              { email: trimmedIdentifier },
+            ]
+          : [
+              { email: { equals: normalizedEmail, mode: "insensitive" } },
+              { email: trimmedIdentifier },
+            ],
       },
       include: {
         admin_scopes: true,
       },
     });
+
+    if (!user && this.prisma.student) {
+      // Backward compatibility fallback: check student table for legacy admin records
+      const studentAdmin = await this.prisma.student.findFirst({
+        where: {
+          role: Role.ADMIN,
+          OR: [
+            { email: { equals: normalizedEmail, mode: "insensitive" } },
+            { email: trimmedIdentifier },
+            { phone: trimmedIdentifier },
+          ],
+        },
+      });
+
+      if (studentAdmin && this.prisma.adminUser?.upsert) {
+        user = await this.prisma.adminUser.upsert({
+          where: { email: studentAdmin.email || normalizedEmail },
+          update: {
+            password_hash: studentAdmin.password_hash,
+            first_name: studentAdmin.first_name,
+            last_name: studentAdmin.last_name,
+            admin_role: (studentAdmin.admin_role as any) || "SUPER_ADMIN",
+            is_active: studentAdmin.status === StudentStatus.ACTIVE,
+          },
+          create: {
+            email: studentAdmin.email || normalizedEmail,
+            password_hash: studentAdmin.password_hash,
+            first_name: studentAdmin.first_name,
+            last_name: studentAdmin.last_name,
+            admin_role: (studentAdmin.admin_role as any) || "SUPER_ADMIN",
+            is_active: studentAdmin.status === StudentStatus.ACTIVE,
+          },
+          include: {
+            admin_scopes: true,
+          },
+        });
+      }
+    }
 
     if (!user) {
       throw new UnauthorizedException({
@@ -363,7 +415,7 @@ export class AuthService {
         role: "ADMIN",
         adminRole,
         permissions,
-        scopes: user.admin_scopes?.map((s) => ({
+        scopes: user.admin_scopes?.map((s: any) => ({
           id: s.id,
           universityId: s.university_id,
           programId: s.program_id,

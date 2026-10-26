@@ -102,6 +102,25 @@ async function main() {
       last_name: "Admin",
     },
   });
+
+  await prisma.adminUser.upsert({
+    where: { email: superAdminEmail },
+    update: {
+      password_hash: superAdminPasswordHash,
+      first_name: "Super",
+      last_name: "Admin",
+      admin_role: AdminRole.SUPER_ADMIN,
+      is_active: true,
+    },
+    create: {
+      email: superAdminEmail,
+      password_hash: superAdminPasswordHash,
+      first_name: "Super",
+      last_name: "Admin",
+      admin_role: AdminRole.SUPER_ADMIN,
+      is_active: true,
+    },
+  });
   console.log(`  ✅ Super Admin verified: ${superAdminEmail}`);
 
   // 1b. Academic Admin (Config-driven or dev fallback)
@@ -133,9 +152,56 @@ async function main() {
       last_name: "Coordinator",
     },
   });
+
+  await prisma.adminUser.upsert({
+    where: { email: academicAdminEmail },
+    update: {
+      password_hash: academicAdminPasswordHash,
+      first_name: "Academic",
+      last_name: "Coordinator",
+      admin_role: AdminRole.ACADEMIC_ADMIN,
+      is_active: true,
+    },
+    create: {
+      email: academicAdminEmail,
+      password_hash: academicAdminPasswordHash,
+      first_name: "Academic",
+      last_name: "Coordinator",
+      admin_role: AdminRole.ACADEMIC_ADMIN,
+      is_active: true,
+    },
+  });
   console.log(`  ✅ Academic Admin verified: ${academicAdminEmail}`);
 
-  // Note: Only Super Admin (admin@mastara.demo) and Academic Admin (academic@mastara.demo) are retained per SRS v3.2 configuration.
+  // 1c. Operations Admin (Config-driven or dev fallback)
+  const opsAdminEmail = process.env.SEED_OPS_EMAIL?.trim() || "ops@mastara.demo";
+  const opsAdminPasswordHash = resolvePasswordHash({
+    plainEnvKey: "SEED_OPS_PASSWORD",
+    hashEnvKey: "SEED_OPS_PASSWORD_HASH",
+    defaultDevHash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123 (dev only)
+    roleName: "Operations Admin",
+    isProduction,
+  });
+
+  await prisma.adminUser.upsert({
+    where: { email: opsAdminEmail },
+    update: {
+      password_hash: opsAdminPasswordHash,
+      first_name: "Operations",
+      last_name: "Admin",
+      admin_role: AdminRole.OPERATIONS_ADMIN,
+      is_active: true,
+    },
+    create: {
+      email: opsAdminEmail,
+      password_hash: opsAdminPasswordHash,
+      first_name: "Operations",
+      last_name: "Admin",
+      admin_role: AdminRole.OPERATIONS_ADMIN,
+      is_active: true,
+    },
+  });
+  console.log(`  ✅ Operations Admin verified: ${opsAdminEmail}`);
 
   // ==========================================================================
   // 2. Universities (All 6 National Public Universities)
