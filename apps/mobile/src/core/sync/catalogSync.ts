@@ -119,7 +119,7 @@ export async function syncCatalog(
 
         const snapshot = await httpClient.get<CatalogSnapshotResponse | null>(
           `/catalog/snapshot?${queryParams.toString()}`,
-          { headers },
+          { headers, timeoutMs: 15000 },
         );
 
         // 304 Not Modified
