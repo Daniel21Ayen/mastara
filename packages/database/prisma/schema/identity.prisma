@@ -92,7 +92,6 @@ model Student {
   outbox_events    OutboxEvent[]
   notifications    Notification[]
   support_tickets  SupportTicket[]
-  support_messages SupportMessage[]
   security_logs    SecurityEventLog[]
 
   @@index([phone])
