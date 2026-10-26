@@ -10,6 +10,8 @@ function getHostFromUri(uri?: string | null): string | null {
   return null;
 }
 
+let resolvedHost: string | null = null;
+
 function resolveApiUrl(): string {
   const rawUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4001';
 
@@ -29,9 +31,14 @@ function resolveApiUrl(): string {
     }
 
     if (rawUrl.includes('localhost') || rawUrl.includes('127.0.0.1')) {
+      if (resolvedHost) {
+        return rawUrl.replace(/localhost|127\.0\.0\.1/, resolvedHost);
+      }
+
       const scriptUrl = NativeModules?.SourceCode?.scriptURL;
       const scriptHost = getHostFromUri(scriptUrl);
       if (scriptHost) {
+        resolvedHost = scriptHost;
         return rawUrl.replace(/localhost|127\.0\.0\.1/, scriptHost);
       }
 
@@ -52,10 +59,12 @@ function resolveApiUrl(): string {
         getHostFromUri(Constants?.experienceUrl);
 
       if (expoHost) {
+        resolvedHost = expoHost;
         return rawUrl.replace(/localhost|127\.0\.0\.1/, expoHost);
       }
 
-      if (Platform.OS === 'android') {
+      const isDevice = Constants?.isDevice ?? false;
+      if (Platform.OS === 'android' && !isDevice) {
         return rawUrl.replace(/localhost|127\.0\.0\.1/, '10.0.2.2');
       }
     }
@@ -72,5 +81,7 @@ export const env = {
   dbEncryption: process.env.EXPO_PUBLIC_DB_ENCRYPTION === 'true',
   /** Block screenshots and screen recording and show the watermark while signed in. Turn off only to capture screenshots for design or support. */
   protectContent: process.env.EXPO_PUBLIC_PROTECT_CONTENT !== 'false',
-  apiUrl: resolveApiUrl(),
+  get apiUrl(): string {
+    return resolveApiUrl();
+  },
 } as const;
