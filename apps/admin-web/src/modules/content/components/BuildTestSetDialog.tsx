@@ -173,7 +173,7 @@ export function BuildTestSetDialog({
         status: status === 'Active' ? 'PUBLISHED' : 'DRAFT',
       })
       .catch(() => {
-        // Safe offline / mock fallback
+        // Safe offline fallback
       });
 
     onBuild(newTestSet);

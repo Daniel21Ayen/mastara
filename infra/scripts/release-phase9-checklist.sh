@@ -86,7 +86,7 @@ else
 fi
 
 if [ -f "${ROOT_DIR}/apps/mobile/scripts/check-app-size.mjs" ]; then
-  echo "  ✓ scripts/check-app-size.mjs present (<50 MB release gatekeeper)"
+  echo "  ✓ scripts/check-app-size.mjs present (<20 MB release gatekeeper)"
 fi
 echo "✓ Release build configuration verified."
 echo ""

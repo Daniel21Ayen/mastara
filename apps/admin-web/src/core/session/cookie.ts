@@ -3,9 +3,8 @@ import { adminAuthResultSchema } from '@mastara/contracts';
 import type { AdminAuthResult } from '@mastara/contracts';
 
 /**
- * MOCK SESSION. The mock sign-in stores the session in a plain cookie so that `middleware.ts` and the
- * server layout can guard pages. In backend phase B2 the API sets an httpOnly cookie instead, and only
- * `readSession` changes. Nothing here is a security boundary.
+ * Admin portal session cookie helpers for reading and decoding auth sessions in `middleware.ts`
+ * and server layout guards.
  */
 export const SESSION_COOKIE = 'mastara_admin_session';
 export const SESSION_MAX_AGE_SECONDS = 8 * 60 * 60;

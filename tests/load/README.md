@@ -39,3 +39,10 @@ Simulates peak student concurrency downloading catalog snapshots, testing 304 ET
 k6 run tests/load/k6-catalog-snapshot.js
 ```
 
+### 5. Admin Lists Scale Load Test (10,000 Rows, p95 < 500 ms)
+Validates that administrative paginated tables (payments, audit trail, students, refunds, reports) respond under 500 ms p95 at 10,000 rows scale:
+```bash
+k6 run tests/load/k6-admin-lists-scale.js
+```
+
+

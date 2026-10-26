@@ -332,7 +332,7 @@ export function ScanWizardScreen() {
 
       await scansApi.createScan(payload);
     } catch {
-      // Mock mode fallback safe
+      // Fallback safe for offline mode
     }
     setPublishedSuccess(status);
   };

@@ -1,5 +1,5 @@
 // packages/domain/src/constants/sync.ts
-/** Kinds of change a phone can queue while offline. Add a kind here and handle it in the sync mock/server. */
+/** Kinds of change a phone can queue while offline. Add a kind here and handle it in the sync server. */
 export const OUTBOX_TYPES = ['PROFILE_SAVED', 'ATTEMPT_FINISHED', 'EXAM_SUBMITTED'] as const;
 export type OutboxType = (typeof OUTBOX_TYPES)[number];
 

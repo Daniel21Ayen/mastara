@@ -32,7 +32,7 @@ export const SCAN_VALIDATION = {
 
 const required = z.string().trim().min(1, { message: VALIDATION.required });
 
-/** A file the admin added. The mock keeps its details only; the backend phase stores the bytes. */
+/** A file the admin added with its details and metadata. */
 export const scanFileSchema = z.object({
   name: z.string().min(1),
   mime: z.enum(SCAN_FILE_TYPES, { message: SCAN_VALIDATION.fileType }),

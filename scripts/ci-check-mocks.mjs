@@ -30,13 +30,13 @@ function scanDirectory(dir) {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
 
-    // Fail if production source tree contains any mocks/ or mock/ path
-    if (entry.name === 'mock' || entry.name === 'mocks') {
+    // Fail if production source tree contains any mocks/, mock/, or dev-mocks/ path
+    if (entry.name === 'mock' || entry.name === 'mocks' || entry.name === 'dev-mocks') {
       violations.push({
         file: path.relative(rootDir, fullPath),
         line: 1,
         content: entry.name,
-        reason: 'Production source tree contains a mock/ or mocks/ directory',
+        reason: 'Production source tree contains a mock/, mocks/, or dev-mocks/ directory',
       });
       continue;
     }
@@ -86,7 +86,13 @@ function checkFile(filePath) {
   lines.forEach((line, index) => {
     // Check for mock imports in production files
     const isImportOrRequire = /^\s*(import\s|const\s+.*=\s+require\(|export\s+.*from)/.test(line);
-    if (isImportOrRequire && (line.includes('/mock') || line.includes('/mocks') || line.includes('core/mock'))) {
+    if (
+      isImportOrRequire &&
+      (line.includes('/mock') ||
+        line.includes('/mocks') ||
+        line.includes('core/mock') ||
+        line.includes('dev-mocks'))
+    ) {
       violations.push({
         file: path.relative(rootDir, filePath),
         line: index + 1,
@@ -129,10 +135,55 @@ function checkFile(filePath) {
   });
 }
 
+/**
+ * Scans compiled production bundle artifacts (e.g. .next/static or mobile dist)
+ * to guarantee that no mock paths leaked into release code.
+ */
+function scanProductionBundles() {
+  const BUNDLE_DIRS = [
+    path.join(rootDir, 'apps/admin-web/.next/static'),
+    path.join(rootDir, 'apps/mobile/dist'),
+    path.join(rootDir, 'apps/mobile/build'),
+  ];
+
+  for (const bundleDir of BUNDLE_DIRS) {
+    if (!fs.existsSync(bundleDir)) continue;
+
+    function walkBundle(dir) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walkBundle(full);
+        } else if (entry.isFile() && (entry.name.endsWith('.js') || entry.name.endsWith('.map'))) {
+          const content = fs.readFileSync(full, 'utf8');
+          if (
+            content.includes('dev-mocks') ||
+            content.includes('core/mock') ||
+            content.includes('useMocks:true') ||
+            content.includes('useMocks:!0')
+          ) {
+            violations.push({
+              file: path.relative(rootDir, full),
+              line: 1,
+              content: entry.name,
+              reason: 'Production bundle artifact contains mock paths or active useMocks flag',
+            });
+          }
+        }
+      }
+    }
+    walkBundle(bundleDir);
+  }
+}
+
 console.log('🔍 CI Gate: Scanning production code for mock imports and enforcing color token consistency...');
 for (const dir of PRODUCTION_DIRS) {
   scanDirectory(dir);
 }
+
+console.log('🔍 CI Gate: Inspecting production bundle artifacts for mock path leakage...');
+scanProductionBundles();
 
 if (violations.length > 0) {
   console.error(`\n❌ CI Mock Gate FAILED: Found ${violations.length} mock violations in production code:\n`);
@@ -142,6 +193,6 @@ if (violations.length > 0) {
   }
   process.exit(1);
 } else {
-  console.log('✅ CI Mock Gate PASSED: Zero mock imports or useMocks branches in production code!\n');
+  console.log('✅ CI Mock Gate PASSED: Zero mock imports or useMocks branches in production code & bundles!\n');
   process.exit(0);
 }

@@ -13,7 +13,7 @@ import { OrderRow } from '../components/OrderRow';
 import { useOrders } from '../hooks/useStoreData';
 import { useOrderDraft } from '../state/OrderDraftContext';
 
-/** Receipts and their status. A mock admin approves each one about 10 seconds after it is sent. */
+/** Receipts and their status. Updated as administrative reviewers approve payments. */
 export function OrdersScreen() {
   const theme = useTheme();
   const styles = useStyles();

@@ -23,12 +23,46 @@ import {
   AttemptState,
   ContentKind,
 } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { prisma } from "./client";
 
+function resolvePasswordHash(opts: {
+  plainEnvKey: string;
+  hashEnvKey: string;
+  defaultDevHash?: string;
+  roleName: string;
+  isProduction: boolean;
+}): string {
+  const configuredHash = process.env[opts.hashEnvKey]?.trim();
+  if (configuredHash) return configuredHash;
+
+  const configuredPlain = process.env[opts.plainEnvKey]?.trim();
+  if (configuredPlain) {
+    if (configuredPlain.length < 8) {
+      console.error(`🛑 FATAL: ${opts.plainEnvKey} must be at least 8 characters long.`);
+      process.exit(1);
+    }
+    return bcrypt.hashSync(configuredPlain, 10);
+  }
+
+  if (opts.isProduction) {
+    console.error(
+      `🛑 FATAL: Production seeding requires ${opts.plainEnvKey} or ${opts.hashEnvKey} to be explicitly set.`,
+    );
+    console.error(`Built-in default credentials are prohibited in production per Mastara SRS 3.2 Phase 6.`);
+    process.exit(1);
+  }
+
+  if (opts.defaultDevHash) return opts.defaultDevHash;
+
+  console.error(`🛑 FATAL: Missing password configuration for ${opts.roleName}.`);
+  process.exit(1);
+}
+
 async function main() {
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_PROD_SEED !== "true") {
-    console.error("🛑 FATAL: Database seeding with default dev passwords is blocked in PRODUCTION.");
-    console.error("To seed in production, set ALLOW_PROD_SEED=true and supply custom hashed credentials via env.");
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction && process.env.ALLOW_PROD_SEED !== "true") {
+    console.error("🛑 FATAL: Database seeding in PRODUCTION requires ALLOW_PROD_SEED=true and environment seed credentials.");
     process.exit(1);
   }
 
@@ -39,19 +73,28 @@ async function main() {
   // ==========================================================================
   console.log("--- 1. Seeding Admin & Student Users ---");
 
-  // 1a. Super Admin: admin@mastara.demo with password admin123
+  // 1a. Super Admin (Config-driven or dev fallback)
+  const superAdminEmail = process.env.SEED_SUPERADMIN_EMAIL?.trim() || "admin@mastara.demo";
+  const superAdminPasswordHash = resolvePasswordHash({
+    plainEnvKey: "SEED_SUPERADMIN_PASSWORD",
+    hashEnvKey: "SEED_SUPERADMIN_PASSWORD_HASH",
+    defaultDevHash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123 (dev only)
+    roleName: "Super Admin",
+    isProduction,
+  });
+
   const adminDemo = await prisma.student.upsert({
-    where: { email: "admin@mastara.demo" },
+    where: { email: superAdminEmail },
     update: {
       role: Role.ADMIN,
       admin_role: AdminRole.SUPER_ADMIN,
       status: StudentStatus.ACTIVE,
-      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
+      password_hash: superAdminPasswordHash,
     },
     create: {
-      email: "admin@mastara.demo",
+      email: superAdminEmail,
       phone: "+251911000001",
-      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
+      password_hash: superAdminPasswordHash,
       role: Role.ADMIN,
       admin_role: AdminRole.SUPER_ADMIN,
       status: StudentStatus.ACTIVE,
@@ -59,21 +102,30 @@ async function main() {
       last_name: "Admin",
     },
   });
-  console.log("  ✅ Demo Super Admin verified: admin@mastara.demo (admin123)");
+  console.log(`  ✅ Super Admin verified: ${superAdminEmail}`);
 
-  // 1b. Academic Admin: academic@mastara.demo with password admin123
+  // 1b. Academic Admin (Config-driven or dev fallback)
+  const academicAdminEmail = process.env.SEED_ACADEMIC_EMAIL?.trim() || "academic@mastara.demo";
+  const academicAdminPasswordHash = resolvePasswordHash({
+    plainEnvKey: "SEED_ACADEMIC_PASSWORD",
+    hashEnvKey: "SEED_ACADEMIC_PASSWORD_HASH",
+    defaultDevHash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123 (dev only)
+    roleName: "Academic Admin",
+    isProduction,
+  });
+
   await prisma.student.upsert({
-    where: { email: "academic@mastara.demo" },
+    where: { email: academicAdminEmail },
     update: {
       role: Role.ADMIN,
       admin_role: AdminRole.ACADEMIC_ADMIN,
       status: StudentStatus.ACTIVE,
-      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
+      password_hash: academicAdminPasswordHash,
     },
     create: {
-      email: "academic@mastara.demo",
+      email: academicAdminEmail,
       phone: "+251911000002",
-      password_hash: "$2a$10$vbgVTEGmVV/vCOd/rn7RXe5OfcQc.Wan.DREeVSbdxJuZNHpYFw2W", // admin123
+      password_hash: academicAdminPasswordHash,
       role: Role.ADMIN,
       admin_role: AdminRole.ACADEMIC_ADMIN,
       status: StudentStatus.ACTIVE,
@@ -81,7 +133,7 @@ async function main() {
       last_name: "Coordinator",
     },
   });
-  console.log("  ✅ Demo Academic Admin verified: academic@mastara.demo (admin123)");
+  console.log(`  ✅ Academic Admin verified: ${academicAdminEmail}`);
 
   // Note: Only Super Admin (admin@mastara.demo) and Academic Admin (academic@mastara.demo) are retained per SRS v3.2 configuration.
 
@@ -259,53 +311,68 @@ async function main() {
     },
   ];
 
-  const studentMap = new Map<string, any>();
-  for (const [idx, s] of studentSeeds.entries()) {
-    const studentCode = `MS${(idx + 1).toString().padStart(4, '0')}`;
-    const studentRecord = await prisma.student.upsert({
-      where: { email: s.email },
-      update: {
-        student_code: studentCode,
-        first_name: s.firstName,
-        last_name: s.lastName,
-        stream_pref: s.stream,
-        university_id: s.univId,
-        profile_completed_at: new Date(),
-      },
-      create: {
-        student_code: studentCode,
-        email: s.email,
-        phone: s.phone,
-        password_hash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123
-        role: Role.STUDENT,
-        status: StudentStatus.ACTIVE,
-        first_name: s.firstName,
-        last_name: s.lastName,
-        stream_pref: s.stream,
-        university_id: s.univId,
-        profile_completed_at: new Date(),
-      },
-    });
-    studentMap.set(s.email, studentRecord);
+  const shouldSeedStudents = !isProduction || process.env.SEED_DEMO_STUDENTS === "true";
+  const studentPasswordHash = shouldSeedStudents
+    ? resolvePasswordHash({
+        plainEnvKey: "SEED_STUDENT_PASSWORD",
+        hashEnvKey: "SEED_STUDENT_PASSWORD_HASH",
+        defaultDevHash: "$2a$10$qeC6ZERtYEg1QXVNhUKxNu9OAlnhsv6MduYJ8z5ngJIiQC3OEOnmq", // password123 (dev only)
+        roleName: "Demo Students",
+        isProduction,
+      })
+    : "";
 
-    // Device binding
-    await prisma.deviceBinding.upsert({
-      where: { student_id: studentRecord.id },
-      update: {
-        device_name: s.device.name,
-        platform: s.device.platform,
-        status: s.device.status,
-      },
-      create: {
-        student_id: studentRecord.id,
-        device_id_hash: s.device.hash,
-        device_name: s.device.name,
-        platform: s.device.platform,
-        status: s.device.status,
-      },
-    });
+  const studentMap = new Map<string, any>();
+  if (shouldSeedStudents) {
+    for (const [idx, s] of studentSeeds.entries()) {
+      const studentCode = `MS${(idx + 1).toString().padStart(4, '0')}`;
+      const studentRecord = await prisma.student.upsert({
+        where: { email: s.email },
+        update: {
+          student_code: studentCode,
+          first_name: s.firstName,
+          last_name: s.lastName,
+          stream_pref: s.stream,
+          university_id: s.univId,
+          profile_completed_at: new Date(),
+        },
+        create: {
+          student_code: studentCode,
+          email: s.email,
+          phone: s.phone,
+          password_hash: studentPasswordHash,
+          role: Role.STUDENT,
+          status: StudentStatus.ACTIVE,
+          first_name: s.firstName,
+          last_name: s.lastName,
+          stream_pref: s.stream,
+          university_id: s.univId,
+          profile_completed_at: new Date(),
+        },
+      });
+      studentMap.set(s.email, studentRecord);
+
+      // Device binding
+      await prisma.deviceBinding.upsert({
+        where: { student_id: studentRecord.id },
+        update: {
+          device_name: s.device.name,
+          platform: s.device.platform,
+          status: s.device.status,
+        },
+        create: {
+          student_id: studentRecord.id,
+          device_id_hash: s.device.hash,
+          device_name: s.device.name,
+          platform: s.device.platform,
+          status: s.device.status,
+        },
+      });
+    }
+    console.log(`  ✅ ${studentSeeds.length} Students & Hardware Device Bindings seeded.`);
+  } else {
+    console.log("  ℹ️ Skipping demo student user generation in production environment.");
   }
-  console.log(`  ✅ ${studentSeeds.length} Students & Hardware Device Bindings seeded.`);
 
   // ==========================================================================
   // 5. Complete Academic Catalog Courses (18 Courses)

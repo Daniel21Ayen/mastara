@@ -80,9 +80,76 @@ Budget smartphones common across Ethiopia (e.g., Tecno Spark Go / Pop series, In
 | Image cache & Audio playback buffers | 15 MB | 6.8 MB |
 | **Total Memory Footprint** | **120 MB** | **98.0 MB (Pass: 22 MB margin)** |
 
+# Performance Benchmarks (Mastara SRS 3.2 Phase 6)
+
+## 1. Startup & Cold Start (NFR-14: < 3.0 s)
+- **Target**: Cold start to interactive home screen in strictly **under 3.0 seconds** on a 2 GB reference Android device (e.g. Tecno Spark 8/10, Infinix Smart series).
+- **Architecture Controls**:
+  - Bytecode pre-compilation via **Hermes** engine (no on-device JS parse/JIT stall).
+  - Bundled local SQLite schema and seed catalog (`apps/mobile/assets/seedCatalog.json`).
+  - Zero network blocking on startup: splash screen dismisses as soon as local SQLite state is hydrated; network sync happens asynchronously in the background.
+- **Verification Command**:
+  ```bash
+  adb shell am start -W -n com.kewakibt.mastara/.MainActivity
+  # Check TotalTime <= 3000 ms
+  ```
+
+## 2. Instant Local Lists (NFR-15: < 300 ms)
+- **Target**: Course and catalog lists render from local storage in **under 300 ms** with zero loading spinner or network requests.
+- **Architecture Controls**:
+  - Offline-first cache: course cards, modules, and quiz outlines load directly from local SQLite.
+  - FlashList / optimized FlatList with fixed item height layout calculations.
+  - Verification: Airplane mode test; zero network roundtrips during list navigation.
+
+## 3. Scaled Admin Lists (NFR-19: < 500 ms p95 @ 10,000 rows)
+- **Target**: Admin paginated queries (payments queue, audit log, student directory, refund management) execute under **500 ms p95** at 10,000+ rows.
+- **Architecture Controls**:
+  - Composite indexes on database schema (`@@index([status, created_at])`, `@@index([scheduled_deletion_at])`, `@@index([role, admin_role])`).
+  - Deterministic tiebreaker pagination (`paginatePrisma` with unique `{ id: 'asc' }`).
+  - Connection pooling with bounded limits (`DATABASE_URL` pool size 20).
+- **Verification Command**:
+  ```bash
+  k6 run tests/load/k6-admin-lists-scale.js
+  ```
+
+---
+
+# Single-University Pilot Runbook (Budget Android Reference)
+
+## Target Campus & Device Cohort
+- **Pilot University**: Addis Ababa University (AAU) or Addis Ababa Science and Technology University (AASTU) freshman natural/social science students.
+- **Reference Pilot Hardware**: Real budget Android devices common in Ethiopian student dorms:
+  - Models: Tecno Spark Go / Pop series, Infinix Smart series, Samsung Galaxy A03 Core.
+  - Specifications: 2 GB RAM, 32 GB Storage, Android 10 (Go Edition) to Android 13, ARM64 or ARM32 architecture.
+  - Network: Ethiopian campus Wi-Fi + Ethio Telecom / Safaricom spotty 3G/4G with packet drops.
+
+## Pilot Execution Checklist
+1. **Pre-Flight APK Size Check**:
+   - Build ARM64 release APK: `npx eas build --platform android --profile preview-arm64`.
+   - Run size gatekeeper: `node apps/mobile/scripts/check-app-size.mjs build/app-arm64.apk`.
+   - Result must be strictly $\le 20.0$ MB.
+2. **Cold Start & List Render Timing**:
+   - Install APK on reference budget device over ADB.
+   - Measure cold launch (`adb shell am start -W ...`) $\le 3$ s.
+   - Disconnect network (airplane mode) and verify all enrolled courses open and render lists in $\le 300$ ms.
+3. **Memory Pressure & Math Layout Verification**:
+   - Open Mathematics for Natural Sciences Chapter with 30+ math formulas.
+   - Measure memory via `adb shell dumpsys meminfo com.kewakibt.mastara`.
+   - Total PSS must remain below 120 MB (safe below 140 MB Android Go `lmkd` threshold).
+4. **End-to-End Payment & Entitlement Sync**:
+   - Complete sample order via Telebirr SuperApp and CBE Mobile banking screenshot.
+   - Operations Admin reviews receipt in Admin Portal and approves order.
+   - Device auto-syncs entitlement within 60 s when reconnected, unlocking the course offline.
+5. **Pilot Failure Reporting**:
+   - Sentry crash report rate must be $< 0.1\%$.
+   - Any unhandled exception or memory kill automatically logs device model and free RAM snapshot.
+
 ## Profiling Command
 To measure resident memory on a connected USB device or Android emulator:
 ```bash
 adb shell dumpsys meminfo com.kewakibt.mastara
 ```
 Verify `TOTAL PSS` remains under 120,000 KB (120 MB) while navigating through course syllabi and math tests.
+
+---
+

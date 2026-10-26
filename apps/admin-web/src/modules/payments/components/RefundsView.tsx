@@ -161,7 +161,7 @@ export function RefundsView() {
       render: (row) => (
         <div>
           <strong>{row.studentName}</strong>
-          <div style={{ fontSize: '11px', color: '#64748b' }}>Order: {row.orderId.slice(0, 8)}...</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Order: {row.orderId.slice(0, 8)}...</div>
         </div>
       ),
     },
@@ -191,7 +191,7 @@ export function RefundsView() {
     {
       key: 'payout',
       header: 'Payout Ref',
-      render: (row) => row.payoutReference || <span style={{ color: '#94a3b8' }}>Pending payout</span>,
+      render: (row) => row.payoutReference || <span style={{ color: 'var(--text-muted)' }}>Pending payout</span>,
     },
     {
       key: 'created',
@@ -239,7 +239,7 @@ export function RefundsView() {
               Record Payout
             </Button>
           ) : (
-            <span style={{ fontSize: '12px', color: '#64748b' }}>Complete</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Complete</span>
           )}
         </div>
       ),
@@ -326,7 +326,7 @@ export function RefundsView() {
           onClose={() => setRequestModalOpen(false)}
         >
           <form onSubmit={handleCreateRequest} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <p style={{ margin: 0, color: '#475569', fontSize: '13px' }}>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '13px' }}>
               Operations Admin submits a refund request for an approved order with an explicit audit reason.
               Approval by Super Admin will revoke the student's entitlements (FR-G64).
             </p>
@@ -363,14 +363,14 @@ export function RefundsView() {
           onClose={() => setDecisionModalRefund(null)}
         >
           <form onSubmit={handleDecision} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ padding: '12px', background: '#f8fafc', borderRadius: '6px', fontSize: '13px' }}>
+            <div style={{ padding: '12px', background: 'var(--surface-subtle)', borderRadius: '6px', fontSize: '13px' }}>
               <div><strong>Amount:</strong> {decisionModalRefund.amount} ETB</div>
               <div><strong>Request Reason:</strong> {decisionModalRefund.reason}</div>
               <div><strong>Order ID:</strong> {decisionModalRefund.orderId}</div>
             </div>
 
             {decisionAction === 'APPROVE' ? (
-              <div style={{ padding: '10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', color: '#991b1b', fontSize: '12px' }}>
+              <div style={{ padding: '10px', background: 'var(--surface-subtle)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }}>
                 ⚠️ <strong>Entitlement Revocation:</strong> Approving this refund will immediately revoke all courses and entitlements associated with this order per SRS 5.5 and FR-G64.
               </div>
             ) : null}
@@ -415,7 +415,7 @@ export function RefundsView() {
           onClose={() => setPayoutModalRefund(null)}
         >
           <form onSubmit={handlePayout} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <p style={{ margin: 0, fontSize: '13px', color: '#475569' }}>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>
               Payout occurs outside the system (CBE or Telebirr bank transfer). Record the external transaction receipt reference below.
             </p>
             <TextField

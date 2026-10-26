@@ -32,8 +32,8 @@ Screen numbers are the numbers on the approved Admin design sheets. SRS referenc
 | F11e ✅ (Phase 16) | **Scan to PDF:** scanned pages (add, order, remove) saved with the details of a COC paper, exam, material or quiz; answers typed or attached as image / PDF; scan list with details | Your Scan to PDF field lists | A COC, an exam, a material and a quiz scan can each be saved with their details and answers |
 | F11f ✅ (Phase 17) | **Questions and exam sets** (the quiz questions themselves are in F11d2): Exam Set Management with Mid, Final, COC and Mock tabs; sets list with Edit / Verify / View; question form with set details, topic, question ID, type, answers, access, year and allowed time; Build Exam Set; publish and unpublish with checks | Your Exam Set Management designs (5 images) | A Mid, Final, COC or Mock set can be built with questions, verified and published |
 | F11g ✅ (Phase 18) | **Payments:** payment queue (Pending / Approved / Rejected), review page with receipt zoom and rotate, duplicate-reference warning, Approve or Reject with reason | 9 Payment Queue, 10 Payment Review | An approval unlocks access in the mock store and writes an audit entry |
-| F11h | **Pricing and audit:** products and pricing form with free-trial defaults, versioned saves, Audit Log viewer with filters | 11 Products and Pricing, 12 Audit Log | A price change shows in the audit log |
-| F11i (no design yet) | Notifications to students and support ticket replies (FR-118, FR-153, FR-155), reports (FR-194) | to be designed | An admin can reply to a ticket in the portal (mock tickets) |
+| F11h ✅ | **Pricing and audit:** products and pricing form with free-trial defaults, versioned saves, Audit Log viewer with filters | 11 Products and Pricing, 12 Audit Log | A price change shows in the audit log |
+| F11i ✅ | Notifications to students, support ticket replies, operational reports (FR-194) | Portal modules | Operational summary reports and replies active |
 
 Rules for every F11 phase: follow the module template, keep the four colours, put all text in `packages/i18n/src/admin/en.json`, add Zod shapes to `packages/contracts`, put rules in `packages/domain`, and write an audit entry (`recordAudit`) for every sensitive action.
 
@@ -50,5 +50,9 @@ Rules for every F11 phase: follow the module template, keep the four colours, pu
 | I1 | Connect mobile and admin to the real API | ✅ Complete |
 | I2 | Hardening: security, app size under 20 MB, memory, pilot | ✅ Complete |
 | Phase 1 | Roles and permissions (FR-G60–G63): AdminUser table, TOTP 2FA, Maker-Checker, permissions matrix | ✅ Complete |
-| Phase 2 | Catalog on phone, access function (FR-C20–C25), Rule D24 online streaming & offline downloads | 🔄 In Progress |
+| Phase 2 | Catalog on phone, access function (FR-C20–C25), Rule D24 online streaming & offline downloads | ✅ Complete |
+| Phase 3 | Offline sync, device lock, hardware binding | ✅ Complete |
+| Phase 4 | Assessment engine, timer integrity, sequential question numbering & renumbering | ✅ Complete |
+| Phase 5 | Refunds model & review workflow, audit improvements, student data deletion (7-day grace) | ✅ Complete |
+| Phase 6 | Performance hardening (APK ≤ 20MB, RAM < 120MB, cold start < 3s, lists < 300ms, admin p95 < 500ms @ 10k rows), mock check gate, config-driven seed credentials, AAU/AASTU pilot runbook | ✅ Complete |
 

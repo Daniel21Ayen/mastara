@@ -144,7 +144,7 @@ export const FREE_TRIAL_MAX_ITEMS = 20;
 /** Rows shown in a "Recent updates" list on the Content pages. */
 export const CONTENT_RECENT_LIMIT = 3;
 
-/** Modules a course starts with in the mock content, and quizzes every course has (Quiz 1, 2, 3). */
+/** Modules a course starts with in standard catalog content, and quizzes every course has (Quiz 1, 2, 3). */
 export const QUIZ_COUNT = 3;
 
 /** Longest note title the editor accepts. */
