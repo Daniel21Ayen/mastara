@@ -5,8 +5,13 @@ const getNodeCrypto = () => {
     if (typeof proc?.getBuiltinModule === 'function') {
       return proc.getBuiltinModule('crypto') || proc.getBuiltinModule('node:crypto');
     }
-    if (typeof require !== 'undefined') {
-      return require('crypto');
+    if (typeof proc !== 'undefined' && proc.versions?.node) {
+      const dynamicRequire =
+        (globalThis as any).require ||
+        (typeof module !== 'undefined' ? (module as any).require : null);
+      if (typeof dynamicRequire === 'function') {
+        return dynamicRequire('crypto');
+      }
     }
     return null;
   } catch {
