@@ -26,23 +26,37 @@ export class AdminsService {
       },
     });
 
-    return admins.map((admin: any) => ({
-      id: admin.id,
-      email: admin.email,
-      firstName: admin.first_name,
-      lastName: admin.last_name,
-      adminRole: admin.admin_role,
-      isActive: admin.is_active,
-      totpEnabled: Boolean(admin.totp_secret),
-      lastLoginAt: admin.last_login_at,
-      createdAt: admin.created_at,
-      scopes: admin.admin_scopes.map((s: any) => ({
-        id: s.id,
-        universityId: s.university_id,
-        programId: s.program_id,
-        courseId: s.course_id,
-      })),
-    }));
+    return admins.map((admin: any) => {
+      const fullName = `${admin.first_name || ""} ${admin.last_name || ""}`.trim() || null;
+      return {
+        id: admin.id,
+        email: admin.email,
+        firstName: admin.first_name,
+        lastName: admin.last_name,
+        fullName,
+        full_name: fullName,
+        phone_number: null,
+        adminRole: admin.admin_role,
+        admin_role: admin.admin_role,
+        isActive: admin.is_active,
+        is_active: admin.is_active,
+        totpEnabled: Boolean(admin.totp_secret),
+        totp_enabled: Boolean(admin.totp_secret),
+        lastLoginAt: admin.last_login_at,
+        last_login_at: admin.last_login_at,
+        createdAt: admin.created_at,
+        created_at: admin.created_at,
+        scopes: admin.admin_scopes.map((s: any) => ({
+          id: s.id,
+          universityId: s.university_id,
+          programId: s.program_id,
+          courseId: s.course_id,
+          university_id: s.university_id,
+          program_id: s.program_id,
+          course_id: s.course_id,
+        })),
+      };
+    });
   }
 
   async getAdminById(id: string) {
@@ -57,21 +71,33 @@ export class AdminsService {
       throw new NotFoundException(`Admin with ID ${id} not found`);
     }
 
+    const fullName = `${admin.first_name || ""} ${admin.last_name || ""}`.trim() || null;
     return {
       id: admin.id,
       email: admin.email,
       firstName: admin.first_name,
       lastName: admin.last_name,
+      fullName,
+      full_name: fullName,
+      phone_number: null,
       adminRole: admin.admin_role,
+      admin_role: admin.admin_role,
       isActive: admin.is_active,
+      is_active: admin.is_active,
       totpEnabled: Boolean(admin.totp_secret),
+      totp_enabled: Boolean(admin.totp_secret),
       lastLoginAt: admin.last_login_at,
+      last_login_at: admin.last_login_at,
       createdAt: admin.created_at,
+      created_at: admin.created_at,
       scopes: admin.admin_scopes.map((s: any) => ({
         id: s.id,
         universityId: s.university_id,
         programId: s.program_id,
         courseId: s.course_id,
+        university_id: s.university_id,
+        program_id: s.program_id,
+        course_id: s.course_id,
       })),
     };
   }
@@ -87,17 +113,28 @@ export class AdminsService {
       throw new ConflictException("An administrator with this email already exists");
     }
 
+    let firstName = dto.first_name?.trim() || "";
+    let lastName = dto.last_name?.trim() || "";
+    if (!firstName && !lastName && dto.full_name) {
+      const parts = dto.full_name.trim().split(/\s+/);
+      firstName = parts[0] || "Admin";
+      lastName = parts.slice(1).join(" ") || "User";
+    }
+    if (!firstName) firstName = "Admin";
+    if (!lastName) lastName = "User";
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
+    const isActive = dto.is_active !== undefined ? dto.is_active : true;
 
     return this.prisma.$transaction(async (tx: any) => {
       const admin = await tx.adminUser.create({
         data: {
           email: normalizedEmail,
           password_hash: passwordHash,
-          first_name: dto.first_name.trim(),
-          last_name: dto.last_name.trim(),
+          first_name: firstName,
+          last_name: lastName,
           admin_role: dto.admin_role,
-          is_active: true,
+          is_active: isActive,
         },
       });
 
@@ -117,16 +154,25 @@ export class AdminsService {
         include: { admin_scopes: true },
       });
 
+      const fullName = `${fullAdmin!.first_name || ""} ${fullAdmin!.last_name || ""}`.trim() || null;
       return {
         id: fullAdmin!.id,
         email: fullAdmin!.email,
         firstName: fullAdmin!.first_name,
         lastName: fullAdmin!.last_name,
+        fullName,
+        full_name: fullName,
+        phone_number: dto.phone_number || null,
         adminRole: fullAdmin!.admin_role,
+        admin_role: fullAdmin!.admin_role,
         isActive: fullAdmin!.is_active,
+        is_active: fullAdmin!.is_active,
         totpEnabled: false,
+        totp_enabled: false,
         lastLoginAt: null,
+        last_login_at: null,
         createdAt: fullAdmin!.created_at,
+        created_at: fullAdmin!.created_at,
         scopes: fullAdmin!.admin_scopes,
       };
     });
@@ -164,8 +210,16 @@ export class AdminsService {
 
     return this.prisma.$transaction(async (tx: any) => {
       const updateData: any = {};
-      if (dto.first_name !== undefined) updateData.first_name = dto.first_name.trim();
-      if (dto.last_name !== undefined) updateData.last_name = dto.last_name.trim();
+      let firstName = dto.first_name?.trim();
+      let lastName = dto.last_name?.trim();
+      if (!firstName && !lastName && dto.full_name !== undefined) {
+        const parts = dto.full_name.trim().split(/\s+/);
+        firstName = parts[0] || "";
+        lastName = parts.slice(1).join(" ") || "";
+      }
+      if (firstName !== undefined) updateData.first_name = firstName;
+      if (lastName !== undefined) updateData.last_name = lastName;
+      if (dto.email !== undefined) updateData.email = dto.email.trim().toLowerCase();
       if (dto.admin_role !== undefined) updateData.admin_role = dto.admin_role;
       if (dto.is_active !== undefined) updateData.is_active = dto.is_active;
       if (dto.password) {
@@ -199,16 +253,25 @@ export class AdminsService {
         include: { admin_scopes: true },
       });
 
+      const fullName = `${updated!.first_name || ""} ${updated!.last_name || ""}`.trim() || null;
       return {
         id: updated!.id,
         email: updated!.email,
         firstName: updated!.first_name,
         lastName: updated!.last_name,
+        fullName,
+        full_name: fullName,
+        phone_number: dto.phone_number || null,
         adminRole: updated!.admin_role,
+        admin_role: updated!.admin_role,
         isActive: updated!.is_active,
+        is_active: updated!.is_active,
         totpEnabled: Boolean(updated!.totp_secret),
+        totp_enabled: Boolean(updated!.totp_secret),
         lastLoginAt: updated!.last_login_at,
+        last_login_at: updated!.last_login_at,
         createdAt: updated!.created_at,
+        created_at: updated!.created_at,
         scopes: updated!.admin_scopes,
       };
     });

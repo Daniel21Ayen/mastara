@@ -32,15 +32,30 @@ export class CreateAdminDto {
   @MinLength(8)
   password!: string;
 
-  @ApiProperty({ example: "Abebe" })
+  @ApiPropertyOptional({ example: "Abebe" })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  first_name!: string;
+  first_name?: string;
 
-  @ApiProperty({ example: "Kebede" })
+  @ApiPropertyOptional({ example: "Kebede" })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  last_name!: string;
+  last_name?: string;
+
+  @ApiPropertyOptional({ example: "Abebe Kebede" })
+  @IsOptional()
+  @IsString()
+  full_name?: string;
+
+  @ApiPropertyOptional({ example: "+251911223344" })
+  @IsOptional()
+  @IsString()
+  phone_number?: string;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
 
   @ApiProperty({ enum: AdminRole, default: AdminRole.SUPER_ADMIN })
   @IsEnum(AdminRole)
@@ -55,6 +70,11 @@ export class CreateAdminDto {
 }
 
 export class UpdateAdminDto {
+  @ApiPropertyOptional({ example: "admin@mastara.app" })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
@@ -64,6 +84,16 @@ export class UpdateAdminDto {
   @IsOptional()
   @IsString()
   last_name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  full_name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  phone_number?: string;
 
   @ApiPropertyOptional({ enum: AdminRole })
   @IsOptional()

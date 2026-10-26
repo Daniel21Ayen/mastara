@@ -473,16 +473,18 @@ export class StudentsService {
 
     const counterRow = await this.prisma.$queryRawUnsafe<Array<{ value: number }>>(
       `INSERT INTO counters (name, value)
-       VALUES ('student_ms_code', 1)
+       VALUES ('student_ms_code', (SELECT COALESCE(MAX(student_number), 0) + 1 FROM students))
        ON CONFLICT (name)
-       DO UPDATE SET value = counters.value + 1
+       DO UPDATE SET value = GREATEST(counters.value, (SELECT COALESCE(MAX(student_number), 0) FROM students)) + 1
        RETURNING value;`
     );
     const studentNumber = Number(counterRow[0]?.value ?? 1);
+    const studentCode = `MS${studentNumber.toString().padStart(4, "0")}`;
 
     const student = await this.prisma.student.create({
       data: {
         student_number: studentNumber,
+        student_code: studentCode,
         first_name: firstName,
         last_name: lastName,
         phone: !isEmail ? normalized : null,

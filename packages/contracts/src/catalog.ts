@@ -69,7 +69,7 @@ export const adminCourseSchema = z.object({
   code: z.string(),
   title: z.string(),
   stream: z.enum(STREAMS),
-  accent: z.enum(COURSE_ACCENTS).default('blue'),
+  accent: z.string().default('blue'),
   icon: z.string().default('book'),
   freeAccess: z.boolean().default(false),
   /** True when the course has free-trial items: unpaid students can see it and use those items. */
@@ -103,7 +103,7 @@ const courseFields = {
   code: z.string().trim().refine(isValidCourseCode, { message: CATALOG_VALIDATION.courseCode }),
   title: z.string().trim().min(3, { message: CATALOG_VALIDATION.title }),
   stream: z.enum(STREAMS),
-  accent: z.enum(COURSE_ACCENTS).default('blue').optional(),
+  accent: z.string().default('blue').optional(),
   icon: z.string().default('book').optional(),
   freeAccess: z.boolean().default(false).optional(),
   freeTrialItems: z

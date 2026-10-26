@@ -116,7 +116,14 @@ export function AdminsAndRolesScreen() {
     try {
       setActionLoading(true);
       setFormError(null);
-      await createAdmin(createForm);
+      const nameParts = (createForm.full_name || '').trim().split(/\s+/);
+      const firstName = nameParts[0] || 'Admin';
+      const lastName = nameParts.slice(1).join(' ') || 'User';
+      await createAdmin({
+        ...createForm,
+        first_name: firstName,
+        last_name: lastName,
+      } as any);
       setCreateModalOpen(false);
       await loadAdmins();
     } catch (err: unknown) {
@@ -130,12 +137,13 @@ export function AdminsAndRolesScreen() {
   const handleOpenEdit = (admin: AdminUserRecord) => {
     setFormError(null);
     setEditAdmin(admin);
+    const resolvedName = admin.full_name || ((admin as any).firstName ? `${(admin as any).firstName} ${(admin as any).lastName || ''}`.trim() : '');
     setEditForm({
       email: admin.email,
-      admin_role: admin.admin_role,
-      full_name: admin.full_name || '',
-      phone_number: admin.phone_number || '',
-      is_active: admin.is_active,
+      admin_role: admin.admin_role || (admin as any).adminRole || 'OPERATIONS_ADMIN',
+      full_name: resolvedName,
+      phone_number: admin.phone_number || (admin as any).phone || '',
+      is_active: admin.is_active !== undefined ? admin.is_active : (admin as any).isActive ?? true,
       password: '',
     });
   };
@@ -146,10 +154,13 @@ export function AdminsAndRolesScreen() {
     try {
       setActionLoading(true);
       setFormError(null);
-      const payload: UpdateAdminPayload = {
+      const nameParts = (editForm.full_name || '').trim().split(/\s+/);
+      const payload: any = {
         email: editForm.email,
         admin_role: editForm.admin_role,
         full_name: editForm.full_name,
+        first_name: nameParts[0] || '',
+        last_name: nameParts.slice(1).join(' ') || '',
         phone_number: editForm.phone_number,
         is_active: editForm.is_active,
       };
@@ -336,12 +347,14 @@ export function AdminsAndRolesScreen() {
               {filteredAdmins.map((admin) => (
                 <tr key={admin.id}>
                   <td>
-                    <div className={styles.adminName}>{admin.full_name || 'Unnamed Admin'}</div>
+                    <div className={styles.adminName}>
+                      {admin.full_name || ((admin as any).firstName ? `${(admin as any).firstName} ${(admin as any).lastName || ''}`.trim() : null) || 'Unnamed Admin'}
+                    </div>
                     <div className={styles.adminEmail}>{admin.email}</div>
                   </td>
-                  <td>{renderRoleBadge(admin.admin_role)}</td>
+                  <td>{renderRoleBadge(admin.admin_role || (admin as any).adminRole)}</td>
                   <td>
-                    {admin.is_active ? (
+                    {(admin.is_active !== undefined ? admin.is_active : (admin as any).isActive) ? (
                       <span className={styles.statusActive}>
                         <span className={`${styles.dot} ${styles.dotActive}`} />
                         Active

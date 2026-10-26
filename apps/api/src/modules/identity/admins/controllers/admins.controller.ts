@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Param,
@@ -43,6 +44,13 @@ export class AdminsController {
   @ApiOperation({ summary: "Create a new administrator account (Super Admin only)" })
   async createAdmin(@Body() dto: CreateAdminDto) {
     return this.adminsService.createAdmin(dto);
+  }
+
+  @Put(":id")
+  @RequirePermission("admins.manage")
+  @ApiOperation({ summary: "Update administrator details, role, or scopes (PUT alias)" })
+  async updateAdminPut(@Param("id") id: string, @Body() dto: UpdateAdminDto) {
+    return this.adminsService.updateAdmin(id, dto);
   }
 
   @Patch(":id")
