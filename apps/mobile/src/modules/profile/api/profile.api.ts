@@ -56,9 +56,7 @@ export const profileApi: ProfileApi = {
     // 1. Check local pending registration / offline profile
     const pendingSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
     if (pendingSync && (pendingSync.userId === userId || !pendingSync.purchased)) {
-      if (pendingSync.profile) {
-        return pendingSync.profile;
-      }
+      return pendingSync.profile ?? null;
     }
 
     // 2. Check local session
