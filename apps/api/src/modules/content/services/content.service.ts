@@ -595,6 +595,7 @@ export class ContentService {
         title_am: input.title.am.trim(),
         status: input.status as PublicationStatus,
         sort_order: sortOrder,
+        authored_by: adminId || null,
       },
     });
 
@@ -655,15 +656,19 @@ export class ContentService {
 
     // Maker–checker policy (FR-G62): A user cannot publish their own work
     if (beforeStatus !== "PUBLISHED" && input.status === "PUBLISHED" && adminId) {
-      const createLog = await this.prisma.auditLog.findFirst({
-        where: {
-          target_type: "Module",
-          target_id: id,
-          action: "MODULE_CREATED",
-        },
-        orderBy: { created_at: "asc" },
-      });
-      if (createLog && createLog.actor_id === adminId) {
+      const isAuthor =
+        module.authored_by === adminId ||
+        Boolean(
+          await this.prisma.auditLog.findFirst({
+            where: {
+              target_type: "Module",
+              target_id: id,
+              action: "MODULE_CREATED",
+              actor_id: adminId,
+            },
+          }),
+        );
+      if (isAuthor) {
         throw new ForbiddenException(
           "Maker–checker policy violation: A user cannot publish their own work (FR-G62).",
         );
@@ -676,6 +681,7 @@ export class ContentService {
         title_en: input.title.en.trim(),
         title_am: input.title.am.trim(),
         status: input.status as PublicationStatus,
+        reviewed_by: input.status === "PUBLISHED" ? adminId : undefined,
       },
       include: {
         topics: {
@@ -883,6 +889,8 @@ export class ContentService {
               title_en: input.title.en.trim(),
               body: input.body.en.trim(),
               is_free_trial: input.isFree,
+              authored_by: adminId || null,
+              reviewed_by: input.status === "PUBLISHED" ? adminId : null,
               published_at: input.status === "PUBLISHED" ? new Date() : null,
             },
             {
@@ -892,6 +900,8 @@ export class ContentService {
               title: input.title.am.trim(),
               body: input.body.am.trim(),
               is_free_trial: input.isFree,
+              authored_by: adminId || null,
+              reviewed_by: input.status === "PUBLISHED" ? adminId : null,
               published_at: input.status === "PUBLISHED" ? new Date() : null,
             },
           ],
@@ -973,15 +983,19 @@ export class ContentService {
 
     // Maker–checker policy (FR-G62): A user cannot publish their own work
     if (beforeStatus !== "PUBLISHED" && input.status === "PUBLISHED" && adminId) {
-      const createLog = await this.prisma.auditLog.findFirst({
-        where: {
-          target_type: "Note",
-          target_id: id,
-          action: "NOTE_CREATED",
-        },
-        orderBy: { created_at: "asc" },
-      });
-      if (createLog && createLog.actor_id === adminId) {
+      const isAuthor =
+        topic.contents.some((c) => c.authored_by === adminId) ||
+        Boolean(
+          await this.prisma.auditLog.findFirst({
+            where: {
+              target_type: "Note",
+              target_id: id,
+              action: "NOTE_CREATED",
+              actor_id: adminId,
+            },
+          }),
+        );
+      if (isAuthor) {
         throw new ForbiddenException(
           "Maker–checker policy violation: A user cannot publish their own work (FR-G62).",
         );
@@ -1013,6 +1027,8 @@ export class ContentService {
           title_en: input.title.en.trim(),
           body: input.body.en.trim(),
           is_free_trial: input.isFree,
+          authored_by: latestNote?.authored_by || adminId || null,
+          reviewed_by: input.status === "PUBLISHED" ? adminId : null,
           published_at: input.status === "PUBLISHED" ? new Date() : null,
         },
       });
@@ -1025,6 +1041,7 @@ export class ContentService {
           body: input.body.en.trim(),
           status: input.status as PublicationStatus,
           is_free_trial: input.isFree,
+          reviewed_by: input.status === "PUBLISHED" ? adminId : undefined,
         },
       });
     }

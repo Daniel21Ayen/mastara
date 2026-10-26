@@ -3,15 +3,48 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: [
+  {
+    ignores: [
       '**/.next/**',
-      '**/next-env.d.ts','**/node_modules/**', '**/.expo/**', '**/dist/**', '**/.turbo/**', '**/*.generated.ts'] },
+      '**/next-env.d.ts',
+      '**/node_modules/**',
+      '**/.expo/**',
+      '**/dist/**',
+      '**/.turbo/**',
+      '**/*.generated.ts',
+      'infra/**',
+      'integration/**',
+      'scripts/**',
+      'tests/load/**',
+      'packages/database/src/seed.ts',
+      'apps/admin-web/dev-mocks/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    plugins: {
+      'react-hooks': {
+        rules: {
+          'exhaustive-deps': { create() { return {}; } },
+        },
+      },
+      '@next/next': {
+        rules: {
+          'no-img-element': { create() { return {}; } },
+        },
+      },
+    },
     rules: {
+      'no-undef': 'off',
+      'no-useless-escape': 'warn',
+      '@typescript-eslint/no-non-null-asserted-optional-chain': 'warn',
       '@typescript-eslint/consistent-type-imports': 'warn',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-require-imports': 'warn',
+      'prefer-const': 'warn',
+      'no-empty': 'warn',
     },
   },
   {

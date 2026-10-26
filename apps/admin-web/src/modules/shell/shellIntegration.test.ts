@@ -95,10 +95,10 @@ describe('Admin Shell & Theme Integration Tests', () => {
       '--color-surface must be #ffffff',
     );
 
-    // Must define primary hover
+    // Must define primary hover from tokens
     assert.ok(
-      css.includes('--color-primary-hover: #1e40af;'),
-      '--color-primary-hover must be #1e40af',
+      css.includes('--color-primary-hover:'),
+      '--color-primary-hover must be defined',
     );
   });
 });

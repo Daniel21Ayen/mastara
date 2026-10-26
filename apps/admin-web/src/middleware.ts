@@ -8,6 +8,7 @@ import { hasPermission, type AdminRole } from '@mastara/domain';
 // Map of route prefixes to required permissions
 const ROUTE_PERMISSIONS: Array<{ prefix: string; permission: string }> = [
   { prefix: '/students', permission: 'students.read' },
+  { prefix: '/catalog', permission: 'catalog.read' },
   { prefix: '/commerce/payments', permission: 'payments.review' },
   { prefix: '/commerce/pricing', permission: 'pricing.read' },
   { prefix: '/content', permission: 'content.write' },
@@ -15,6 +16,7 @@ const ROUTE_PERMISSIONS: Array<{ prefix: string; permission: string }> = [
   { prefix: '/questions', permission: 'questions.write' },
   { prefix: '/support', permission: 'support.reply' },
   { prefix: '/audit', permission: 'audit.read' },
+  { prefix: '/admins', permission: 'admins.manage' },
 ];
 
 /**

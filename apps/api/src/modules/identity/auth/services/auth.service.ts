@@ -17,6 +17,8 @@ export interface NormalizedIdentifier {
   normalized: string;
 }
 
+import { TotpService } from "../../../../common/security/totp.service";
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -24,6 +26,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly totpService: TotpService,
   ) {}
 
   normalizeIdentifier(identifier: string): NormalizedIdentifier {
@@ -100,19 +103,6 @@ export class AuthService {
     // 3. Gapless MS ID creation inside an atomic PostgreSQL transaction
     // If the transaction fails, the counter rolls back with it, guaranteeing no gaps!
     const student = await this.prisma.$transaction(async (tx) => {
-      // Ensure counters table and counter row exist
-      await tx.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS counters (
-          name VARCHAR(64) PRIMARY KEY,
-          value BIGINT NOT NULL DEFAULT 0
-        );
-      `);
-      await tx.$executeRawUnsafe(`
-        INSERT INTO counters (name, value)
-        VALUES ('student_ms_code', 0)
-        ON CONFLICT (name) DO NOTHING;
-      `);
-
       // Atomically increment counter with row-level lock
       const counterRows: any = await tx.$queryRawUnsafe(`
         UPDATE counters
@@ -129,6 +119,7 @@ export class AuthService {
       return tx.student.create({
         data: {
           ...(dto.localAccountId ? { id: dto.localAccountId } : {}),
+          student_number: nextVal,
           student_code: studentCode,
           first_name: firstName,
           last_name: lastName,
@@ -248,14 +239,15 @@ export class AuthService {
   }
 
   async adminLogin(dto: LoginDto): Promise<AdminAuthResponseDto> {
-    const { isEmail, normalized } = this.normalizeIdentifier(dto.identifier);
+    const trimmedIdentifier = dto.identifier.trim();
+    const normalizedEmail = trimmedIdentifier.toLowerCase();
 
-    const user = await this.prisma.student.findFirst({
+    // Query separate admin_user table per SRS 10.3
+    const user = await this.prisma.adminUser.findFirst({
       where: {
         OR: [
-          isEmail ? { email: normalized } : { phone: normalized },
-          { email: dto.identifier.trim().toLowerCase() },
-          { phone: dto.identifier.trim() },
+          { email: { equals: normalizedEmail, mode: "insensitive" } },
+          { email: trimmedIdentifier },
         ],
       },
       include: {
@@ -276,9 +268,8 @@ export class AuthService {
       try {
         await this.prisma.securityEventLog.create({
           data: {
-            student_id: user.id,
             event_type: SecurityEventType.LOGIN_FAILED,
-            metadata: { context: "admin_portal" },
+            metadata: { context: "admin_portal", admin_id: user.id },
           },
         });
       } catch (e) {
@@ -292,15 +283,7 @@ export class AuthService {
       });
     }
 
-    if (user.role !== Role.ADMIN) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        errorCode: "UNAUTHORIZED",
-        message: "Access denied: Account is not an administrator",
-      });
-    }
-
-    if (user.status !== StudentStatus.ACTIVE) {
+    if (!user.is_active) {
       throw new ForbiddenException({
         statusCode: 403,
         errorCode: "ACCOUNT_INACTIVE",
@@ -308,33 +291,75 @@ export class AuthService {
       });
     }
 
+    // TOTP two-factor authentication requirement for Super Admin and Operations Admin
+    const adminRole = (user.admin_role || "SUPER_ADMIN") as "SUPER_ADMIN" | "ACADEMIC_ADMIN" | "OPERATIONS_ADMIN";
+    const requiresTotp = adminRole === "SUPER_ADMIN" || adminRole === "OPERATIONS_ADMIN";
+    const totpInput = ((dto as any).totp_code || (dto as any).totpCode || "").toString().trim();
+
+    if (requiresTotp) {
+      if (user.totp_secret) {
+        if (!totpInput) {
+          throw new UnauthorizedException({
+            statusCode: 401,
+            errorCode: "MFA_REQUIRED",
+            message: "Two-factor authentication code is required for your administrator role",
+            requiresTotp: true,
+          });
+        }
+        const isValid = this.totpService.verifyTotp(totpInput, user.totp_secret);
+        if (!isValid) {
+          throw new UnauthorizedException({
+            statusCode: 401,
+            errorCode: "INVALID_TOTP",
+            message: "Invalid two-factor authentication code",
+          });
+        }
+      } else if (totpInput) {
+        throw new UnauthorizedException({
+          statusCode: 401,
+          errorCode: "INVALID_TOTP",
+          message: "Two-factor authentication is not yet configured for this account",
+        });
+      }
+    }
+
+    // Record last login time on admin_user
+    await this.prisma.adminUser.update({
+      where: { id: user.id },
+      data: { last_login_at: new Date() },
+    });
+
     try {
       await this.prisma.securityEventLog.create({
         data: {
-          student_id: user.id,
           event_type: SecurityEventType.LOGIN_SUCCESS,
-          metadata: { context: "admin_portal" },
+          metadata: { context: "admin_portal", admin_id: user.id },
         },
       });
     } catch (e) {
       this.logger.warn(`Failed to log admin login success: ${e}`);
     }
 
-    const identifier = user.email || user.phone || dto.identifier;
-    const token = this.jwtService.sign({
-      sub: user.id,
-      role: Role.ADMIN,
-      identifier,
-    });
+    // Cap admin session tokens at 12 hours per SRS 10.3
+    const token = this.jwtService.sign(
+      {
+        sub: user.id,
+        role: "ADMIN",
+        adminRole,
+        identifier: user.email,
+      },
+      {
+        expiresIn: "12h",
+      } as any,
+    );
 
-    const adminRole = (user.admin_role || "SUPER_ADMIN") as "SUPER_ADMIN" | "ACADEMIC_ADMIN" | "OPERATIONS_ADMIN";
     const permissions = [...getPermissionsForRole(adminRole)];
 
     return {
       user: {
         id: user.id,
-        name: `${user.first_name} ${user.last_name}`.trim(),
-        identifier,
+        name: `${user.first_name} ${user.last_name}`.trim() || user.email,
+        identifier: user.email,
         role: "ADMIN",
         adminRole,
         permissions,

@@ -12,6 +12,7 @@
   "validation.password": "Use at least 6 characters",
   "admin.nav.label": "Main menu",
   "admin.nav.dashboard": "Dashboard",
+  "admin.nav.admins": "Admins & Roles",
   "admin.nav.students": "Students",
   "admin.nav.courses": "Courses",
   "admin.nav.content": "Content",

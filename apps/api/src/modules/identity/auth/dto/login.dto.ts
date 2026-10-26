@@ -22,4 +22,13 @@ export class LoginDto {
   @IsNotEmpty()
   @MinLength(8, { message: "Password must be at least 8 characters long" })
   password!: string;
+
+  @IsString()
+  totp_code?: string;
+
+  @IsString()
+  totpCode?: string;
 }
+
+export class AdminLoginDto extends LoginDto {}
+

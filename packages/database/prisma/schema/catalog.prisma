@@ -11,6 +11,7 @@ enum Stream {
 
 enum PublicationStatus {
   DRAFT
+  IN_REVIEW
   PUBLISHED
   ARCHIVED
 }

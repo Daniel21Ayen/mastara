@@ -27,20 +27,31 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly CACHE_TTL_MS = 60 * 1000;
 
   async validate(payload: JwtPayload) {
-    const now = Date.now();
-    const cached = this.adminCache.get(payload.sub);
-    let student = cached && now - cached.cachedAt < this.CACHE_TTL_MS ? cached.student : null;
-
-    if (!student) {
-      student = await this.prisma.student.findUnique({
+    if (payload.role === "ADMIN") {
+      const admin = await this.prisma.adminUser.findUnique({
         where: { id: payload.sub },
         include: { admin_scopes: true },
       });
 
-      if (student) {
-        this.adminCache.set(payload.sub, { student, cachedAt: now });
+      if (!admin || !admin.is_active) {
+        throw new UnauthorizedException("Administrator account is inactive or not found");
       }
+
+      return {
+        id: admin.id,
+        email: admin.email,
+        phone: null,
+        role: "ADMIN",
+        adminRole: admin.admin_role ?? "SUPER_ADMIN",
+        scopes: admin.admin_scopes ?? [],
+        firstName: admin.first_name,
+        lastName: admin.last_name,
+      };
     }
+
+    const student = await this.prisma.student.findUnique({
+      where: { id: payload.sub },
+    });
 
     if (!student || student.status !== "ACTIVE") {
       throw new UnauthorizedException("Student account is not active or unauthorized");
@@ -52,7 +63,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       phone: student.phone,
       role: student.role,
       adminRole: student.admin_role ?? (student.role === "ADMIN" ? "SUPER_ADMIN" : undefined),
-      scopes: student.admin_scopes ?? [],
+      scopes: [],
       firstName: student.first_name,
       lastName: student.last_name,
     };

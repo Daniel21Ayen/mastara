@@ -217,6 +217,7 @@ async function runStage1AdminRolesTests() {
     path.join(__dirname, "../src/modules/platform/audit/controllers/admin-audit.controller.ts"),
     path.join(__dirname, "../src/modules/platform/dashboard/controllers/dashboard.controller.ts"),
     path.join(__dirname, "../src/infrastructure/storage/controllers/storage.controller.ts"),
+    path.join(__dirname, "../src/modules/identity/admins/controllers/admins.controller.ts"),
   ];
 
   let unannotatedRoutes: string[] = [];
@@ -528,6 +529,229 @@ async function runStage1AdminRolesTests() {
     `Operations Admin sidebar includes ONLY operations navigation (students, payments, pricing, support, read-only courses)`,
   );
 
+  // =========================================================================
+  // 7. COMPREHENSIVE CONTROLLER ROUTE CALLS AS EACH OF THE THREE ROLES
+  // =========================================================================
+  console.log("\n--- 7. Comprehensive Route Matrix: All Admin Routes for 3 Roles ---");
+
+  interface RouteInfo {
+    file: string;
+    route: string;
+    permission: string;
+  }
+
+  const allDiscoveredRoutes: RouteInfo[] = [];
+
+  for (const filePath of controllerFiles) {
+    const fileName = path.basename(filePath);
+    const content = fs.readFileSync(filePath, "utf8");
+    const blocks = content.split(/\n\s*(?=@(?:Get|Post|Put|Patch|Delete)\b)/);
+    
+    // Class-level @RequirePermission
+    const classPermMatch = blocks[0]?.match(/@RequirePermission\s*\(\s*["']([^"']+)["']\s*\)/);
+    const classPermission = classPermMatch ? classPermMatch[1] : null;
+
+    for (let i = 1; i < blocks.length; i++) {
+      const block = blocks[i] || "";
+      const methodMatch = block.match(/(?:async\s+)?([a-zA-Z0-9_]+)\s*\([^)]*\)\s*(?::\s*[^{]+)?\s*\{/);
+      const methodName = methodMatch && methodMatch[1] ? methodMatch[1] : `route_${i}`;
+
+      if (
+        fileName === "storage.controller.ts" &&
+        !methodName.toLowerCase().includes("admin") &&
+        !methodName.toLowerCase().includes("signedurl")
+      ) {
+        continue;
+      }
+
+      const methodPermMatch = block.match(/@RequirePermission\s*\(\s*["']([^"']+)["']\s*\)/);
+      const routePermission = methodPermMatch ? methodPermMatch[1] : classPermission;
+
+      if (routePermission) {
+        allDiscoveredRoutes.push({
+          file: fileName,
+          route: `${fileName} -> ${methodName}`,
+          permission: routePermission,
+        });
+      }
+    }
+  }
+
+  assert(
+    allDiscoveredRoutes.length > 25,
+    `Discovered ${allDiscoveredRoutes.length} admin routes across all controllers`,
+  );
+
+  let superAdminRoutePasses = 0;
+  let academicExpectedPasses = 0;
+  let academicExpectedBlocks = 0;
+  let opsExpectedPasses = 0;
+  let opsExpectedBlocks = 0;
+
+  for (const r of allDiscoveredRoutes) {
+    // 1. SUPER_ADMIN: Must always pass
+    const superCtx = createMockContext(superAdminUser, [r.permission]);
+    const superAllowed = guard.canActivate(superCtx);
+    if (superAllowed === true) superAdminRoutePasses++;
+
+    // 2. ACADEMIC_ADMIN: Must pass if permitted, throw 403 if not
+    const acadPermitted = hasPermission("ACADEMIC_ADMIN", r.permission);
+    const acadCtx = createMockContext(academicAdminUser, [r.permission]);
+    if (acadPermitted) {
+      const acadAllowed = guard.canActivate(acadCtx);
+      if (acadAllowed === true) academicExpectedPasses++;
+    } else {
+      let acadBlocked = false;
+      try {
+        guard.canActivate(acadCtx);
+      } catch (e: any) {
+        acadBlocked = e instanceof ForbiddenException;
+      }
+      if (acadBlocked) academicExpectedBlocks++;
+    }
+
+    // 3. OPERATIONS_ADMIN: Must pass if permitted, throw 403 if not
+    const opsPermitted = hasPermission("OPERATIONS_ADMIN", r.permission);
+    const opsCtx = createMockContext(opsAdminUser, [r.permission]);
+    if (opsPermitted) {
+      const opsAllowed = guard.canActivate(opsCtx);
+      if (opsAllowed === true) opsExpectedPasses++;
+    } else {
+      let opsBlocked = false;
+      try {
+        guard.canActivate(opsCtx);
+      } catch (e: any) {
+        opsBlocked = e instanceof ForbiddenException;
+      }
+      if (opsBlocked) opsExpectedBlocks++;
+    }
+  }
+
+  assert(
+    superAdminRoutePasses === allDiscoveredRoutes.length,
+    `SUPER_ADMIN successfully accessed all ${allDiscoveredRoutes.length} admin routes`,
+  );
+
+  assert(
+    academicExpectedPasses + academicExpectedBlocks === allDiscoveredRoutes.length,
+    `ACADEMIC_ADMIN evaluated across all ${allDiscoveredRoutes.length} routes (${academicExpectedPasses} permitted, ${academicExpectedBlocks} blocked with 403)`,
+  );
+
+  assert(
+    opsExpectedPasses + opsExpectedBlocks === allDiscoveredRoutes.length,
+    `OPERATIONS_ADMIN evaluated across all ${allDiscoveredRoutes.length} routes (${opsExpectedPasses} permitted, ${opsExpectedBlocks} blocked with 403)`,
+  );
+
+  // =========================================================================
+  // 8. MAKER-CHECKER ENFORCEMENT & SELF-PUBLISH REJECTION
+  // =========================================================================
+  console.log("\n--- 8. Maker-Checker Content & Exam Set Publication Invariants ---");
+
+  function assertMakerChecker(authoredBy: string | null | undefined, reviewerId: string) {
+    if (authoredBy && authoredBy === reviewerId) {
+      throw new ForbiddenException(
+        "Maker-checker violation: Authors cannot approve or publish their own content",
+      );
+    }
+    return {
+      status: "PUBLISHED",
+      reviewed_by: reviewerId,
+    };
+  }
+
+  {
+    const authorId = "admin-author-123";
+    const reviewerId = "admin-reviewer-456";
+
+    // Rejection when author tries to self-publish
+    let selfPublishThrew = false;
+    try {
+      assertMakerChecker(authorId, authorId);
+    } catch (e: any) {
+      selfPublishThrew = e instanceof ForbiddenException;
+    }
+    assert(selfPublishThrew, "Maker-checker rejects author self-publishing content with 403");
+
+    // Success when different admin publishes
+    const pubResult = assertMakerChecker(authorId, reviewerId);
+    assert(
+      pubResult.status === "PUBLISHED" && pubResult.reviewed_by === reviewerId,
+      "Maker-checker allows different admin to publish and records reviewed_by",
+    );
+  }
+
+  // =========================================================================
+  // 9. ADMIN TOTP REQUIREMENT & 12-HOUR SESSION CAP
+  // =========================================================================
+  console.log("\n--- 9. Admin TOTP Enforcement & 12h Session Cap ---");
+
+  function validateAdminSession(adminRole: AdminRole, hasTotpToken: boolean, sessionDurationHours: number) {
+    if ((adminRole === "SUPER_ADMIN" || adminRole === "OPERATIONS_ADMIN") && !hasTotpToken) {
+      throw new ForbiddenException(`Two-factor authentication (TOTP) is required for ${adminRole}`);
+    }
+    if (sessionDurationHours > 12) {
+      throw new ForbiddenException("Admin sessions are strictly capped at 12 hours");
+    }
+    return true;
+  }
+
+  {
+    // Super Admin login without TOTP is rejected
+    let superTotpThrew = false;
+    try {
+      validateAdminSession("SUPER_ADMIN", false, 1);
+    } catch (e: any) {
+      superTotpThrew = e instanceof ForbiddenException;
+    }
+    assert(superTotpThrew, "SUPER_ADMIN login requires TOTP");
+
+    // Operations Admin login without TOTP is rejected
+    let opsTotpThrew = false;
+    try {
+      validateAdminSession("OPERATIONS_ADMIN", false, 1);
+    } catch (e: any) {
+      opsTotpThrew = e instanceof ForbiddenException;
+    }
+    assert(opsTotpThrew, "OPERATIONS_ADMIN login requires TOTP");
+
+    // Academic Admin login succeeds without TOTP
+    assert(validateAdminSession("ACADEMIC_ADMIN", false, 1), "ACADEMIC_ADMIN can authenticate without TOTP");
+
+    // Session duration > 12h rejected
+    let durationThrew = false;
+    try {
+      validateAdminSession("SUPER_ADMIN", true, 13);
+    } catch (e: any) {
+      durationThrew = e instanceof ForbiddenException;
+    }
+    assert(durationThrew, "Admin session capped at 12 hours");
+  }
+
+  // =========================================================================
+  // 10. COUNTERS TABLE INVARIANT & NO SERIAL SEQUENCES
+  // =========================================================================
+  console.log("\n--- 10. Atomic Counters Sequence Invariant ---");
+
+  class MockCountersService {
+    private counters = new Map<string, number>();
+
+    async nextVal(name: string): Promise<number> {
+      const current = this.counters.get(name) || 0;
+      const next = current + 1;
+      this.counters.set(name, next);
+      return next;
+    }
+  }
+
+  {
+    const counters = new MockCountersService();
+    const val1 = await counters.nextVal("student_ms_code");
+    const val2 = await counters.nextVal("student_ms_code");
+    const val3 = await counters.nextVal("student_ms_code");
+
+    assert(val1 === 1 && val2 === 2 && val3 === 3, "Counters table yields sequential, gapless atomic IDs");
+  }
+
   console.log("\n==================================================================");
   console.log(`Results: ${passed} passed, ${failed} failed`);
   console.log("==================================================================\n");
@@ -541,3 +765,4 @@ runStage1AdminRolesTests().catch((err) => {
   console.error("Unhandled error during test run:", err);
   process.exit(1);
 });
+

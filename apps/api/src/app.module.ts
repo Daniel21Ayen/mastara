@@ -17,6 +17,7 @@ import { AuditModule } from "./modules/platform/audit/audit.module";
 import { DashboardModule } from "./modules/platform/dashboard/dashboard.module";
 import { AuthModule } from "./modules/identity/auth/auth.module";
 import { DevicesModule } from "./modules/identity/devices/devices.module";
+import { AdminsModule } from "./modules/identity/admins/admins.module";
 import { StudentsModule } from "./modules/identity/students/students.module";
 import { CatalogModule } from "./modules/catalog/catalog.module";
 import { ContentModule } from "./modules/content/content.module";
@@ -60,6 +61,7 @@ import { ScopeService } from "./common/services/scope.service";
     DashboardModule,
     // Identity
     AuthModule,
+    AdminsModule,
     DevicesModule,
     StudentsModule,
     // Academic

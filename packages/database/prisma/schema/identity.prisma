@@ -88,7 +88,6 @@ model Student {
   support_tickets  SupportTicket[]
   support_messages SupportMessage[]
   security_logs    SecurityEventLog[]
-  admin_scopes     AdminScope[]
 
   @@index([phone])
   @@index([email])
@@ -98,13 +97,33 @@ model Student {
   @@map("students")
 }
 
+model AdminUser {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String       @unique
+  password_hash String
+  first_name    String       @default("")
+  last_name     String       @default("")
+  admin_role    AdminRole    @default(SUPER_ADMIN)
+  totp_secret   String?
+  is_active     Boolean      @default(true)
+  last_login_at DateTime?    @db.Timestamptz(6)
+  created_at    DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime     @updatedAt @db.Timestamptz(6)
+
+  admin_scopes  AdminScope[]
+
+  @@index([admin_role])
+  @@index([is_active])
+  @@map("admin_users")
+}
+
 model AdminScope {
-  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  admin_id      String  @db.Uuid
-  university_id String? @db.Uuid
-  program_id    String? @db.Uuid
-  course_id     String? @db.Uuid
-  admin         Student @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  admin_id      String    @db.Uuid
+  university_id String?   @db.Uuid
+  program_id    String?   @db.Uuid
+  course_id     String?   @db.Uuid
+  admin         AdminUser @relation(fields: [admin_id], references: [id], onDelete: Cascade)
 
   @@index([admin_id])
   @@map("admin_scopes")

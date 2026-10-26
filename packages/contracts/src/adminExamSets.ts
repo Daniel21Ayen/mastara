@@ -69,6 +69,8 @@ export const examSetSchema = z.object({
   isFree: z.boolean(),
   minutes: z.number().int(),
   status,
+  authored_by: z.string().nullable().optional(),
+  reviewed_by: z.string().nullable().optional(),
   questions: z.array(examQuestionSchema),
   updatedAt: z.string(),
 });

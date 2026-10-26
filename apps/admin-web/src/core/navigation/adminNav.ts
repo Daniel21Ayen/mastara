@@ -128,6 +128,13 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
     icon: 'headset',
     permission: 'support.reply',
   },
+  {
+    id: 'admins',
+    labelKey: 'admin.nav.admins',
+    href: '/admins',
+    icon: 'shieldCheck',
+    permission: 'admins.manage',
+  },
 ];
 
 const startsWith = (pathname: string, base: string): boolean =>
@@ -169,6 +176,7 @@ export function activeNavId(pathname: string): string | null {
   if (pathname === '/audit' || pathname.startsWith('/audit/')) return 'audit';
   if (pathname === '/reports' || pathname.startsWith('/reports/')) return 'reports';
   if (pathname === '/notifications' || pathname.startsWith('/notifications/')) return 'notifications';
+  if (pathname === '/admins' || pathname.startsWith('/admins/')) return 'admins';
   const match = ADMIN_NAV.find((item) => startsWith(pathname, item.section ?? item.href));
   return match?.id ?? null;
 }

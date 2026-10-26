@@ -1,7 +1,6 @@
 import "reflect-metadata";
 import * as bcrypt from "bcryptjs";
 import { UnauthorizedException, ForbiddenException } from "@nestjs/common";
-import { Role, StudentStatus, SecurityEventType } from "@mastara/database";
 import { AuthService } from "../src/modules/identity/auth/services/auth.service";
 
 let passed = 0;
@@ -21,59 +20,54 @@ async function runAdminAuthUnitTests() {
   console.log("=== Testing Admin Auth Service Unit & Role Enforcement ===\n");
 
   const adminPasswordHash = await bcrypt.hash("adminPass123!", 10);
-  const studentPasswordHash = await bcrypt.hash("studentPass123!", 10);
 
   const mockAdminUser = {
     id: "admin-uuid-001",
     email: "admin@mastara.edu.et",
-    phone: "+251911000000",
+    phone_number: "+251911000000",
     password_hash: adminPasswordHash,
     first_name: "System",
     last_name: "Admin",
-    role: Role.ADMIN,
-    status: StudentStatus.ACTIVE,
-  };
-
-  const mockStudentUser = {
-    id: "student-uuid-002",
-    email: "student@mastara.edu.et",
-    phone: "+251911223344",
-    password_hash: studentPasswordHash,
-    first_name: "Normal",
-    last_name: "Student",
-    role: Role.STUDENT,
-    status: StudentStatus.ACTIVE,
+    admin_role: "SUPER_ADMIN",
+    is_active: true,
+    totp_secret: "JBSWY3DPEHPK3PXP",
+    admin_scopes: [],
   };
 
   const mockSuspendedAdmin = {
     id: "admin-uuid-003",
     email: "suspended@mastara.edu.et",
-    phone: "+251911999999",
+    phone_number: "+251911999999",
     password_hash: adminPasswordHash,
     first_name: "Suspended",
     last_name: "Admin",
-    role: Role.ADMIN,
-    status: StudentStatus.SUSPENDED,
+    admin_role: "SUPER_ADMIN",
+    is_active: false,
+    totp_secret: "JBSWY3DPEHPK3PXP",
+    admin_scopes: [],
   };
 
   // Mock Prisma Service
   const mockPrisma: any = {
-    student: {
+    adminUser: {
       findFirst: async ({ where }: any) => {
         const identifiers = [
+          where.email,
+          where.phone_number,
           where.OR?.[0]?.email,
-          where.OR?.[0]?.phone,
+          where.OR?.[0]?.phone_number,
           where.OR?.[1]?.email,
-          where.OR?.[2]?.phone,
+          where.OR?.[1]?.phone_number,
         ].filter(Boolean);
 
-        for (const user of [mockAdminUser, mockStudentUser, mockSuspendedAdmin]) {
-          if (identifiers.includes(user.email) || identifiers.includes(user.phone)) {
+        for (const user of [mockAdminUser, mockSuspendedAdmin]) {
+          if (identifiers.includes(user.email) || identifiers.includes(user.phone_number)) {
             return user;
           }
         }
         return null;
       },
+      update: async () => ({ id: "admin-uuid-001" }),
     },
     securityEventLog: {
       create: async () => ({ id: "log-1" }),
@@ -85,15 +79,21 @@ async function runAdminAuthUnitTests() {
     sign: (payload: any) => `mock-jwt-token-for-${payload.sub}-${payload.role}`,
   };
 
-  const authService = new AuthService(mockPrisma, mockJwt);
+  // Mock TotpService
+  const mockTotp: any = {
+    verifyTotp: (token: string, secret: string) => token === "123456",
+  };
+
+  const authService = new AuthService(mockPrisma, mockJwt, mockTotp);
 
   // ----------------------------------------------------
-  // Test 1: Successful Admin Login with email
+  // Test 1: Successful Admin Login with email + TOTP
   // ----------------------------------------------------
   console.log("1. Successful Admin Login Tests:");
   const result1 = await authService.adminLogin({
     identifier: "admin@mastara.edu.et",
     password: "adminPass123!",
+    totp_code: "123456",
   });
   assert(result1.user.id === mockAdminUser.id, "Returns correct admin user ID");
   assert(result1.user.role === "ADMIN", "Guarantees user.role is 'ADMIN'");
@@ -102,33 +102,31 @@ async function runAdminAuthUnitTests() {
   assert(result1.token.includes("ADMIN"), "Issues JWT with ADMIN role");
 
   // ----------------------------------------------------
-  // Test 2: Successful Admin Login with phone format (0911000000 -> +251911000000)
+  // Test 2: Successful Admin Login with phone format
   // ----------------------------------------------------
   const result2 = await authService.adminLogin({
     identifier: "0911000000",
     password: "adminPass123!",
+    totp_code: "123456",
   });
   assert(result2.user.id === mockAdminUser.id, "Supports normalized phone identifier");
 
   // ----------------------------------------------------
-  // Test 3: Reject non-admin (STUDENT) role
+  // Test 3: Reject missing TOTP for SUPER_ADMIN
   // ----------------------------------------------------
-  console.log("\n2. Role-based Boundary Tests:");
-  let studentRejected = false;
-  let rejectionMessage = "";
+  console.log("\n2. TOTP Enforcement Tests:");
+  let missingTotpRejected = false;
   try {
     await authService.adminLogin({
-      identifier: "student@mastara.edu.et",
-      password: "studentPass123!",
+      identifier: "admin@mastara.edu.et",
+      password: "adminPass123!",
     });
   } catch (err: any) {
-    if (err instanceof ForbiddenException) {
-      studentRejected = true;
-      rejectionMessage = err.message;
+    if (err instanceof UnauthorizedException) {
+      missingTotpRejected = true;
     }
   }
-  assert(studentRejected, "Rejects student user from admin portal with ForbiddenException");
-  assert(rejectionMessage.includes("administrator"), "Returns clear admin access denied message");
+  assert(missingTotpRejected, "Rejects SUPER_ADMIN without TOTP code with UnauthorizedException (MFA_REQUIRED)");
 
   // ----------------------------------------------------
   // Test 4: Reject incorrect password
@@ -139,6 +137,7 @@ async function runAdminAuthUnitTests() {
     await authService.adminLogin({
       identifier: "admin@mastara.edu.et",
       password: "WrongPassword999!",
+      totp_code: "123456",
     });
   } catch (err: any) {
     if (err instanceof UnauthorizedException) {
@@ -155,6 +154,7 @@ async function runAdminAuthUnitTests() {
     await authService.adminLogin({
       identifier: "ghost@mastara.edu.et",
       password: "somePassword123!",
+      totp_code: "123456",
     });
   } catch (err: any) {
     if (err instanceof UnauthorizedException) {
@@ -164,20 +164,21 @@ async function runAdminAuthUnitTests() {
   assert(unknownRejected, "Rejects non-existent identifier with UnauthorizedException");
 
   // ----------------------------------------------------
-  // Test 6: Reject suspended admin account
+  // Test 6: Reject suspended / inactive admin account
   // ----------------------------------------------------
   let suspendedRejected = false;
   try {
     await authService.adminLogin({
       identifier: "suspended@mastara.edu.et",
       password: "adminPass123!",
+      totp_code: "123456",
     });
   } catch (err: any) {
     if (err instanceof ForbiddenException) {
       suspendedRejected = true;
     }
   }
-  assert(suspendedRejected, "Rejects suspended admin with ForbiddenException");
+  assert(suspendedRejected, "Rejects inactive admin with ForbiddenException");
 
   console.log(`\n========================================`);
   console.log(`Admin Auth Tests: ${passed} passed, ${failed} failed.`);

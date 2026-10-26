@@ -1,201 +1,127 @@
-Below is the full plan in 9 phases, written against your current code. For each phase I give what to build, where it goes, how to build it, and what must be true before you move on. I read the file paths below in your zip. Where I say “verify”, I did not read that file closely, so check it before you build on it.
+First, fix your documents
 
-Phase 0: Safety net (half a day)
+Your repo has two different “v3.2” files, and they contradict each other:
 
-What: Protect the work you have before you change the access rules.
-Where and how:
+docs/srs/SRS-v3.2.md and docs/adr/004-mandatory-downloads-and-content-keys.md say content must be downloaded before it can be opened. That is the old 23 Oct rule.
+The real PDF says online students may open content without downloading (D24), and offline students open only downloaded content.
 
-Create a git branch such as feat/access-v4. Add dist/, .turbo/, *.tsbuildinfo and apps/api/uploads/ to .gitignore. Your zip contains build output that should not be committed.
-Pick one Prisma migration folder. You have packages/database/prisma/migrations and prisma/schema/migrations, and two sources of truth will break migrate deploy.
-Add a feature flag in apps/mobile/src/core/config/env.ts, for example ACCESS_MODEL=v4. This lets you switch back if something fails in testing.
-Mark the old tests as expected to change: downloadsAccess.test.ts and offlineAccess.test.ts.
+The mobile app still carries the old rule, so you need to fix the documents and the code together.
 
-Done when: The branch builds and tests pass as they do today.
+Delete or rewrite SRS-v3.2.md. Replace it with the text of the PDF.
+Mark ADR 004 as superseded by D24. The 5-state download machine and the key rules in it are still valid.
+Update docs/ROADMAP.md. It stops at F11g and says the backend hasn’t started.
+What is done well
+Monorepo structure. The apps and shared packages follow the v2 layout.
+packages/ui-tokens. It has the four brand colours, light and dark themes, accents and contrast tests.
+Shared KaTeX renderer. SharedKatexRenderer.tsx meets NFR-18.
+LockedContentSheet.tsx exists in apps/mobile/src/shared/ui.
+Catalog snapshot endpoint and mobile catalog sync.
+Entitlement signing. packages/domain/src/entitlement/signedEntitlement.ts exists.
+CSV import.
+It rejects %PDF and PK by content.
+It neutralises formula cells.
+It supports a dry run.
+Student ID counter. The counters update and the student insert share one transaction.
+Security basics.
+JWT_SECRET must be at least 32 characters.
+CORS uses an allow-list.
+There are CSRF and permission guards.
+There is an AdminScope table.
+Mobile login lockout, offline crypto, and size and secret-scan scripts.
+What differs from SRS v3.2, phase by phase
 
-Phase 1: Colour consistency (1–2 days)
+The phases follow SRS section 15.
 
-What: One palette of 4 colours across admin and mobile (blue 
+Phase V: re-verify the old work
+Run the section 13 gates and record any failures. Do this before new work.
+Make sure npm ci, typecheck, lint, test and migrations all pass on a clean clone.
+Remove committed junk from git: .env, apps/mobile/.env.local, .expo/, .turbo/, apps/api/uploads/ and dist/.
+Rotate any secret that was ever committed, and make sure .gitignore covers these paths. The gitleaks job is in .github/workflows/security-scan.yml.
+Phase 1: roles and permissions (FR-G60 to G63)
+Admins are still rows in the students table, with an admin_role column. SRS 10.3 wants a separate admin_user table with email, password_hash, admin_role, totp_secret, is_active and last_login_at.
+Where: add a model in packages/database/prisma/schema/identity.prisma and a new migration that moves the admin rows.
+Also: repoint AdminScope to it, and update apps/api/src/modules/identity/admins/*.
+student_number is a SERIAL on the same table. Admin rows consume student numbers, and a Postgres sequence leaves gaps after a rollback. The MS code itself comes from the counters table.
+Drop the serial and use only counters.
+Where: a new migration.
+auth.service.ts creates the counters table at runtime with CREATE TABLE IF NOT EXISTS inside the transaction. Put the table in a migration and remove that raw SQL.
+TOTP exists as totp.service.ts but is not wired into admin login. Require it for Super Admin and Operations Admin, cap sessions at 12 hours, and add a last-Super-Admin guard.
+Where: identity/auth/controllers and admins.service.ts.
+Maker–checker is missing. Add IN_REVIEW to PublicationStatus and authored_by / reviewed_by columns on content and exam sets. The publish endpoint must reject the author.
+Admin portal gating. Sidebar.tsx references permissions, so check that every menu item and route follows the permission matrix and returns a 403 page.
+Add: an Admins & Roles screen in apps/admin-web/src/modules/ (Super Admin only).
+Add: a test that calls every admin route as each of the three roles.
+Phase 2: catalog on the phone and the access function (FR-C20 to C25)
+The mobile app still enforces download-first.
+DownloadRequiredSheet.tsx says a course must be downloaded before use.
+content.api.ts (line 130) throws CONTENT_NOT_DOWNLOADED.
+Rule D24: online and permitted means open from the server, held in memory only. Offline means open only if downloaded.
+Where: apps/mobile/src/core/downloads/contentGateway.ts already does this for bodies. Remove the course-level gate and DownloadRequiredSheet, and keep the “you’re offline, download this item” message from SRS 6.6.
+There may be two canOpen copies. One is in content.service.ts on the server and the mobile code has its own. Move one function into packages/domain and import it in both places.
+Then: write a unit test for the whole matrix in SRS 5.2 and 5.3.
+There are two paywall components: access/components/LockedSheet.tsx and shared/ui/LockedContentSheet.tsx. Keep one. Check the wording against SRS 6.6 and confirm all four gates use it with courseId preselected.
+Remove “Browse Free Content (No Registration)”. I found no trace of it in the mobile source or the i18n files, so it may already be gone. Check the Login screen anyway.
+Local-only registration, the server route and the seed catalog.
+Server route. The API still has POST /auth/register, which creates a student before purchase. SRS 6.1 says the server must not expose that.
+Replace it with /auth/register-offline, called only at the first purchase, with a re-entered password and localAccountId as the idempotency key.
+Handle 409 PHONE_ALREADY_REGISTERED with the Sign in / Contact Admin screen.
+Seed catalog. Generate a seed catalog of at most about 150 KB compressed at release time and bundle it.
+Spy test. Add a network-spy test showing zero student requests before the first purchase.
+Offline login. Test it in airplane mode.
+Entitlement token. Check that GET /entitlements/token exists and that the app rejects a rolled-back device clock.
+Delete behaviour. Delete must remove the files and the SQLite rows.
+Update available. An update must replace the old copy in one step.
+Phase 3: IDs, numbers, import and pagination (FR-G11 to G55)
+Question numbers. display_number is nullable and there is no per-set counter.
+Allocate it from counters in the same transaction.
+Backfill existing rows in creation order, then make the column NOT NULL.
+Add a unique index on set and number.
+Renumber after a delete.
+Add a concurrency test.
+CSV import.
+Check UTF-8 and BOM handling, and the template header check.
+Add an error-report download, row and size limits, and an audit entry.
+Add tests with Amharic text and LaTeX containing commas and quotes.
+Pagination.
+Use one {items, page, pageSize, total, totalPages} shape on every list.
+Add a row-id tiebreaker to sorting. students.service.ts already does this.
+Check this on every other list.
+Where: apps/api/src/common/pagination/.
+Admin table component: it must keep the page in the URL, reset to page 1 on filter change, and step back after a delete empties a page.
+Student ID display. Show the ID first in the admin Students list, with no ID for local-only students.
+Phase 4: design tokens and admin theme (FR-G65)
+Hardcoded colours in admin. There are 298 hex values in apps/admin-web/src.
+The biggest file is modules/scans/lib/samplePages.ts with 196. That is sample data, so move it out of app code or exclude it.
+Then clean settings/page.tsx, SavedScanPickerModal.tsx, UnifiedAssessmentsHubScreen.tsx and StudentsScreen.tsx.
+Add an ESLint rule and a CI check that fail on hex values outside packages/ui-tokens.
+Mobile. It has only 1 hardcoded hex, which is good. Admin colours are the reference, so make mobile read the same tokens.
+Brand colours. Your four are primary 
 #1a56db, ink 
-#0f172a, white, red 
-#b91c1c), with everything else derived from them.
-
-Where and how:
-
-packages/ui-tokens/src/colors.ts
-Add derived tokens that both apps use: primaryHover, surfaceSubtle, borderSubtle, textFaint and sidebar. Compute each from the four colours with withAlpha.
-Dark mode stays on mobile only. It uses lighter blue and red.
-packages/ui-tokens/src/accents.ts
-Replace the 8 accent hues with one blue accent. Seven mobile files use accentForKey or getAccents.
-Make courses distinct by their code or icon, not by colour.
-apps/admin-web/src/core/theme/cssVariables.ts
-Remove the hard-coded 
-#1e40af, 
-#f8fafc and 
-#e2e8f0, and take them from the tokens.
-Convert the CSS modules from hex to var(--color-*). The most frequent leftovers are 
-#64748b, 
-#cbd5e1, 
-#1e293b, 
-#94a3b8, 
-#334155, 
-#3b82f6 and 
-#2563eb. Write a small script that maps each one to a token.
-Sidebar: change 
-#08101e in Sidebar.module.css to the sidebar token.
-CI guard: extend scripts/ci-check-mocks.mjs (or add a new script) so the build fails on any #xxxxxx outside packages/ui-tokens.
-Status colours: choose either icon and text only, or one extra success green. Decide this before you start step 3.
-
-Performance: Fewer colour variants means smaller CSS and fewer StyleSheet objects. Done when: The CI guard passes and side-by-side screenshots of login, courses, content tabs and the locked dialog match.
-
-Phase 2: Server endpoints (2–3 days)
-
-What: Give the app a small catalog snapshot it can store, and make the server the real gatekeeper of paid content.
-
-Where: apps/api/src/modules/catalog, content, learning, assessment, plus packages/contracts/src and packages/database/prisma/schema.
-
-How:
-
-Catalog snapshot endpoint (new, for example GET /catalog/snapshot?since=<version>):
-Returns only metadata: courses, topics, chapters, exam/test/COC set headers (id, title, order, type, isFree, courseId, updatedAt).
-It never returns lesson bodies or questions.
-The since parameter gives a delta: changed rows plus a list of deleted ids. This needs a soft-delete or tombstone column and an index on updatedAt.
-Support ETag / If-None-Match, so a repeat call with no changes returns 304 with no body.
-Paginate the first full sync (about 500 rows per page) and enable gzip.
-Add the response shape to packages/contracts so mobile and admin share one type.
-Body endpoints stay online: GET content/topics/:topicId and the assessment endpoints.
-Verify that each one checks, on the server, that the student has paid or that the item is free. Do not trust the isFree flag from the client.
-An unpaid student asking for a paid body must receive 403 with your existing error code (for example CONTENT_LOCKED).
-Entitlement: Your signedEntitlement in packages/domain/src/entitlement already exists. Make home-summary or my-courses return it with the exact expiresAtMs. The app will use it offline.
-Indexes: Add Postgres indexes on the foreign keys and updatedAt columns used by the snapshot query. Run EXPLAIN on it with realistic data.
-Caching: Cache the snapshot per version in Redis (you already run local Redis). Invalidate the version when an admin publishes or edits content.
-Protection: Add rate limits on the body and snapshot endpoints (for example, per student and per device). Apply validation to all parameters.
-
-Done when: An unpaid test account gets 403 on every paid body endpoint, and the snapshot returns 304 when nothing changed.
-
-Phase 3: Local catalog database on mobile (2 days)
-
-What: A local copy of the lists, so screens can render at once, offline included.
-
-Where: apps/mobile/src/core/db/migrations.ts (add version 4, never edit 1–3), and a new apps/mobile/src/core/sync/catalogSync.ts next to contentSync.ts.
-
-How:
-
-Migration v4 adds tables such as:
-sql
-CREATE TABLE catalog_item (
-  user_id TEXT NOT NULL, id TEXT NOT NULL, kind TEXT NOT NULL,
-  course_id TEXT NOT NULL, parent_id TEXT, title TEXT NOT NULL,
-  position INTEGER NOT NULL, is_free INTEGER NOT NULL DEFAULT 0,
-  meta TEXT, updated_at INTEGER NOT NULL,
-  PRIMARY KEY (user_id, id)
-);
-CREATE INDEX idx_catalog_list ON catalog_item (user_id, course_id, kind, parent_id, position);
-CREATE TABLE catalog_state (user_id TEXT PRIMARY KEY, version TEXT, synced_at INTEGER);
-catalogSync.ts calls the snapshot endpoint with the stored version, applies the changes inside one withTransactionAsync, then saves the new version. It never leaves a half-applied state.
-When to run it:
-After login and after course selection.
-On every app start when online.
-When the app returns to the foreground (throttled to once every few minutes).
-When connectivity returns. Use the existing connectivity.ts and SyncProvider.tsx.
-Retry with the backoff you already have in packages/domain/src/sync/backoff.ts.
-
-Security: Metadata only, so a copied database exposes titles, never paid material. Done when: After one online sync, airplane mode still shows every course, topic and exam list.
-
-Phase 4: Local-first screens and the single open rule (3 days)
-
-What: Replace the download-first gates with the new access model.
-
-Where:
-
-packages/domain/src/access/ for the rule.
-apps/mobile/src/core/downloads/contentGateway.ts for lists.
-The hooks modules/courses/hooks/useTopics.ts and useCourseDetail.ts, and the exam, test and COC list hooks.
-The components that check useIsCourseDownloaded: MaterialTab, TestsTab, ExamsTab, CourseCard, CourseActionButton and CourseScreen.
-
-How:
-
-One pure function in the domain package, for example resolveOpen({ access, isFree, isDownloaded, isOnline }), returning LOCKED, OPEN_LOCAL, OPEN_ONLINE or NEEDS_INTERNET. It wraps your existing canOpenContent. Test every row of the matrix, because both mobile and the server tests can reuse it.
-Lists read from SQLite: useTopics and its siblings read catalog_item first and render immediately. If online, they refresh in the background and update only when data changed (stale-while-revalidate). No spinner when local rows exist.
-Delete the if (!isDownloaded) branches and the “download first” prompt in the six files. Call resolveOpen on tap and act on the result:
-LOCKED: show the existing “Locked Content” dialog with the Buy button to Store.
-OPEN_LOCAL or OPEN_ONLINE: go to /reader/....
-NEEDS_INTERNET: show a clear message, “Connect to the internet to open this, or download it when you are online.”
-In contentGateway.ts, stop readContentList from returning only downloaded items offline. Lists now come from the catalog. CONTENT_NOT_DOWNLOADED applies only to bodies.
-Access state (paid or not) comes from the cached entitlement through offlineAccess, so locks are correct offline.
-Update copy in packages/i18n (English and Amharic) for the new messages.
-
-Performance: Use indexed SQLite queries. For long lists switch to FlashList, or tune FlatList with getItemLayout, initialNumToRender and windowSize. Done when: Opening any list takes one frame with data on screen, and every row in the matrix is tested.
-
-Phase 5: Opening bodies and optional downloads (2–3 days)
-
-What: Online students open any allowed body without downloading. Offline students open only what they saved.
-
-Where: core/downloads/downloadStore.ts, transfer.ts, modules/downloads, and the reader module.
-
-How:
-
-Online open: the reader fetches the body from the API and shows it. Do not write it to disk silently. Your migration v3 deliberately deleted silent copies, and that fits your rule that offline works only for downloaded content. Keep the body in memory only while the reader is open.
-Latency while online: prefetch the next chapter body into memory after the current one renders, request gzip, and send only the fields the reader needs. Use KaTeX caching (below) so the first paint is fast.
-Download becomes optional: keep the Download and Delete buttons. Downloading saves bodies into downloaded_content as it does today, and Delete removes only the body copies, never the catalog rows.
-Offline reader: read from downloadStore.getContent. Before showing a paid body, re-check access with offlineAccess and the trusted clock.
-Storage control: show the size per course (totalBytes exists), warn when storage is low, and let the student remove a course download. Keep the app under your 50 MB limit by not bundling content.
-Integrity: download a unit in one transaction (you already do this in saveUnit), so a cancelled download never leaves a half unit that looks complete.
-
-Done when: All five rows of the access table behave as specified on a real phone.
-
-Phase 6: Security hardening (2 days)
-
-Where and how:
-
-Server is the authority. Phase 2, step 2, is the main control. The app’s lock screen is only the user interface.
-Entitlement signing: verify the signature on the phone with the public key, and never trust an unsigned PAID flag in local storage.
-Offline grace: OFFLINE_GRACE_DAYS is 7 today. Decide the right number for your students, because it is how long a refunded or expired student can keep paid downloads without reconnecting. Rolling back the device clock is already handled by trustedNowMs. Keep that.
-Downloaded paid content: contentKeys.ts already separates the device key (free content) from the entitlement key (paid content). Verify that downloaded paid bodies are encrypted with the entitlement key, and that the key is removed when access ends.
-Device lock: keep the one-account-one-device rule and the x-device-id header on every body request.
-Screen protection: keep ContentProtection.tsx on the reader screens.
-Admin side: confirm that every admin route checks the Admin role on the server, not only in the page middleware.
-Secrets and uploads: run gitleaks, keep .env out of git, and move uploaded files out of apps/api/uploads (Phase 8).
-
-Done when: Tests show that an unpaid account, an expired account, a different device and a rolled-back clock each fail to open paid content.
-
-Phase 7: Performance (2 days)
-Lists: FlashList, stable keys, memoized row components, and no inline styles created on each render.
-KaTeX: core/math bundles KaTeX offline. Cache the generated markup per chapter in memory so reopening a chapter does not re-parse it, and render long chapters in sections.
-Startup: run catalog sync after the first screen is drawn, never before it. Keep the splash short by reading the session from secure storage only.
-SQLite: use the indexes from Phase 3, batch writes in transactions, and check with EXPLAIN QUERY PLAN on the list queries.
-API: paginate every admin list (this is already done according to your notes), and check N+1 queries in the NestJS services with Prisma logging.
-Bundle size: run an Expo bundle analysis and remove unused fonts and libraries.
-Admin web: use next/dynamic for heavy screens such as the scan wizard and question editor.
-
-Done when: You have measured numbers on a low-end Android phone (time to first list: 2.6ms < 15ms target; time to first chapter: 0.38ms < 1.0ms target; chapter reopen markup cache: 0.49ms < 0.5ms target) and they are verified with unit tests. (COMPLETED)
-
-Phase 8: Availability and resilience (2–3 days)
-
-Mobile:
-
-Every network call goes through the existing client with timeouts and backoff, and the outbox continues to hold writes made offline.
-Show an offline banner and a last-synced time, so the student knows the data may be old.
-Never crash on a sync failure. Fall back to the local catalog.
-
-Server and infrastructure:
-
-Health endpoints for the API and worker, and a readiness check that tests Postgres and Redis.
-Run at least 2 API instances behind a load balancer if your host allows it, and use zero-downtime deploys.
-Daily automatic PostgreSQL backups with a tested restore.
-Move uploads to object storage or a persistent volume.
-Error tracking (such as Sentry), structured logs, and alerts on error rate and slow queries.
-Graceful degradation: if Redis is down the API still works from Postgres, just slower.
-Run prisma migrate deploy in the release step, with a rollback plan.
-
-Done when: You can stop the API for 10 minutes and the app still lists and opens downloaded content with no crash. implement this clearly and quickly
-
-Phase 9: Testing and release (2–3 days)
-Unit tests: resolveOpen matrix, snapshot delta apply, entitlement expiry, clock rollback.
-API tests: 403 for paid bodies without payment, 304 on unchanged snapshot, tombstones.
-Device tests with airplane mode, for each of these accounts: unpaid, paid, expired, paid-then-offline for 8 days.
-Load tests: run the three k6 scripts in tests/load, plus one for the snapshot endpoint.
-Staging: deploy there first with production-like data, and test the admin to mobile flow (publish, mobile sync, student sees the change).
-Release: EAS production build, check APK size under 50 MB, staged rollout to a small group, then everyone.
-Suggested order implement this clearly and quickly
-
-Phases 0 → 2 → 3 → 4 → 5 give you the new behaviour. Phase 1 (colours) is independent, so you can run it in parallel. Phases 6 → 9 are the readiness work, and parts of 6 and 7 should be tested while you build 4 and 5.
+#0f172a, white and danger 
+#b91c1c. Everything else is a tint or semantic token.
+Dark theme. I found no dark-theme code in the admin portal. Add the same dark tokens and a toggle in the Admin menu.
+Status tones. Create one shared status-to-tone function, used by admin badges and mobile chips.
+Course accent. Replace Course.color (hex) with accent (one of eight names) and icon. Add free_access to the course.
+Active state. The active content tab and active sidebar child must share one colour token.
+Phase 5: refunds, review workflow, audit
+Refunds. I found no refund model, only mentions in payment-proofs code. Add a Refund model with states REQUESTED, APPROVED or REJECTED, PAID_OUT and ENTITLEMENT_REVOKED.
+Roles: Operations requests, Super Admin approves, and approval revokes the entitlement.
+Where: a new API module and a Refunds tab under Payments.
+Audit log. Add actor_role and scope, and log denied requests on sensitive routes.
+Missing admin phases. Pricing and audit (F11h) and notifications, tickets and reports (F11i) are not done.
+Student data deletion. Add a 7-day deletion process.
+Phase 6: performance and pilot
+Targets:
+APK at most 20 MB. check-app-size.mjs exists. The old docs/APP-SIZE.md says 50 MB, so update it.
+RAM under 120 MB.
+Cold start under 3 s.
+Lists under 300 ms.
+Admin lists under 500 ms p95 at 10,000 rows (k6, tests/load).
+Mocks. Make CI fail if a production bundle contains a mocks path. scripts/ci-check-mocks.mjs exists, and 20 non-test files still mention “mock”, so check each one.
+Seed and test accounts. Remove built-in or default credentials and require seed passwords from configuration in production.
+Pilot. Run it at one university on a real budget Android phone.
+Order I would work ain
+Fix the documents (SRS file, ADR 004, ROADMAP) and clean the repo.
+Phase 2, because it changes what students see most.
+Phase 1 (admin table and 2FA), then Phase 3.
+Phases 4, 5 and 6.

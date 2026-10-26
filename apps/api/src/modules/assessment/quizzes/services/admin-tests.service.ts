@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
   Logger,
 } from "@nestjs/common";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
@@ -710,6 +711,8 @@ export class AdminTestsService {
       isFree: exam.is_free_trial ?? false,
       minutes: exam.duration_min ?? 60,
       status: exam.status as CatalogStatus,
+      authored_by: (exam as any).authored_by,
+      reviewed_by: (exam as any).reviewed_by,
       questions,
       updatedAt: exam.updated_at ? exam.updated_at.toISOString() : new Date().toISOString(),
     };
@@ -741,6 +744,8 @@ export class AdminTestsService {
       isFree: false,
       minutes: cs.duration_min ?? 120,
       status: cs.status as CatalogStatus,
+      authored_by: (cs as any).authored_by,
+      reviewed_by: (cs as any).reviewed_by,
       questions,
       updatedAt: cs.updated_at ? cs.updated_at.toISOString() : new Date().toISOString(),
     };
@@ -1016,6 +1021,15 @@ export class AdminTestsService {
 
     const beforeStatus: CatalogStatus = existing?.status ?? "DRAFT";
 
+    // Maker–checker policy (FR-G62): A user cannot publish their own work
+    if (beforeStatus !== "PUBLISHED" && input.status === "PUBLISHED" && adminId) {
+      if (existing && (existing as any).authored_by === adminId) {
+        throw new ForbiddenException(
+          "Maker–checker policy violation: A user cannot publish their own work (FR-G62).",
+        );
+      }
+    }
+
     if (isCoc) {
       let cocSet = await this.prisma.cocSet.findFirst({
         where: {
@@ -1031,6 +1045,7 @@ export class AdminTestsService {
             year: input.year ?? 2024,
             duration_min: input.minutes,
             status: input.status as PublicationStatus,
+            reviewed_by: input.status === "PUBLISHED" ? adminId : undefined,
           },
         });
         await this.prisma.cocSetQuestion.deleteMany({
@@ -1046,6 +1061,8 @@ export class AdminTestsService {
             duration_min: input.minutes,
             sample_question_count: Math.min(input.questions.length, 10),
             status: input.status as PublicationStatus,
+            authored_by: adminId || null,
+            reviewed_by: input.status === "PUBLISHED" ? adminId : null,
           },
         });
       }
@@ -1117,6 +1134,7 @@ export class AdminTestsService {
             duration_min: input.minutes,
             is_free_trial: input.isFree,
             status: input.status as PublicationStatus,
+            reviewed_by: input.status === "PUBLISHED" ? adminId : undefined,
           },
         });
         await this.prisma.examQuestion.deleteMany({
@@ -1134,6 +1152,8 @@ export class AdminTestsService {
             duration_min: input.minutes,
             is_free_trial: input.isFree,
             status: input.status as PublicationStatus,
+            authored_by: adminId || null,
+            reviewed_by: input.status === "PUBLISHED" ? adminId : null,
           },
         });
       }

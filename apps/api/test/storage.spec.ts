@@ -20,8 +20,7 @@ async function runTests() {
     },
   } as unknown as ConfigService;
 
-  const localDriver = new LocalDriver(mockConfig);
-  const storageService = new StorageService(localDriver);
+  const storageService = new StorageService(mockConfig);
 
   let passed = 0;
   let failed = 0;

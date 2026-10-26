@@ -1,0 +1,423 @@
+/* apps/admin-web/src/modules/admins/components/AdminsAndRoles.module.css */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 48px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.statCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.statHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.statIcon {
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+}
+
+.statValue {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.statSubtext {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  flex-wrap: wrap;
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 280px;
+  flex: 1;
+  max-width: 400px;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--color-text);
+  width: 100%;
+  outline: none;
+}
+
+.filterControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.roleSelect {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+  outline: none;
+}
+
+.createButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.createButton:hover {
+  opacity: 0.9;
+}
+
+.tableCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.table th {
+  padding: 14px 18px;
+  background-color: var(--color-surface-subtle);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background-color: var(--color-surface-subtle);
+}
+
+.adminName {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.adminEmail {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.roleBadgeSuper {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-soft);
+}
+
+.roleBadgeAcademic {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-soft);
+}
+
+.roleBadgeOperations {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.statusActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-success);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.statusInactive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-danger);
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dotActive {
+  background-color: var(--color-success);
+}
+
+.dotInactive {
+  background-color: var(--color-danger);
+}
+
+.actionsCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.actionBtn:hover {
+  background-color: var(--color-surface-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.deleteBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-danger-soft);
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.deleteBtn:hover {
+  opacity: 0.9;
+}
+
+.totpEnabledBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.totpDisabledBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.emptyState {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* Modal Form Styles */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.formInput {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+  outline: none;
+}
+
+.formInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-soft);
+}
+
+.formCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.errorBanner {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger-soft);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.cancelBtn {
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.submitBtn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* TOTP Setup styles */
+.totpContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.totpSecretBox {
+  background-color: var(--color-surface-subtle);
+  border: 1px dashed var(--color-border);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 15px;
+  text-align: center;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: var(--color-primary);
+  user-select: all;
+}
+
+.totpHelp {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
