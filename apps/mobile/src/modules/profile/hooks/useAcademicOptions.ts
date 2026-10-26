@@ -16,7 +16,7 @@ interface Options {
 
 /** Cascading options: programs depend on the university, semesters on the program. */
 export function useAcademicOptions(universityId: string, programId: string): Options {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const universities = useAsync(() => academicApi.getUniversities());
   const programs = useAsync(universityId ? () => academicApi.getPrograms(universityId) : null, [universityId]);
@@ -28,12 +28,26 @@ export function useAcademicOptions(universityId: string, programId: string): Opt
     if (programId) semesters.reload();
   };
 
+  const resolveText = (val: unknown): string => {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      const loc = val as { en?: string; am?: string };
+      return (language === 'am' ? loc.am || loc.en : loc.en || loc.am) || '';
+    }
+    return String(val);
+  };
+
   return {
-    universities: (universities.data ?? []).map((item) => ({
-      value: item.id,
-      label: item.shortName && item.shortName !== item.name ? `${item.shortName} · ${item.name}` : item.name,
-    })),
-    programs: (programs.data ?? []).map((item) => ({ value: item.id, label: item.name })),
+    universities: (universities.data ?? []).map((item) => {
+      const name = resolveText(item.name);
+      const shortName = resolveText(item.shortName);
+      return {
+        value: item.id,
+        label: shortName && shortName !== name ? `${shortName} · ${name}` : name,
+      };
+    }),
+    programs: (programs.data ?? []).map((item) => ({ value: item.id, label: resolveText(item.name) })),
     semesters: (semesters.data ?? []).map((item) => ({
       value: item.id,
       label: t(item.number === 1 ? 'profile.semester.1' : 'profile.semester.2'),

@@ -47,11 +47,13 @@ export function AppText({
   color,
   lang,
   style,
+  children,
   ...rest
 }: AppTextProps) {
   const theme = useTheme();
   const { language } = useI18n();
-  const family = (lang ?? language) === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
+  const effectiveLang = lang ?? language;
+  const family = effectiveLang === 'am' ? theme.fontFamily.ethiopic : theme.fontFamily.sans;
 
   return (
     <Text
@@ -64,6 +66,8 @@ export function AppText({
         },
         style,
       ]}
-    />
+    >
+      {resolveNode(children, effectiveLang)}
+    </Text>
   );
 }

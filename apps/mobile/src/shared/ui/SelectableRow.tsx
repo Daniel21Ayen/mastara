@@ -7,7 +7,7 @@ import { createStyles, useTheme } from '@/core/theme';
 import { AppText } from './AppText';
 
 interface SelectableRowProps {
-  title: string;
+  title: ReactNode;
   description?: string;
   selected: boolean;
   onToggle: () => void;
