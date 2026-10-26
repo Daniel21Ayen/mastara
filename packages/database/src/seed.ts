@@ -608,6 +608,26 @@ async function main() {
         for (let q = 1; q <= 4; q++) {
           const isTF = q === 1;
           const qType = isTF ? QuestionType.TRUE_FALSE : QuestionType.SINGLE_CHOICE;
+          const promptEn = `Consider the fundamental properties in ${course.title_en} (Chapter ${chapterNumber}). Which statement is mathematically valid?`;
+
+          const existingQuestion = await prisma.question.findFirst({
+            where: {
+              course_id: course.id,
+              prompt_en: promptEn,
+            },
+          });
+          if (existingQuestion) {
+            questionCount++;
+            continue;
+          }
+
+          const lastQ = await prisma.question.findFirst({
+            where: { course_id: course.id },
+            orderBy: { display_number: "desc" },
+            select: { display_number: true },
+          });
+          const nextDisplayNum = (lastQ?.display_number || 0) + 1;
+
           const options = isTF
             ? [
                 { id: "true", label: { en: "True", am: "እውነት" } },
@@ -623,8 +643,9 @@ async function main() {
           await prisma.question.create({
             data: {
               course_id: course.id,
+              display_number: nextDisplayNum,
               type: qType,
-              prompt_en: `Consider the fundamental properties in ${course.title_en} (Chapter ${chapterNumber}). Which statement is mathematically valid?`,
+              prompt_en: promptEn,
               prompt_am: `በ${course.title_en} (ምዕራፍ ${chapterNumber}) ውስጥ ያሉትን መርሆዎች በተመለከተ፡ የትኛው አገላለጽ ትክክል ነው?`,
               explanation_en: `According to standard syllabus proofs, the theorem guarantees continuity and differentiability under specified hypotheses.`,
               explanation_am: `በትምህርት መርሃግብሩ መሰረት፡ ቲዎረሙ በቀረቡት ቅድመ ሁኔታዎች መሰረት ትክክለኛነቱ የተረጋገጠ ነው።`,
@@ -648,73 +669,87 @@ async function main() {
   console.log("\n--- 8. Seeding Mid, Final, Mock Exams & National COC Sets ---");
   for (const course of seededCourses.slice(0, 5)) {
     for (const kind of [ExamKind.MID, ExamKind.FINAL, ExamKind.MOCK]) {
-      const exam = await prisma.exam.create({
-        data: {
-          course_id: course.id,
-          university_id: aastuId,
-          kind,
-          title_en: `${course.title_en} ${kind} Examination`,
-          title_am: `${course.title_en} የ${kind} ፈተና`,
-          year: 2024,
-          duration_min: kind === ExamKind.FINAL ? 60 : 35,
-          passing_score: 50,
-          is_free_trial: kind === ExamKind.MID,
-          status: PublicationStatus.PUBLISHED,
-        },
+      const examTitle = `${course.title_en} ${kind} Examination`;
+      let exam = await prisma.exam.findFirst({
+        where: { course_id: course.id, kind, title_en: examTitle },
       });
 
-      const qList = await prisma.question.findMany({ where: { course_id: course.id }, take: 4 });
-      for (const [order, q] of qList.entries()) {
-        await prisma.examQuestion.create({
+      if (!exam) {
+        exam = await prisma.exam.create({
           data: {
-            exam_id: exam.id,
-            question_id: q.id,
-            sort_order: order + 1,
-            points: 2.5,
+            course_id: course.id,
+            university_id: aastuId,
+            kind,
+            title_en: examTitle,
+            title_am: `${course.title_en} የ${kind} ፈተና`,
+            year: 2024,
+            duration_min: kind === ExamKind.FINAL ? 60 : 35,
+            passing_score: 50,
+            is_free_trial: kind === ExamKind.MID,
+            status: PublicationStatus.PUBLISHED,
           },
         });
+
+        const qList = await prisma.question.findMany({ where: { course_id: course.id }, take: 4 });
+        for (const [order, q] of qList.entries()) {
+          await prisma.examQuestion.create({
+            data: {
+              exam_id: exam.id,
+              question_id: q.id,
+              sort_order: order + 1,
+              points: 2.5,
+            },
+          });
+        }
       }
     }
   }
 
   // National Model COC Sets
   for (const setNo of [1, 2, 3]) {
-    const cocSet = await prisma.cocSet.create({
-      data: {
-        title_en: `National Model COC Assessment - Set ${setNo}`,
-        title_am: `ብሔራዊ የሞዴል COC የብቃት ማረጋገጫ - ስብስብ ${setNo}`,
-        year: 2024,
-        is_timed: true,
-        duration_min: 60,
-        sample_question_count: 5,
-        status: PublicationStatus.PUBLISHED,
-      },
+    const cocTitle = `National Model COC Assessment - Set ${setNo}`;
+    let cocSet = await prisma.cocSet.findFirst({
+      where: { title_en: cocTitle },
     });
 
-    const sampleQs = await prisma.question.findMany({
-      where: { course_id: { not: null } },
-      take: 5,
-    });
-    for (const [idx, q] of sampleQs.entries()) {
-      if (!q.course_id) continue;
-      const cocQ = await prisma.cocQuestion.upsert({
-        where: { question_id: q.id },
-        update: {},
-        create: {
-          question_id: q.id,
-          course_id: q.course_id,
-          year: 2024,
-        },
-      });
-
-      await prisma.cocSetQuestion.create({
+    if (!cocSet) {
+      cocSet = await prisma.cocSet.create({
         data: {
-          coc_set_id: cocSet.id,
-          coc_question_id: cocQ.id,
-          sort_order: idx + 1,
-          is_sample: idx < 2,
+          title_en: cocTitle,
+          title_am: `ብሔራዊ የሞዴል COC የብቃት ማረጋገጫ - ስብስብ ${setNo}`,
+          year: 2024,
+          is_timed: true,
+          duration_min: 60,
+          sample_question_count: 5,
+          status: PublicationStatus.PUBLISHED,
         },
       });
+
+      const sampleQs = await prisma.question.findMany({
+        where: { course_id: { not: null } },
+        take: 5,
+      });
+      for (const [idx, q] of sampleQs.entries()) {
+        if (!q.course_id) continue;
+        const cocQ = await prisma.cocQuestion.upsert({
+          where: { question_id: q.id },
+          update: {},
+          create: {
+            question_id: q.id,
+            course_id: q.course_id,
+            year: 2024,
+          },
+        });
+
+        await prisma.cocSetQuestion.create({
+          data: {
+            coc_set_id: cocSet.id,
+            coc_question_id: cocQ.id,
+            sort_order: idx + 1,
+            is_sample: idx < 2,
+          },
+        });
+      }
     }
   }
   console.log(`  ✅ Mid, Final, Mock Exams and National COC Sets seeded.`);
@@ -728,35 +763,45 @@ async function main() {
   const firstCocSet = await prisma.cocSet.findFirst();
 
   if (abebeStudent && firstExam) {
-    await prisma.attempt.create({
-      data: {
-        student_id: abebeStudent.id,
-        exam_id: firstExam.id,
-        category: AttemptCategory.EXAM,
-        state: AttemptState.RESULT_AVAILABLE,
-        score: 8.5,
-        total_questions: 4,
-        correct_count: 3,
-        elapsed_ms: BigInt(1420000), // ~23 mins
-        submitted_at: new Date(Date.now() - 3600000 * 24),
-      },
+    const existingAttempt = await prisma.attempt.findFirst({
+      where: { student_id: abebeStudent.id, exam_id: firstExam.id },
     });
+    if (!existingAttempt) {
+      await prisma.attempt.create({
+        data: {
+          student_id: abebeStudent.id,
+          exam_id: firstExam.id,
+          category: AttemptCategory.EXAM,
+          state: AttemptState.RESULT_AVAILABLE,
+          score: 8.5,
+          total_questions: 4,
+          correct_count: 3,
+          elapsed_ms: BigInt(1420000), // ~23 mins
+          submitted_at: new Date(Date.now() - 3600000 * 24),
+        },
+      });
+    }
   }
 
   if (abebeStudent && firstCocSet) {
-    await prisma.attempt.create({
-      data: {
-        student_id: abebeStudent.id,
-        coc_set_id: firstCocSet.id,
-        category: AttemptCategory.COC,
-        state: AttemptState.RESULT_AVAILABLE,
-        score: 9.0,
-        total_questions: 5,
-        correct_count: 4,
-        elapsed_ms: BigInt(2100000), // ~35 mins
-        submitted_at: new Date(Date.now() - 3600000 * 12),
-      },
+    const existingAttempt = await prisma.attempt.findFirst({
+      where: { student_id: abebeStudent.id, coc_set_id: firstCocSet.id },
     });
+    if (!existingAttempt) {
+      await prisma.attempt.create({
+        data: {
+          student_id: abebeStudent.id,
+          coc_set_id: firstCocSet.id,
+          category: AttemptCategory.COC,
+          state: AttemptState.RESULT_AVAILABLE,
+          score: 9.0,
+          total_questions: 5,
+          correct_count: 4,
+          elapsed_ms: BigInt(2100000), // ~35 mins
+          submitted_at: new Date(Date.now() - 3600000 * 12),
+        },
+      });
+    }
   }
   console.log(`  ✅ Student assessment attempts seeded.`);
 
