@@ -43,8 +43,9 @@ export interface ContentApi {
 
 export const realContentApi: ContentApi = {
   async listCourses(): Promise<ContentCourse[]> {
-    const raw = await httpClient.get<ContentCourse[]>('/content/admin/courses');
-    return z.array(contentCourseSchema).parse(raw);
+    const raw = await httpClient.get<any>('/content/admin/courses');
+    const items = Array.isArray(raw) ? raw : (raw?.items ?? []);
+    return z.array(contentCourseSchema).parse(items);
   },
 
   async getSummary(courseId: string): Promise<ContentSummary> {

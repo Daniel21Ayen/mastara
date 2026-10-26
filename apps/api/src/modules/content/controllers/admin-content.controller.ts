@@ -47,8 +47,17 @@ export class AdminContentController {
   @Get("courses")
   @ApiOperation({ summary: "List courses available in content management studio with optional pagination" })
   @ApiResponse({ status: HttpStatus.OK, description: "List of content courses" })
-  async listCourses(@Query() query?: PaginationQueryDto) {
-    return this.contentService.listAdminCourses(query);
+  async listCourses(
+    @Query("page") page?: string,
+    @Query("pageSize") pageSize?: string,
+  ) {
+    if (page !== undefined || pageSize !== undefined) {
+      return this.contentService.listAdminCourses({
+        page: page ? parseInt(page, 10) : 1,
+        pageSize: pageSize ? parseInt(pageSize, 10) : 10,
+      });
+    }
+    return this.contentService.listAdminCourses();
   }
 
   @Get("courses/:courseId/summary")
