@@ -134,4 +134,45 @@ export class AdminStudentsController {
   ): Promise<AdminStudentDetailDto> {
     return this.studentsService.grantStudentAccess(adminId, id, dto.courseId, dto.days, dto.reason);
   }
+
+  @Post(":id/request-deletion")
+  @RequirePermission("students.support")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Schedule 7-day student account deletion process (SRS 3.2)" })
+  @ApiParam({ name: "id", description: "Student UUID" })
+  async requestDeletion(
+    @CurrentUser("id") adminId: string,
+    @Param("id") id: string,
+    @Body() dto: StudentActionDto,
+  ) {
+    return this.studentsService.requestStudentDeletion(id, dto.reason, adminId);
+  }
+
+  @Post(":id/cancel-deletion")
+  @RequirePermission("students.support")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Cancel scheduled 7-day student deletion within grace period" })
+  @ApiParam({ name: "id", description: "Student UUID" })
+  async cancelDeletion(
+    @CurrentUser("id") adminId: string,
+    @Param("id") id: string,
+  ) {
+    return this.studentsService.cancelStudentDeletion(id, adminId);
+  }
+
+  @Get(":id/deletion-status")
+  @RequirePermission("students.read", "students.support")
+  @ApiOperation({ summary: "Get 7-day student deletion status and remaining grace days" })
+  @ApiParam({ name: "id", description: "Student UUID" })
+  async getDeletionStatus(@Param("id") id: string) {
+    return this.studentsService.getStudentDeletionStatus(id);
+  }
+
+  @Post("process-deletions")
+  @RequirePermission("students.support", "admins.manage")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Batch process expired 7-day student deletions (permanently purges PII)" })
+  async processDeletions(@CurrentUser("id") adminId: string) {
+    return this.studentsService.processScheduledDeletions(adminId);
+  }
 }

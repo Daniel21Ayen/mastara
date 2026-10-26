@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
@@ -10,8 +11,10 @@ import {
   EntitlementStatus,
   ProductType,
   PublicationStatus,
+  Role,
   Stream,
 } from "@mastara/database";
+import { AuditService } from "../../../platform/audit/services/audit.service";
 import {
   canBuyCourse,
   DEFAULT_PRICING_CONFIG,
@@ -27,6 +30,27 @@ import {
   GetBuyableCoursesQueryDto,
   GetFullPackageQueryDto,
 } from "../dto";
+
+export interface FreeTrialConfig {
+  firstChapterModuleFree: boolean;
+  firstChapterQuizFree: boolean;
+  cocSampleSetFree: boolean;
+}
+
+export interface PricingSettings {
+  bundlePrice: number;
+  coursesMin: number;
+  coursesMax: number;
+  bundleDurationDays: number;
+  firstExtraPrice: number;
+  laterExtrasPrice: number;
+  singleCoursePrice: number;
+  fullStreamPrice: number;
+  fullBothPrice: number;
+  fullStreamDurationDays: number;
+  freeTrial: FreeTrialConfig;
+  updatedAt?: string;
+}
 
 export interface AccountsResponse {
   CBE_MOBILE: string;
@@ -65,6 +89,7 @@ export class PricingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    @Optional() private readonly auditService?: AuditService,
   ) {}
 
   /**
@@ -332,5 +357,165 @@ export class PricingService {
       },
       stream: c.stream,
     }));
+  }
+
+  /**
+   * Retrieves full admin pricing settings including free-trial defaults and versioned rules (F11h).
+   */
+  async getAdminPricingSettings(): Promise<PricingSettings> {
+    const config = await this.getPricingConfig();
+
+    const freeTrialSetting = await this.prisma.systemSetting.findUnique({
+      where: { key: "free_trial_config" },
+    });
+
+    const freeTrial: FreeTrialConfig = (freeTrialSetting?.value as any) || {
+      firstChapterModuleFree: true,
+      firstChapterQuizFree: true,
+      cocSampleSetFree: true,
+    };
+
+    return {
+      bundlePrice: config.bundle.bundlePrice,
+      coursesMin: config.bundle.minCourses,
+      coursesMax: config.bundle.maxCourses,
+      bundleDurationDays: config.durationDays.BUNDLE,
+      firstExtraPrice: config.bundle.extraCoursePrices[0] ?? 100,
+      laterExtrasPrice: config.bundle.extraCoursePrices[1] ?? 50,
+      singleCoursePrice: config.singlePrice,
+      fullStreamPrice: config.fullStreamPrice,
+      fullBothPrice: config.fullBothPrice,
+      fullStreamDurationDays: config.durationDays.FULL_STREAM,
+      freeTrial,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Updates platform pricing rules, bundle parameters and free-trial defaults.
+   * Every price change is audited in the immutable audit log (F11h).
+   */
+  async updateAdminPricingSettings(
+    adminId: string,
+    patch: Partial<PricingSettings>,
+  ): Promise<PricingSettings> {
+    const previous = await this.getAdminPricingSettings();
+
+    // 1. Update BUNDLE product
+    if (patch.bundlePrice !== undefined || patch.bundleDurationDays !== undefined || patch.coursesMin !== undefined || patch.coursesMax !== undefined) {
+      await this.prisma.product.updateMany({
+        where: { type: ProductType.BUNDLE },
+        data: {
+          ...(patch.bundlePrice !== undefined ? { price_etb: patch.bundlePrice } : {}),
+          ...(patch.bundleDurationDays !== undefined ? { duration_days: patch.bundleDurationDays } : {}),
+          ...(patch.coursesMin !== undefined ? { min_courses: patch.coursesMin } : {}),
+          ...(patch.coursesMax !== undefined ? { max_courses: patch.coursesMax } : {}),
+        },
+      });
+    }
+
+    // 2. Update EXTRA price rules
+    if (patch.firstExtraPrice !== undefined || patch.laterExtrasPrice !== undefined) {
+      const extraProduct = await this.prisma.product.findFirst({
+        where: { type: ProductType.EXTRA },
+      });
+      if (extraProduct) {
+        if (patch.firstExtraPrice !== undefined) {
+          await this.prisma.priceRule.upsert({
+            where: {
+              product_id_tier_no: { product_id: extraProduct.id, tier_no: 1 },
+            },
+            update: { price_etb: patch.firstExtraPrice },
+            create: {
+              product_id: extraProduct.id,
+              tier_no: 1,
+              price_etb: patch.firstExtraPrice,
+            },
+          });
+        }
+        if (patch.laterExtrasPrice !== undefined) {
+          await this.prisma.priceRule.upsert({
+            where: {
+              product_id_tier_no: { product_id: extraProduct.id, tier_no: 2 },
+            },
+            update: { price_etb: patch.laterExtrasPrice },
+            create: {
+              product_id: extraProduct.id,
+              tier_no: 2,
+              price_etb: patch.laterExtrasPrice,
+            },
+          });
+        }
+      }
+    }
+
+    // 3. Update SINGLE product
+    if (patch.singleCoursePrice !== undefined) {
+      await this.prisma.product.updateMany({
+        where: { type: ProductType.SINGLE },
+        data: { price_etb: patch.singleCoursePrice },
+      });
+    }
+
+    // 4. Update FULL_STREAM product
+    if (patch.fullStreamPrice !== undefined || patch.fullStreamDurationDays !== undefined) {
+      await this.prisma.product.updateMany({
+        where: { type: ProductType.FULL_STREAM },
+        data: {
+          ...(patch.fullStreamPrice !== undefined ? { price_etb: patch.fullStreamPrice } : {}),
+          ...(patch.fullStreamDurationDays !== undefined ? { duration_days: patch.fullStreamDurationDays } : {}),
+        },
+      });
+    }
+
+    // 5. Update FULL_BOTH product
+    if (patch.fullBothPrice !== undefined || patch.fullStreamDurationDays !== undefined) {
+      await this.prisma.product.updateMany({
+        where: { type: ProductType.FULL_BOTH },
+        data: {
+          ...(patch.fullBothPrice !== undefined ? { price_etb: patch.fullBothPrice } : {}),
+          ...(patch.fullStreamDurationDays !== undefined ? { duration_days: patch.fullStreamDurationDays } : {}),
+        },
+      });
+    }
+
+    // 6. Free trial settings in systemSetting
+    if (patch.freeTrial) {
+      await this.prisma.systemSetting.upsert({
+        where: { key: "free_trial_config" },
+        update: {
+          value: patch.freeTrial as any,
+          updated_by: adminId,
+        },
+        create: {
+          key: "free_trial_config",
+          value: patch.freeTrial as any,
+          description: "Global free trial configuration for modules, quizzes and COC sample sets",
+          updated_by: adminId,
+        },
+      });
+    }
+
+    const updated = await this.getAdminPricingSettings();
+
+    // 7. Audit the price change per F11h
+    if (this.auditService) {
+      await this.auditService.log({
+        actorId: adminId,
+        actorRole: Role.ADMIN,
+        action: "PRICE_CHANGED",
+        targetType: "Pricing",
+        targetId: "platform-pricing",
+        metadata: {
+          previous,
+          updated,
+          patch,
+          reason: "Administrator updated platform products and pricing configuration",
+        },
+      });
+    }
+
+    this.logger.log(`Pricing updated by admin ${adminId}`);
+    return updated;
   }
 }

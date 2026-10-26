@@ -44,5 +44,42 @@ export const createOrderSchema = z.object({
   reference: z.string(),
 });
 
+export const refundStatusSchema = z.enum([
+  'REQUESTED',
+  'APPROVED',
+  'REJECTED',
+  'PAID_OUT',
+  'ENTITLEMENT_REVOKED',
+]);
+
+export const adminRefundSchema = z.object({
+  id: z.string(),
+  orderId: z.string(),
+  studentId: z.string(),
+  studentName: z.string(),
+  amount: z.number(),
+  reason: z.string(),
+  status: refundStatusSchema,
+  requestedBy: z.string(),
+  reviewedBy: z.string().nullable().optional(),
+  decisionReason: z.string().nullable().optional(),
+  payoutReference: z.string().nullable().optional(),
+  paidOutAt: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const refundListResultSchema = z.object({
+  items: z.array(adminRefundSchema),
+  total: z.number(),
+  page: z.number(),
+  pageSize: z.number(),
+  totalPages: z.number(),
+});
+
 export type Order = z.infer<typeof orderSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+export type RefundStatus = z.infer<typeof refundStatusSchema>;
+export type AdminRefund = z.infer<typeof adminRefundSchema>;
+export type RefundListResult = z.infer<typeof refundListResultSchema>;
+

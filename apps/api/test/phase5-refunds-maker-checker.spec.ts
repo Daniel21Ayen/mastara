@@ -52,7 +52,8 @@ describe("Phase 5: Financial Workflows, Content Publishing & Audit Trail (FR-G62
               (l) =>
                 l.target_type === where.target_type &&
                 l.target_id === where.target_id &&
-                l.action === where.action,
+                l.action === where.action &&
+                (!where.actor_id || l.actor_id === where.actor_id),
             );
           },
         },
@@ -164,7 +165,8 @@ describe("Phase 5: Financial Workflows, Content Publishing & Audit Trail (FR-G62
               (l) =>
                 l.target_type === where.target_type &&
                 l.target_id === where.target_id &&
-                l.action === where.action,
+                l.action === where.action &&
+                (!where.actor_id || l.actor_id === where.actor_id),
             );
           },
         },

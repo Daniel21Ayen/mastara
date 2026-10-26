@@ -575,6 +575,21 @@ export class PaymentProofsService {
       throw new ConflictException("Refund can only be requested for APPROVED orders");
     }
 
+    if ((this.prisma as any).refund) {
+      await (this.prisma as any).refund
+        .create({
+          data: {
+            order_id: proof.order.id,
+            student_id: proof.order.student_id,
+            amount: proof.order.quoted_amount,
+            reason: dto.reason,
+            status: "REQUESTED",
+            requested_by: adminId,
+          },
+        })
+        .catch(() => {});
+    }
+
     await this.auditService.log({
       actorId: adminId,
       actorRole: Role.ADMIN,
@@ -629,6 +644,19 @@ export class PaymentProofsService {
     }
 
     if (dto.action === "REJECT") {
+      if ((this.prisma as any).refund) {
+        await (this.prisma as any).refund
+          .updateMany({
+            where: { order_id: proof.order.id, status: "REQUESTED" },
+            data: {
+              status: "REJECTED",
+              reviewed_by: adminId,
+              decision_reason: dto.reason,
+            },
+          })
+          .catch(() => {});
+      }
+
       await this.auditService.log({
         actorId: adminId,
         actorRole: Role.ADMIN,
@@ -668,6 +696,20 @@ export class PaymentProofsService {
           status: OrderStatus.CANCELLED,
         },
       });
+
+      // 3. Update refund model if present in tx
+      if ((tx as any).refund) {
+        await (tx as any).refund.updateMany({
+          where: { order_id: proof.order.id, status: "REQUESTED" },
+          data: {
+            status: "ENTITLEMENT_REVOKED",
+            reviewed_by: adminId,
+            decision_reason: reason,
+            payout_reference: payoutRef,
+            paid_out_at: new Date(),
+          },
+        }).catch(() => {});
+      }
     });
 
     // Audit logs for refund approval and entitlement revocation

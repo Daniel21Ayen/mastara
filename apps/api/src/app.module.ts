@@ -15,6 +15,7 @@ import { LoggingInterceptor } from "./common/interceptors/logging.interceptor";
 import { HealthModule } from "./modules/platform/health/health.module";
 import { AuditModule } from "./modules/platform/audit/audit.module";
 import { DashboardModule } from "./modules/platform/dashboard/dashboard.module";
+import { ReportsModule } from "./modules/platform/reports/reports.module";
 import { AuthModule } from "./modules/identity/auth/auth.module";
 import { DevicesModule } from "./modules/identity/devices/devices.module";
 import { AdminsModule } from "./modules/identity/admins/admins.module";
@@ -55,10 +56,10 @@ import { ScopeService } from "./common/services/scope.service";
     PushModule,
     QueueModule,
     // Platform
-    
     HealthModule,
     AuditModule,
     DashboardModule,
+    ReportsModule,
     // Identity
     AuthModule,
     AdminsModule,

@@ -5,6 +5,7 @@ import { OrdersModule } from "./orders/orders.module";
 import { PaymentProofsModule } from "./payment-proofs/payment-proofs.module";
 import { EntitlementsModule } from "./entitlements/entitlements.module";
 import { ExpiryModule } from "./expiry/expiry.module";
+import { RefundsModule } from "./refunds/refunds.module";
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ExpiryModule } from "./expiry/expiry.module";
     PaymentProofsModule,
     EntitlementsModule,
     ExpiryModule,
+    RefundsModule,
   ],
   exports: [
     PricingModule,
@@ -21,6 +23,7 @@ import { ExpiryModule } from "./expiry/expiry.module";
     OrdersModule,
     PaymentProofsModule,
     EntitlementsModule,
+    RefundsModule,
   ],
 })
 export class CommerceModule {}

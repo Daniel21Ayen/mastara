@@ -36,10 +36,13 @@ export const auditEntrySchema = z.object({
   /** ISO date-time. */
   at: z.string(),
   actor: z.enum(AUDIT_ACTORS),
+  actorRole: z.string().optional(),
+  scope: z.string().optional(),
   action: z.enum(AUDIT_ACTIONS),
   /** What the action was done to, for example "Student ST003" or "Semester Bundle". */
   target: z.string(),
   reason: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export const dashboardSummarySchema = z.object({

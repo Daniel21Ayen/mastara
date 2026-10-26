@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Post,
   Put,
 } from "@nestjs/common";
 import {
@@ -94,5 +95,28 @@ export class StudentsController {
     @Body() dto: EditAccountDto,
   ): Promise<StudentProfileResponse> {
     return this.studentsService.updateAccount(studentId, dto);
+  }
+
+  @Post("me/request-deletion")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Student initiates 7-day account deletion process (SRS 3.2)" })
+  async requestSelfDeletion(
+    @CurrentUser("id") studentId: string,
+    @Body() body?: { reason?: string },
+  ) {
+    return this.studentsService.requestStudentDeletion(studentId, body?.reason);
+  }
+
+  @Post("me/cancel-deletion")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Student cancels pending deletion within 7-day grace period" })
+  async cancelSelfDeletion(@CurrentUser("id") studentId: string) {
+    return this.studentsService.cancelStudentDeletion(studentId);
+  }
+
+  @Get("me/deletion-status")
+  @ApiOperation({ summary: "Student views current 7-day deletion grace status" })
+  async getSelfDeletionStatus(@CurrentUser("id") studentId: string) {
+    return this.studentsService.getStudentDeletionStatus(studentId);
   }
 }

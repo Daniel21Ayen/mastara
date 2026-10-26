@@ -560,6 +560,7 @@
   "admin.payments.tab.PENDING": "Pending",
   "admin.payments.tab.APPROVED": "Approved",
   "admin.payments.tab.REJECTED": "Rejected",
+  "admin.payments.tab.REFUNDS": "Refunds",
   "admin.payments.searchPlaceholder": "Search student or reference",
   "admin.payments.filter.method": "Payment method",
   "admin.payments.filter.allMethods": "All methods",

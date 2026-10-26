@@ -10,16 +10,21 @@ export class QueryAuditLogsDto extends PaginationQueryDto {
   actor?: "ALL" | "ADMIN" | "STUDENT" | "SYSTEM";
 
   @ApiPropertyOptional({
-    enum: ["ALL", "PAYMENTS", "SECURITY", "CONTENT", "COMMERCE", "STUDENT"],
+    enum: ["ALL", "PAYMENTS", "SECURITY", "CONTENT", "COMMERCE", "STUDENT", "REFUNDS", "AUDIT"],
   })
   @IsOptional()
-  @IsIn(["ALL", "PAYMENTS", "SECURITY", "CONTENT", "COMMERCE", "STUDENT"])
-  actionGroup?: "ALL" | "PAYMENTS" | "SECURITY" | "CONTENT" | "COMMERCE" | "STUDENT";
+  @IsIn(["ALL", "PAYMENTS", "SECURITY", "CONTENT", "COMMERCE", "STUDENT", "REFUNDS", "AUDIT"])
+  actionGroup?: "ALL" | "PAYMENTS" | "SECURITY" | "CONTENT" | "COMMERCE" | "STUDENT" | "REFUNDS" | "AUDIT";
 
   @ApiPropertyOptional({ enum: ["ALL", "TODAY", "WEEK", "MONTH"] })
   @IsOptional()
   @IsIn(["ALL", "TODAY", "WEEK", "MONTH"])
   range?: "ALL" | "TODAY" | "WEEK" | "MONTH";
+
+  @ApiPropertyOptional({ description: "Scope filter (e.g. course code or scope type)" })
+  @IsOptional()
+  @IsString()
+  scope?: string;
 
   @ApiPropertyOptional({ description: "Search query string" })
   @IsOptional()

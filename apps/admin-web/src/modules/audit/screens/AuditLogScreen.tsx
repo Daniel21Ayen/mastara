@@ -71,11 +71,13 @@ export function AuditLogScreen() {
 
   const handleExportCsv = () => {
     if (logs.length === 0) return;
-    const headers = ['ID', 'Timestamp', 'Actor', 'Action', 'Target', 'Reason'];
+    const headers = ['ID', 'Timestamp', 'Actor', 'Actor Role', 'Scope', 'Action', 'Target', 'Reason'];
     const rows = logs.map((l) => [
       l.id,
       l.at,
       l.actor,
+      `"${(l.actorRole ?? '').replace(/"/g, '""')}"`,
+      `"${(l.scope ?? '').replace(/"/g, '""')}"`,
       l.action,
       `"${(l.target ?? '').replace(/"/g, '""')}"`,
       `"${(l.reason ?? '').replace(/"/g, '""')}"`,
@@ -178,6 +180,8 @@ export function AuditLogScreen() {
           >
             <option value="ALL">All Action Categories</option>
             <option value="PAYMENTS">Payments & Orders</option>
+            <option value="REFUNDS">Refunds & Entitlements</option>
+            <option value="AUDIT">Access Denied & Security</option>
             <option value="SECURITY">Security & Devices</option>
             <option value="CONTENT">Content & Exams</option>
             <option value="COMMERCE">Pricing & Access</option>
@@ -206,7 +210,7 @@ export function AuditLogScreen() {
                 <th>Timestamp</th>
                 <th>Actor</th>
                 <th>Action</th>
-                <th>Target Resource</th>
+                <th>Target / Scope</th>
                 <th>Reason / Context</th>
                 <th style={{ textAlign: 'right' }}>Details</th>
               </tr>
@@ -243,9 +247,14 @@ export function AuditLogScreen() {
                         </div>
                       </td>
                       <td>
-                        <span className={`${styles.actorBadge} ${actorClass}`}>
-                          {entry.actor}
-                        </span>
+                        <div>
+                          <span className={`${styles.actorBadge} ${actorClass}`}>
+                            {entry.actor}
+                          </span>
+                          {entry.actorRole ? (
+                            <div className={styles.roleSubtitle}>{entry.actorRole}</div>
+                          ) : null}
+                        </div>
                       </td>
                       <td>
                         <span className={styles.actionText}>
@@ -253,7 +262,12 @@ export function AuditLogScreen() {
                         </span>
                       </td>
                       <td>
-                        <span className={styles.targetText}>{entry.target}</span>
+                        <div>
+                          {entry.scope ? (
+                            <span className={styles.scopeBadge}>{entry.scope}</span>
+                          ) : null}
+                          <span className={styles.targetText}>{entry.target}</span>
+                        </div>
                       </td>
                       <td>
                         <span className={styles.reasonText}>
@@ -291,6 +305,12 @@ export function AuditLogScreen() {
 
               <strong>Actor:</strong>
               <span>{selectedEntry.actor}</span>
+
+              <strong>Actor Role:</strong>
+              <span>{selectedEntry.actorRole ?? '—'}</span>
+
+              <strong>Scope:</strong>
+              <span>{selectedEntry.scope ?? 'GLOBAL'}</span>
 
               <strong>Action:</strong>
               <span>{selectedEntry.action}</span>

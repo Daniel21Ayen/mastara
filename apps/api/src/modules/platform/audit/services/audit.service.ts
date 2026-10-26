@@ -14,6 +14,7 @@ export interface WriteAuditLogInput {
   actorId: string;
   actorRole: Role;
   actorAdminRole?: AdminRole | null;
+  scope?: string | null;
   action: string;
   targetType: string;
   targetId: string;
@@ -53,6 +54,7 @@ export class AuditService {
           actor_id: input.actorId,
           actor_role: input.actorRole,
           actor_admin_role: input.actorAdminRole ?? null,
+          scope: input.scope ?? null,
           action: input.action,
           target_type: input.targetType,
           target_id: input.targetId,
@@ -107,9 +109,20 @@ export class AuditService {
         case "STUDENT":
           whereClause.action = "STUDENT_SUSPENDED";
           break;
+        case "REFUNDS":
+          whereClause.action = { in: ["REFUND_REQUESTED", "REFUND_APPROVED", "REFUND_REJECTED", "ENTITLEMENT_REVOKED"] };
+          break;
+        case "AUDIT":
+          whereClause.action = { in: ["REQUEST_DENIED", "ROLE_CHANGED", "SCOPE_CHANGED"] };
+          break;
         default:
           break;
       }
+    }
+
+    // Filter by Scope
+    if (params.scope && params.scope.trim().length > 0) {
+      whereClause.scope = { contains: params.scope.trim(), mode: "insensitive" };
     }
 
     // Filter by Date Range
@@ -229,9 +242,12 @@ export class AuditService {
       id: row.id,
       at: row.created_at.toISOString(),
       actor,
+      actorRole: row.actor_admin_role || (row.actor_role === Role.ADMIN ? "ADMIN" : "STUDENT"),
+      scope: row.scope || undefined,
       action: row.action as AuditAction,
       target,
       reason,
+      metadata: meta,
     };
   }
 

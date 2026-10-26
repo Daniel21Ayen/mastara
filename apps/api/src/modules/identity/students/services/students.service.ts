@@ -861,4 +861,253 @@ export class StudentsService {
       courses: mappedCourses,
     };
   }
+
+  // --------------------------------------------------------------------------
+  // 7-Day Student Data Deletion Lifecycle (SRS 3.2, Personal Data Compliance)
+  // --------------------------------------------------------------------------
+
+  /**
+   * Initiates a 7-day scheduled deletion process for a student account.
+   * Student account access is suspended during the grace period.
+   */
+  async requestStudentDeletion(
+    studentId: string,
+    reason?: string,
+    actorId?: string,
+  ): Promise<{
+    success: boolean;
+    studentId: string;
+    deletionRequestedAt: string;
+    scheduledDeletionAt: string;
+    daysRemaining: number;
+    status: string;
+  }> {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+    });
+
+    if (!student) {
+      throw new NotFoundException(`Student not found with ID ${studentId}`);
+    }
+
+    if (student.status === StudentStatus.DELETED) {
+      throw new ConflictException("Student account is already permanently deleted");
+    }
+
+    const now = new Date();
+    const scheduledAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const deleteReason = reason?.trim() || "Account deletion requested by student";
+
+    await this.prisma.student.update({
+      where: { id: studentId },
+      data: {
+        deletion_requested_at: now,
+        scheduled_deletion_at: scheduledAt,
+        deletion_reason: deleteReason,
+        status: StudentStatus.SUSPENDED,
+      },
+    });
+
+    await this.auditService.log({
+      actorId: actorId || studentId,
+      actorRole: actorId && actorId !== studentId ? Role.ADMIN : Role.STUDENT,
+      action: "STUDENT_DELETION_REQUESTED",
+      targetType: "Student",
+      targetId: studentId,
+      metadata: {
+        studentId,
+        scheduledDeletionAt: scheduledAt.toISOString(),
+        reason: deleteReason,
+        requestedBy: actorId || studentId,
+      },
+    });
+
+    this.logger.log(`Student ${studentId} deletion requested, scheduled for ${scheduledAt.toISOString()}`);
+
+    return {
+      success: true,
+      studentId,
+      deletionRequestedAt: now.toISOString(),
+      scheduledDeletionAt: scheduledAt.toISOString(),
+      daysRemaining: 7,
+      status: "PENDING_DELETION",
+    };
+  }
+
+  /**
+   * Cancels a pending 7-day student deletion within the grace period.
+   */
+  async cancelStudentDeletion(
+    studentId: string,
+    actorId?: string,
+  ): Promise<{
+    success: boolean;
+    studentId: string;
+    status: string;
+    message: string;
+  }> {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+    });
+
+    if (!student) {
+      throw new NotFoundException(`Student not found with ID ${studentId}`);
+    }
+
+    if (student.status === StudentStatus.DELETED) {
+      throw new ConflictException("Cannot cancel deletion of a permanently deleted account");
+    }
+
+    if (!student.scheduled_deletion_at) {
+      throw new ConflictException("No active deletion request found for this student");
+    }
+
+    await this.prisma.student.update({
+      where: { id: studentId },
+      data: {
+        deletion_requested_at: null,
+        scheduled_deletion_at: null,
+        deletion_reason: null,
+        status: StudentStatus.ACTIVE,
+      },
+    });
+
+    await this.auditService.log({
+      actorId: actorId || studentId,
+      actorRole: actorId && actorId !== studentId ? Role.ADMIN : Role.STUDENT,
+      action: "STUDENT_DELETION_CANCELLED",
+      targetType: "Student",
+      targetId: studentId,
+      metadata: {
+        studentId,
+        cancelledBy: actorId || studentId,
+      },
+    });
+
+    this.logger.log(`Student ${studentId} cancelled scheduled deletion`);
+
+    return {
+      success: true,
+      studentId,
+      status: "ACTIVE",
+      message: "Student deletion cancelled successfully. Account restored to ACTIVE.",
+    };
+  }
+
+  /**
+   * Returns current deletion status and remaining days.
+   */
+  async getStudentDeletionStatus(studentId: string): Promise<{
+    isPendingDeletion: boolean;
+    deletionRequestedAt: string | null;
+    scheduledDeletionAt: string | null;
+    daysRemaining: number;
+    reason: string | null;
+    status: StudentStatus;
+  }> {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+    });
+
+    if (!student) {
+      throw new NotFoundException(`Student not found with ID ${studentId}`);
+    }
+
+    const isPending = Boolean(student.scheduled_deletion_at && student.status !== StudentStatus.DELETED);
+    let daysRemaining = 0;
+    if (student.scheduled_deletion_at) {
+      const msLeft = student.scheduled_deletion_at.getTime() - Date.now();
+      daysRemaining = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+    }
+
+    return {
+      isPendingDeletion: isPending,
+      deletionRequestedAt: student.deletion_requested_at ? student.deletion_requested_at.toISOString() : null,
+      scheduledDeletionAt: student.scheduled_deletion_at ? student.scheduled_deletion_at.toISOString() : null,
+      daysRemaining,
+      reason: student.deletion_reason,
+      status: student.status,
+    };
+  }
+
+  /**
+   * Processes all pending deletions whose 7-day grace period has elapsed.
+   * Permanently purges/anonymizes PII, revokes entitlements and device bindings.
+   */
+  async processScheduledDeletions(actorId?: string): Promise<{
+    processedCount: number;
+    deletedStudentIds: string[];
+  }> {
+    const now = new Date();
+    const studentsToPurge = await this.prisma.student.findMany({
+      where: {
+        scheduled_deletion_at: { lte: now },
+        status: { not: StudentStatus.DELETED },
+      },
+      select: { id: true, deletion_reason: true },
+    });
+
+    const deletedIds: string[] = [];
+
+    for (const student of studentsToPurge) {
+      await this.prisma.$transaction(async (tx) => {
+        // Anonymize personal info per SRS 3.2 data deletion policy
+        await tx.student.update({
+          where: { id: student.id },
+          data: {
+            phone: null,
+            email: null,
+            first_name: "Deleted",
+            last_name: "Student",
+            avatar_url: null,
+            push_token: null,
+            password_hash: "",
+            status: StudentStatus.DELETED,
+          },
+        });
+
+        // Revoke active device binding
+        await tx.deviceBinding.updateMany({
+          where: { student_id: student.id },
+          data: {
+            status: DeviceBindingStatus.REVOKED,
+            revoked_at: now,
+            revoked_by: actorId || null,
+            revoke_reason: "Student 7-day account deletion processed",
+          },
+        });
+
+        // Revoke all active entitlements
+        await tx.entitlement.updateMany({
+          where: { student_id: student.id },
+          data: {
+            status: EntitlementStatus.REVOKED,
+            revoked_by: actorId || null,
+            revoke_reason: "Student 7-day account deletion processed",
+          },
+        });
+      });
+
+      await this.auditService.log({
+        actorId: actorId || "00000000-0000-0000-0000-000000000000",
+        actorRole: Role.ADMIN,
+        action: "STUDENT_DELETED",
+        targetType: "Student",
+        targetId: student.id,
+        metadata: {
+          studentId: student.id,
+          reason: student.deletion_reason || "7-day deletion grace period expired",
+          processedAt: now.toISOString(),
+        },
+      });
+
+      deletedIds.push(student.id);
+      this.logger.log(`Student ${student.id} permanently deleted and anonymized.`);
+    }
+
+    return {
+      processedCount: deletedIds.length,
+      deletedStudentIds: deletedIds,
+    };
+  }
 }

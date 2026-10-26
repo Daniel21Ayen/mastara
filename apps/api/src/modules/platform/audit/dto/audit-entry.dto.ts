@@ -34,8 +34,25 @@ export class AuditEntryDto {
   target!: string;
 
   @ApiPropertyOptional({
+    example: "SUPER_ADMIN",
+    description: "Actor role (e.g. SUPER_ADMIN, OPERATIONS_ADMIN, ACADEMIC_ADMIN, STUDENT)",
+  })
+  actorRole?: string;
+
+  @ApiPropertyOptional({
+    example: "GLOBAL",
+    description: "Administrative or academic scope associated with the event",
+  })
+  scope?: string;
+
+  @ApiPropertyOptional({
     example: "Unreadable or blurry bank slip",
     description: "Reason or context for sensitive action",
   })
   reason?: string;
+
+  @ApiPropertyOptional({
+    description: "Additional structured metadata",
+  })
+  metadata?: Record<string, unknown>;
 }

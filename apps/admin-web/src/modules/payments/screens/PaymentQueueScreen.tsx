@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { formatDate } from '@/core/format';
-import { adminText } from '@/core/i18n';
+import { adminText, adminTextFor } from '@/core/i18n';
 import {
   Button,
   ButtonLink,
@@ -22,6 +22,7 @@ import {
 import type { Column } from '@/shared/ui';
 
 import { PaymentStatusBadge, ReferenceCheck } from '../components/PaymentBadges';
+import { RefundsView } from '../components/RefundsView';
 import { usePayments } from '../hooks/usePayments';
 import { amountText, productText } from '../lib/paymentText';
 
@@ -30,12 +31,12 @@ import styles from '../components/Payments.module.css';
 /** Payment Queue: waiting payments first, with the Approved and Rejected tabs, a method filter and Review. */
 export function PaymentQueueScreen() {
   const q = useSearchParams().get('q')?.trim() || undefined;
-  const [status, setStatus] = useState<OrderStatus>('PENDING');
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'REFUNDS'>('PENDING');
   const [method, setMethod] = useState<PaymentMethod | ''>('');
   const [page, setPage] = useState(1);
 
   const { data, error, loading, reload } = usePayments({
-    status,
+    status: activeTab === 'REFUNDS' ? 'PENDING' : activeTab,
     method: method || undefined,
     q,
     page,
@@ -110,10 +111,10 @@ export function PaymentQueueScreen() {
           return (
             <Button
               key={value}
-              variant={value === status ? 'primary' : 'outline'}
-              aria-pressed={value === status}
+              variant={activeTab === value ? 'primary' : 'outline'}
+              aria-pressed={activeTab === value}
               onClick={() => {
-                setStatus(value);
+                setActiveTab(value);
                 setPage(1);
               }}
             >
@@ -122,53 +123,69 @@ export function PaymentQueueScreen() {
             </Button>
           );
         })}
+        <Button
+          key="REFUNDS"
+          variant={activeTab === 'REFUNDS' ? 'primary' : 'outline'}
+          aria-pressed={activeTab === 'REFUNDS'}
+          onClick={() => {
+            setActiveTab('REFUNDS');
+          }}
+        >
+          {adminText('admin.payments.tab.REFUNDS')}
+        </Button>
       </div>
 
-      {error ? (
-        <StateMessage tone="alert">
-          <span>{adminText('admin.payments.error')}</span>
-          <Button variant="outline" onClick={reload}>
-            {adminText('admin.common.retry')}
-          </Button>
-        </StateMessage>
-      ) : null}
-      {loading && !data ? <StateMessage>{adminText('admin.common.loading')}</StateMessage> : null}
-
-      {data ? (
-        <Card>
-          <SelectField
-            label={adminText('admin.payments.filter.method')}
-            placeholder={adminText('admin.payments.filter.allMethods')}
-            options={PAYMENT_METHODS.map((value) => ({
-              value,
-              label: adminText(`admin.payments.method.${value}`),
-            }))}
-            value={method}
-            onChange={(event) => {
-              setMethod(event.target.value as PaymentMethod | '');
-              setPage(1);
-            }}
-          />
-          <DataTable
-            caption={adminText('admin.payments.caption', {
-              status: adminText(`admin.payments.tab.${status}`),
-            })}
-            columns={columns}
-            rows={data.items}
-            rowKey={(row) => row.id}
-            empty={adminText(q ? 'admin.payments.emptySearch' : 'admin.payments.empty')}
-          />
-          {data.total > 0 ? (
-            <Pagination
-              page={data.page}
-              pageCount={data.pageCount}
-              shown={data.items.length}
-              total={data.total}
-              onPage={setPage}
-            />
+      {activeTab === 'REFUNDS' ? (
+        <RefundsView />
+      ) : (
+        <>
+          {error ? (
+            <StateMessage tone="alert">
+              <span>{adminText('admin.payments.error')}</span>
+              <Button variant="outline" onClick={reload}>
+                {adminText('admin.common.retry')}
+              </Button>
+            </StateMessage>
           ) : null}
-        </Card>
-      ) : null}
+          {loading && !data ? <StateMessage>{adminText('admin.common.loading')}</StateMessage> : null}
+
+          {data ? (
+            <Card>
+              <SelectField
+                label={adminText('admin.payments.filter.method')}
+                placeholder={adminText('admin.payments.filter.allMethods')}
+                options={PAYMENT_METHODS.map((value) => ({
+                  value,
+                  label: adminText(`admin.payments.method.${value}`),
+                }))}
+                value={method}
+                onChange={(event) => {
+                  setMethod(event.target.value as PaymentMethod | '');
+                  setPage(1);
+                }}
+              />
+              <DataTable
+                caption={adminText('admin.payments.caption', {
+                  status: adminText(`admin.payments.tab.${activeTab}`),
+                })}
+                columns={columns}
+                rows={data.items}
+                rowKey={(row) => row.id}
+                empty={adminText(q ? 'admin.payments.emptySearch' : 'admin.payments.empty')}
+              />
+              {data.total > 0 ? (
+                <Pagination
+                  page={data.page}
+                  pageCount={data.pageCount}
+                  shown={data.items.length}
+                  total={data.total}
+                  onPage={setPage}
+                />
+              ) : null}
+            </Card>
+          ) : null}
+        </>
+      )}
     </>
   );
 }

@@ -5,9 +5,10 @@ import { httpClient } from '@/core/network';
 
 export interface AuditFilterParams {
   actor?: 'ALL' | 'ADMIN' | 'STUDENT' | 'SYSTEM';
-  actionGroup?: 'ALL' | 'PAYMENTS' | 'SECURITY' | 'CONTENT' | 'COMMERCE' | 'STUDENT';
+  actionGroup?: 'ALL' | 'PAYMENTS' | 'SECURITY' | 'CONTENT' | 'COMMERCE' | 'STUDENT' | 'REFUNDS' | 'AUDIT';
   query?: string;
   range?: 'ALL' | 'TODAY' | 'WEEK' | 'MONTH';
+  scope?: string;
 }
 
 /**
@@ -18,6 +19,7 @@ export async function fetchAuditLogs(filters: AuditFilterParams = {}): Promise<A
   if (filters.actor && filters.actor !== 'ALL') params.set('actor', filters.actor);
   if (filters.actionGroup && filters.actionGroup !== 'ALL') params.set('actionGroup', filters.actionGroup);
   if (filters.range && filters.range !== 'ALL') params.set('range', filters.range);
+  if (filters.scope && filters.scope !== 'ALL') params.set('scope', filters.scope);
   if (filters.query?.trim()) params.set('query', filters.query.trim());
 
   const qs = params.toString();

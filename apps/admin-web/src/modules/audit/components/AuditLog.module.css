@@ -226,6 +226,24 @@
   color: var(--color-text-muted);
 }
 
+.roleSubtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.scopeBadge {
+  display: inline-block;
+  background-color: var(--color-surface-subtle);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--text-muted);
+  margin-right: 6px;
+}
+
 .actionText {
   font-weight: 600;
   color: var(--text);

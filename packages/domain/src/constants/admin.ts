@@ -51,6 +51,16 @@ export const AUDIT_ACTIONS = [
   'CATALOG_DELETED',
   'SUPPORT_TICKET_REPLIED',
   'SUPPORT_TICKET_RESOLVED',
+  'REQUEST_DENIED',
+  'REFUND_REQUESTED',
+  'REFUND_APPROVED',
+  'REFUND_REJECTED',
+  'ENTITLEMENT_REVOKED',
+  'STUDENT_DELETION_REQUESTED',
+  'STUDENT_DELETION_CANCELLED',
+  'STUDENT_DELETED',
+  'ROLE_CHANGED',
+  'SCOPE_CHANGED',
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
@@ -61,12 +71,32 @@ export const ATTENTION_AUDIT_ACTIONS = [
   'STUDENT_SUSPENDED',
   'ACCESS_EXTENDED',
   'PRICE_CHANGED',
+  'REQUEST_DENIED',
+  'REFUND_REQUESTED',
+  'REFUND_APPROVED',
+  'REFUND_REJECTED',
+  'ENTITLEMENT_REVOKED',
+  'STUDENT_DELETION_REQUESTED',
+  'STUDENT_DELETED',
+  'ROLE_CHANGED',
+  'SCOPE_CHANGED',
 ] as const;
 export type AttentionAuditAction = (typeof ATTENTION_AUDIT_ACTIONS)[number];
 
 export function isAttentionAuditAction(action: string): boolean {
   return (ATTENTION_AUDIT_ACTIONS as readonly string[]).includes(action);
 }
+
+// ---- Refunds (Phase 5) ----
+
+export const REFUND_STATUSES = [
+  'REQUESTED',
+  'APPROVED',
+  'REJECTED',
+  'PAID_OUT',
+  'ENTITLEMENT_REVOKED',
+] as const;
+export type RefundStatus = (typeof REFUND_STATUSES)[number];
 
 /** Days shown in the dashboard "new students" chart. */
 export const DASHBOARD_TREND_DAYS = 7;
