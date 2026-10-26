@@ -1,7 +1,7 @@
 // apps/admin-web/src/modules/scans/screens/ScanWizardScreen.tsx
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { adminText } from '@/core/i18n';
 import { Button, Icon, SelectField } from '@/shared/ui';
 import { usePrograms, useScanCourses, useUniversities } from '../hooks/useScanOptions';
@@ -9,6 +9,8 @@ import { SAMPLE_PAGES } from '../lib/samplePages';
 import type { ScanPageItem } from '../lib/samplePages';
 import type { Stream } from '@mastara/domain';
 import { scansApi } from '../api/scans.api';
+import { PageSheetCanvas } from '../components/PageSheetCanvas';
+import { generatePdfFromPages } from '../lib/pdfGenerator';
 import styles from '../components/ScanWizard.module.css';
 
 type StepNumber = 1 | 2 | 3 | 4;
@@ -84,6 +86,13 @@ export function ScanWizardScreen() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [publishedSuccess, setPublishedSuccess] = useState<'DRAFT' | 'PUBLISHED' | null>(null);
 
+  // PDF Viewer & Compilation State
+  const [zoom, setZoom] = useState<number>(100);
+  const [viewMode, setViewMode] = useState<'pages' | 'pdf'>('pages');
+  const [convertedPdfUrl, setConvertedPdfUrl] = useState<string | null>(null);
+  const [convertedPdfBytes, setConvertedPdfBytes] = useState<number | null>(null);
+  const [isConverting, setIsConverting] = useState<boolean>(false);
+
   // Form State according to hierarchies
   const [category, setCategory] = useState<DocumentCategory>('Notes');
   const [courseId, setCourseId] = useState('aastu-se-s1-eng101');
@@ -139,6 +148,51 @@ export function ScanWizardScreen() {
   }
 
   const computedTotalKb = pages.reduce((sum, p) => sum + Math.round(p.sizeBytes / 1024), 0) || 1845;
+
+  // Invalidate converted PDF if pages change
+  useEffect(() => {
+    setConvertedPdfUrl(null);
+    setConvertedPdfBytes(null);
+  }, [pages]);
+
+  // Background PDF compilation on preview open if not already generated
+  useEffect(() => {
+    if (showPreviewModal && !convertedPdfUrl && pages.length > 0) {
+      const activePages = pages.length > 0 ? pages : SAMPLE_PAGES;
+      generatePdfFromPages(activePages, computedTitle)
+        .then((res) => {
+          setConvertedPdfUrl(res.url);
+          setConvertedPdfBytes(res.sizeBytes);
+        })
+        .catch((err) => console.warn('Background PDF generation fallback:', err));
+    }
+  }, [showPreviewModal, convertedPdfUrl, pages, computedTitle]);
+
+  const handleConvertToPdf = async () => {
+    if (pages.length === 0) return;
+    setIsConverting(true);
+    setCurrentStep(3);
+    try {
+      const activePages = pages.length > 0 ? pages : SAMPLE_PAGES;
+      const res = await generatePdfFromPages(activePages, computedTitle);
+      setConvertedPdfUrl(res.url);
+      setConvertedPdfBytes(res.sizeBytes);
+    } catch (err) {
+      console.warn('Client-side PDF compilation failed, using page sheets viewer:', err);
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (!convertedPdfUrl) return;
+    const a = document.createElement('a');
+    a.href = convertedPdfUrl;
+    a.download = `${computedTitle.replace(/[\/\?<>\\:\*\|":]/g, '_')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   // File Upload Handlers
   const handleFilesChosen = (files: FileList | null) => {
@@ -783,10 +837,10 @@ export function ScanWizardScreen() {
 
               <Button
                 className={styles.convertBtn}
-                disabled={pages.length === 0}
-                onClick={() => setCurrentStep(3)}
+                disabled={pages.length === 0 || isConverting}
+                onClick={handleConvertToPdf}
               >
-                Convert to one PDF
+                {isConverting ? 'Converting to PDF...' : 'Convert to one PDF'}
               </Button>
             </div>
           </div>
@@ -799,16 +853,28 @@ export function ScanWizardScreen() {
           <h2 className={styles.cardHeading}>PDF ready</h2>
           <div className={styles.badgesRow}>
             <span className={styles.pagesBadge}>{pages.length} pages</span>
-            <span className={styles.sizeBadge}>{computedTotalKb} KB</span>
+            <span className={styles.sizeBadge}>
+              {convertedPdfBytes ? Math.round(convertedPdfBytes / 1024) : computedTotalKb} KB
+            </span>
           </div>
 
-          <button
-            type="button"
-            className={styles.previewPdfBtn}
-            onClick={() => setShowPreviewModal(true)}
-          >
-            Preview PDF
-          </button>
+          <div className={styles.previewBtnRow}>
+            <button
+              type="button"
+              className={styles.previewPdfBtn}
+              onClick={() => setShowPreviewModal(true)}
+            >
+              Preview PDF
+            </button>
+            {convertedPdfUrl && (
+              <Button
+                variant="outline"
+                onClick={handleDownloadPdf}
+              >
+                Download PDF
+              </Button>
+            )}
+          </div>
 
           <div className={styles.step3Actions}>
             <Button variant="outline" onClick={() => setCurrentStep(2)}>
@@ -887,19 +953,79 @@ export function ScanWizardScreen() {
         </div>
       )}
 
-      {/* MODAL PDF PREVIEW (MATCHING SCREENSHOT 4) */}
+      {/* MODAL PDF PREVIEW */}
       {showPreviewModal && (
         <div className={styles.modalBackdrop} onClick={() => setShowPreviewModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalBar}>
               <div className={styles.modalBarLeft}>
-                <span>{computedTitle}</span>
-                <span>•</span>
-                <span>{pages.length} Pages</span>
-                <span>•</span>
-                <span>100%</span>
+                <span className={styles.modalTitleText} title={computedTitle}>
+                  {computedTitle}
+                </span>
+                <span className={styles.modalBarDivider}>•</span>
+                <span className={styles.modalPageCount}>{pages.length} Pages</span>
+                <div className={styles.zoomControls}>
+                  <button
+                    type="button"
+                    className={styles.zoomBtn}
+                    onClick={() => setZoom((z) => Math.max(50, z - 25))}
+                    disabled={zoom <= 50}
+                    title="Zoom out"
+                  >
+                    −
+                  </button>
+                  <span
+                    className={styles.zoomIndicator}
+                    onClick={() => setZoom(100)}
+                    title="Click to reset to 100%"
+                  >
+                    {zoom}%
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.zoomBtn}
+                    onClick={() => setZoom((z) => Math.min(200, z + 25))}
+                    disabled={zoom >= 200}
+                    title="Zoom in"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
+
               <div className={styles.modalBarRight}>
+                {convertedPdfUrl && (
+                  <div className={styles.viewModeToggle}>
+                    <button
+                      type="button"
+                      className={`${styles.viewModeBtn} ${
+                        viewMode === 'pages' ? styles.viewModeBtnActive : ''
+                      }`}
+                      onClick={() => setViewMode('pages')}
+                    >
+                      Pages
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.viewModeBtn} ${
+                        viewMode === 'pdf' ? styles.viewModeBtnActive : ''
+                      }`}
+                      onClick={() => setViewMode('pdf')}
+                    >
+                      PDF Reader
+                    </button>
+                  </div>
+                )}
+                {convertedPdfUrl && (
+                  <button
+                    type="button"
+                    className={styles.downloadModalBtn}
+                    onClick={handleDownloadPdf}
+                    title="Download Converted PDF"
+                  >
+                    Download
+                  </button>
+                )}
                 <button
                   type="button"
                   className={styles.closeBtn}
@@ -910,18 +1036,28 @@ export function ScanWizardScreen() {
                 </button>
               </div>
             </div>
-            <div className={styles.modalBody}>
-              {pages.map((p, idx) => (
-                <div key={p.id} className={styles.modalPageSheet}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.url}
-                    alt={`Page ${idx + 1}`}
-                    style={{ transform: `rotate(${p.rotation}deg)` }}
+
+            {viewMode === 'pdf' && convertedPdfUrl ? (
+              <div className={styles.pdfIframeWrapper}>
+                <iframe
+                  src={`${convertedPdfUrl}#toolbar=1`}
+                  className={styles.pdfIframe}
+                  title="PDF Reader Preview"
+                />
+              </div>
+            ) : (
+              <div className={styles.modalBody}>
+                {pages.map((p, idx) => (
+                  <PageSheetCanvas
+                    key={p.id}
+                    page={p}
+                    pageIndex={idx}
+                    totalPages={pages.length}
+                    zoom={zoom}
                   />
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
