@@ -77,9 +77,50 @@ export const refundListResultSchema = z.object({
   totalPages: z.number(),
 });
 
+export const submitOrderWithLocalSchema = z.object({
+  localAccountId: z.string().uuid(),
+  fullName: z.string().min(2),
+  identifier: z.string().min(3),
+  password: z.string().min(6),
+  claimSecretHash: z.string().length(64),
+  type: z.enum(PRODUCT_TYPES),
+  stream: z.enum(ORDER_STREAMS),
+  courseIds: z.array(z.string()),
+  programId: z.string().optional(),
+  method: z.enum(PAYMENT_METHODS),
+  reference: z.string(),
+  imageKey: z.string(),
+  imageSizeBytes: z.number().int().positive(),
+  imageMime: z.string(),
+});
+
+export const claimOrderSchema = z.object({
+  orderId: z.string().uuid(),
+  claimSecret: z.string().length(64),
+});
+
+export const claimOrderResponseSchema = z.object({
+  studentId: z.string().uuid(),
+  studentCode: z.string(),
+  token: z.string(),
+  refreshToken: z.string().optional(),
+  entitlementToken: z.string().optional(),
+});
+
+export const paymentSettingsSchema = z.object({
+  singleCoursesEnabled: z.boolean(),
+  bundlePrices: z.record(z.string(), z.number()).optional(),
+  singleCoursePrices: z.record(z.string(), z.number()).optional(),
+});
+
 export type Order = z.infer<typeof orderSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+export type SubmitOrderWithLocalInput = z.infer<typeof submitOrderWithLocalSchema>;
+export type ClaimOrderInput = z.infer<typeof claimOrderSchema>;
+export type ClaimOrderResponse = z.infer<typeof claimOrderResponseSchema>;
+export type PaymentSettings = z.infer<typeof paymentSettingsSchema>;
 export type RefundStatus = z.infer<typeof refundStatusSchema>;
 export type AdminRefund = z.infer<typeof adminRefundSchema>;
 export type RefundListResult = z.infer<typeof refundListResultSchema>;
+
 

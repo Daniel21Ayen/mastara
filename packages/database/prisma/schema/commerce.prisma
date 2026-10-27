@@ -90,16 +90,22 @@ model PriceRule {
 }
 
 model Order {
-  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  student_id    String      @db.Uuid
-  product_id    String      @db.Uuid
-  stream        Stream?
-  quoted_amount Decimal     @db.Decimal(10, 2)
-  status        OrderStatus @default(PENDING_PAYMENT)
-  created_at    DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime    @updatedAt @db.Timestamptz(6)
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id            String?       @db.Uuid
+  local_account_id      String?       @db.Uuid
+  claim_secret_hash     String?
+  pending_name          String?
+  pending_phone         String?
+  pending_email         String?
+  pending_password_hash String?
+  product_id            String        @db.Uuid
+  stream                Stream?
+  quoted_amount         Decimal       @db.Decimal(10, 2)
+  status                OrderStatus   @default(PENDING_PAYMENT)
+  created_at            DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime      @updatedAt @db.Timestamptz(6)
 
-  student      Student       @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  student      Student?      @relation(fields: [student_id], references: [id], onDelete: Cascade)
   product      Product       @relation(fields: [product_id], references: [id], onDelete: Restrict)
   items        OrderItem[]
   proof        PaymentProof?
@@ -107,6 +113,8 @@ model Order {
   refunds      Refund[]
 
   @@index([student_id, status])
+  @@index([local_account_id])
+  @@index([claim_secret_hash])
   @@map("orders")
 }
 
