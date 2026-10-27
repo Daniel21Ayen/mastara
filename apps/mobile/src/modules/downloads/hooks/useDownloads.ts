@@ -91,4 +91,32 @@ export function useCourseDownloads(): CourseDownloadItem[] {
   return courses;
 }
 
+/** Live progress of an in-flight download (percentage, count). */
+export function useDownloadProgress(unitId: string) {
+  const subscribe = useCallback((listener: () => void) => downloadStatus.subscribe(listener), []);
+  return useSyncExternalStore(subscribe, () => downloadStatus.getProgress(unitId));
+}
+
+/** Downloaded content version of a course, or null if not downloaded (DWN-06). */
+export function useCourseDownloadedVersion(courseId: string): number | null {
+  const [version, setVersion] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const load = () => {
+      void downloadStore.getDownloadedCourseVersion(courseId).then((v) => {
+        if (active) setVersion(v);
+      });
+    };
+    load();
+    const unsubscribe = downloadStore.subscribe(load);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [courseId]);
+
+  return version;
+}
+
 

@@ -4,7 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
 import { createStyles, useTheme } from '@/core/theme';
-import { useIsCourseDownloaded } from '@/modules/downloads';
+import { useCourseDownloadedVersion, useIsCourseDownloaded } from '@/modules/downloads';
 import { ExamsTab } from '@/modules/exams/components/ExamsTab';
 import { TestsTab } from '@/modules/quizzes/components/TestsTab';
 import { AppButton, AppText, Screen, UnderlineTabs, TopBar } from '@/shared/ui';
@@ -26,6 +26,11 @@ export function CourseScreen() {
   const { item, loading, error, reload } = useCourseDetail(courseId ?? '');
   const [tab, setTab] = useState<CourseTabId>('MATERIAL');
   const isDownloaded = useIsCourseDownloaded(courseId ?? '');
+  const downloadedVersion = useCourseDownloadedVersion(courseId ?? '');
+  const hasUpdate =
+    isDownloaded &&
+    downloadedVersion !== null &&
+    ((item?.course as any)?.contentVersion ?? 1) > downloadedVersion;
 
   const tabs: UnderlineTabOption<CourseTabId>[] = [
     { value: 'MATERIAL', label: t('course.tab.material') },
@@ -47,8 +52,10 @@ export function CourseScreen() {
 
           <View style={styles.actionRow}>
             <View style={styles.flex}>
-              <AppText variant="caption" muted>
-                {isDownloaded
+              <AppText variant="caption" bold={hasUpdate} color={hasUpdate ? theme.colors.primary : undefined} muted={!hasUpdate}>
+                {hasUpdate
+                  ? t('course.download.updateAvailable')
+                  : isDownloaded
                   ? t('course.download.downloaded')
                   : t('course.download.optional')}
               </AppText>

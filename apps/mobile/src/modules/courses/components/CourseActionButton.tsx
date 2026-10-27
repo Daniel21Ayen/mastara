@@ -1,14 +1,19 @@
 // apps/mobile/src/modules/courses/components/CourseActionButton.tsx
 import type { Course } from '@mastara/contracts';
-import { ERROR_CODES } from '@mastara/domain';
+import { ERROR_CODES, formatBytes } from '@mastara/domain';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { downloadStatus, downloadStore } from '@/core/downloads';
 import { useI18n } from '@/core/i18n';
-import { isApiError } from '@/core/network';
+import { isApiError, isCellularConnection } from '@/core/network';
 import { createStyles, useTheme } from '@/core/theme';
-import { useIsCourseDownloaded, useTransferStatus } from '@/modules/downloads';
+import {
+  useCourseDownloadedVersion,
+  useDownloadProgress,
+  useIsCourseDownloaded,
+  useTransferStatus,
+} from '@/modules/downloads';
 import { AppButton, AppText, BottomSheet, Icon } from '@/shared/ui';
 
 import { courseDownload } from '../lib/courseDownload';
@@ -24,17 +29,34 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
   const { t } = useI18n();
   const unitId = `COURSE:${course.id}`;
   const isDownloaded = useIsCourseDownloaded(course.id);
+  const downloadedVersion = useCourseDownloadedVersion(course.id);
   const transfer = useTransferStatus(unitId);
-  const [sheet, setSheet] = useState<'delete' | 'failed' | null>(null);
+  const progress = useDownloadProgress(unitId);
+  const [sheet, setSheet] = useState<'delete' | 'failed' | 'cellular_warning' | null>(null);
   const [offline, setOffline] = useState(false);
 
-  async function start() {
+  const serverVersion = (course as any).contentVersion ?? 1;
+  const isUpdateAvailable =
+    isDownloaded && downloadedVersion !== null && serverVersion > downloadedVersion;
+
+  const estimatedSize = formatBytes((course as any).estimatedBytes ?? 25 * 1024 * 1024);
+
+  async function executeDownload() {
     setOffline(false);
     try {
       await downloadStatus.start(courseDownload(course));
     } catch (error) {
       setOffline(isApiError(error, ERROR_CODES.NETWORK_OFFLINE));
       setSheet('failed');
+    }
+  }
+
+  async function triggerDownload() {
+    const isCellular = await isCellularConnection();
+    if (isCellular) {
+      setSheet('cellular_warning');
+    } else {
+      void executeDownload();
     }
   }
 
@@ -45,10 +67,12 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
 
   function handlePress() {
     if (transfer === 'downloading') return;
-    if (isDownloaded) {
+    if (isUpdateAvailable) {
+      void triggerDownload();
+    } else if (isDownloaded) {
       setSheet('delete');
     } else {
-      void start();
+      void triggerDownload();
     }
   }
 
@@ -57,6 +81,11 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
     await downloadStore.removeCourse(course.id);
   }
 
+  const progressLabel =
+    progress && progress.total > 0
+      ? `${progress.percent}% (${progress.current}/${progress.total})`
+      : t('course.download.downloading');
+
   return (
     <>
       {transfer === 'downloading' ? (
@@ -64,9 +93,45 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
           <ActivityIndicator size="small" color={theme.colors.primary} />
           {!compact && (
             <AppText variant="caption" bold color={theme.colors.primary}>
-              {t('course.download.downloading')}
+              {progressLabel}
             </AppText>
           )}
+        </View>
+      ) : isUpdateAvailable ? (
+        <View style={styles.group}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('course.download.updateAvailable')}
+            hitSlop={8}
+            onPress={handlePress}
+            style={({ pressed }) => [
+              styles.button,
+              styles.updateButton,
+              compact && styles.compactButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Icon name="download" size={compact ? 18 : 20} color={theme.colors.primary} />
+            {!compact && (
+              <AppText variant="caption" bold color={theme.colors.primary}>
+                {t('course.download.updateAvailable')}
+              </AppText>
+            )}
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('course.download.delete')}
+            hitSlop={8}
+            onPress={() => setSheet('delete')}
+            style={({ pressed }) => [
+              styles.button,
+              styles.deleteButton,
+              compact && styles.compactButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Icon name="trash" size={compact ? 18 : 20} color={theme.colors.danger} />
+          </Pressable>
         </View>
       ) : isDownloaded ? (
         <Pressable
@@ -110,6 +175,7 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
         </Pressable>
       )}
 
+      {/* Delete Confirmation Sheet */}
       <BottomSheet
         visible={sheet === 'delete'}
         title={t('course.download.deleteConfirmTitle')}
@@ -123,13 +189,33 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
         <AppButton label={t('common.cancel')} variant="outline" onPress={() => setSheet(null)} />
       </BottomSheet>
 
+      {/* Cellular Data Warning Sheet (DWN-02) */}
+      <BottomSheet
+        visible={sheet === 'cellular_warning'}
+        title={t('course.download.mobileDataWarningTitle')}
+        onClose={() => setSheet(null)}
+      >
+        <AppText muted>
+          {t('course.download.mobileDataWarningBody', { size: estimatedSize })}
+        </AppText>
+        <AppButton
+          label={t('course.download.action')}
+          onPress={() => {
+            setSheet(null);
+            void executeDownload();
+          }}
+        />
+        <AppButton label={t('common.cancel')} variant="outline" onPress={() => setSheet(null)} />
+      </BottomSheet>
+
+      {/* Download Failed Sheet */}
       <BottomSheet visible={sheet === 'failed'} title={t('download.failed.title')} onClose={closeFailure}>
         <AppText muted>{offline ? t('download.failed.offline') : t('download.failed.body')}</AppText>
         <AppButton
           label={t('common.retry')}
           onPress={() => {
             closeFailure();
-            void start();
+            void executeDownload();
           }}
         />
         <AppButton label={t('common.cancel')} variant="outline" onPress={closeFailure} />
@@ -139,6 +225,11 @@ export function CourseActionButton({ course, compact }: CourseActionButtonProps)
 }
 
 const useStyles = createStyles((theme) => ({
+  group: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -160,6 +251,10 @@ const useStyles = createStyles((theme) => ({
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.surface,
   },
+  updateButton: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primarySoft,
+  },
   deleteButton: {
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
@@ -168,3 +263,4 @@ const useStyles = createStyles((theme) => ({
     opacity: 0.75,
   },
 }));
+

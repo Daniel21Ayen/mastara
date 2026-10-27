@@ -50,7 +50,7 @@ export function ProductCard({
         pressed && styles.pressed,
       ]}
     >
-      <IconTile icon={icon} accent={locked ? 'gray' : 'blue'} solid size={48} />
+      <IconTile icon={icon} accent={locked ? undefined : 'blue'} solid size={48} />
       <View style={styles.text}>
         <AppText bold>{title}</AppText>
         <AppText variant="caption" muted>

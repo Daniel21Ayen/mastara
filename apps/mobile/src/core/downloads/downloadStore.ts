@@ -217,6 +217,16 @@ export const downloadStore = {
     }
   },
 
+  /** Retrieves the downloaded content_version of a course from its manifest (DWN-06). */
+  async getDownloadedCourseVersion(courseId: string): Promise<number | null> {
+    const res = await this.getContent<{ contentVersion?: number }>(`course:${courseId}:manifest`);
+    if (res.found && res.value?.contentVersion !== undefined) {
+      return res.value.contentVersion;
+    }
+    const isDownloaded = await this.isCourseDownloaded(courseId);
+    return isDownloaded ? 1 : null;
+  },
+
   async removeAll(): Promise<void> {
     const db = await getDb();
     await db.withTransactionAsync(async () => {

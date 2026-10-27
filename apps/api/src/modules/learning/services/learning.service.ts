@@ -10,6 +10,7 @@ export interface MyCourseResponse {
     code: string;
     title: string;
     stream: string;
+    contentVersion?: number;
   };
   access: AccessState;
   expiresAt?: string;
@@ -90,6 +91,7 @@ export class LearningService {
             stream: true,
             is_promotional: true,
             trial_expiry_days: true,
+            content_version: true,
           },
           orderBy: { sort_order: 'asc' },
         });
@@ -112,6 +114,7 @@ export class LearningService {
               stream: true,
               is_promotional: true,
               trial_expiry_days: true,
+              content_version: true,
             },
             orderBy: { sort_order: 'asc' },
           });
@@ -208,6 +211,7 @@ export class LearningService {
           code: course.code,
           title: course.title_en,
           stream: course.stream,
+          contentVersion: course.content_version,
         },
         access,
         expiresAt: expiry ? expiry.toISOString() : undefined,

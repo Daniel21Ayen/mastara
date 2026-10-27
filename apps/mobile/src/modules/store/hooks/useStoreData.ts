@@ -62,6 +62,7 @@ export function useOrders(userId: string | undefined) {
         method: 'CBE_MOBILE',
         reference: c.reference,
         amount: 0,
+        durationDays: 180,
         status: (c.status === 'REJECTED' ? 'REJECTED' : 'PENDING') as Order['status'],
         createdAt: new Date(c.submittedAt).toISOString(),
       }));

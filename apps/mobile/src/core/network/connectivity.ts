@@ -60,3 +60,16 @@ export function subscribeOnline(listener: Listener): () => void {
 export function useOnline(): boolean {
   return useSyncExternalStore(subscribeOnline, isOnline, isOnline);
 }
+
+/** Returns true if active connection is cellular/mobile data (DWN-02). */
+export async function isCellularConnection(): Promise<boolean> {
+  if (NetInfo) {
+    try {
+      const state = await NetInfo.fetch();
+      return (state as any)?.type === 'cellular';
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
