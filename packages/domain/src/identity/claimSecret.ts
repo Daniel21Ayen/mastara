@@ -30,15 +30,11 @@ export function hashClaimSecret(secret: string): string {
   if (!secret || typeof secret !== 'string') {
     throw new Error('Claim secret must be a non-empty string');
   }
+  const trimmed = secret.trim();
   if (cryptoModule?.createHash) {
-    return cryptoModule.createHash('sha256').update(secret.trim()).digest('hex');
+    return cryptoModule.createHash('sha256').update(trimmed).digest('hex');
   }
-  // Fallback to SubtleCrypto if in browser/standard environment
-  if (typeof globalThis.crypto?.subtle !== 'undefined') {
-    // Synchronous sha256 fallback implementation for browser/JS runtimes without synchronous subtleCrypto
-    return fastSha256Hex(secret.trim());
-  }
-  return fastSha256Hex(secret.trim());
+  return fastSha256Hex(trimmed);
 }
 
 /**
@@ -49,7 +45,7 @@ export function verifyClaimSecret(secret: string, expectedHash: string): boolean
   if (!secret || !expectedHash) return false;
   try {
     const computedHash = hashClaimSecret(secret);
-    if (cryptoModule?.timingSafeEqual) {
+    if (cryptoModule?.timingSafeEqual && typeof Buffer !== 'undefined') {
       const a = Buffer.from(computedHash, 'hex');
       const b = Buffer.from(expectedHash.trim().toLowerCase(), 'hex');
       if (a.length !== b.length) return false;
@@ -73,7 +69,6 @@ export function generateClaimSecret(): string {
     globalThis.crypto.getRandomValues(bytes);
     return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
   }
-  // Fallback pseudo-random for test environments if crypto is missing
   let result = '';
   for (let i = 0; i < 64; i += 1) {
     result += Math.floor(Math.random() * 16).toString(16);
@@ -82,25 +77,10 @@ export function generateClaimSecret(): string {
 }
 
 /**
- * Pure TypeScript SHA-256 implementation used as universal fallback.
+ * Strict TypeScript-safe SHA-256 implementation.
  */
 function fastSha256Hex(ascii: string): string {
-  const mathPow = Math.pow;
-  const maxWord = mathPow(2, 32);
-  let lengthProperty = 'length';
-  let i = 0;
-  let j = 0;
-
-  let result = '';
-  const words: number[] = [];
-  const asciiBitLength = ascii[lengthProperty] * 8;
-
-  let hash = [
-    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
-  ];
-
-  const k = [
+  const K = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
     0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -111,52 +91,80 @@ function fastSha256Hex(ascii: string): string {
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
   ];
 
-  let compositeClearHex = '';
-  for (i = 0; i < ascii[lengthProperty]; i += 1) {
-    const code = ascii.charCodeAt(i);
-    words[i >> 2] |= (code & 0xff) << (24 - (i % 4) * 8);
+  let H0 = 0x6a09e667;
+  let H1 = 0xbb67ae85;
+  let H2 = 0x3c6ef372;
+  let H3 = 0xa54ff53a;
+  let H4 = 0x510e527f;
+  let H5 = 0x9b05688c;
+  let H6 = 0x1f83d9ab;
+  let H7 = 0x5be0cd19;
+
+  const words: number[] = [];
+  const len = ascii.length;
+  for (let i = 0; i < len; i += 1) {
+    const wordIdx = i >> 2;
+    words[wordIdx] = (words[wordIdx] ?? 0) | ((ascii.charCodeAt(i) & 0xff) << (24 - (i % 4) * 8));
   }
-  words[asciiBitLength >> 5] |= 0x80 << (24 - (asciiBitLength % 32));
-  words[(((asciiBitLength + 64) >> 9) << 4) + 15] = asciiBitLength;
+  const bitLen = len * 8;
+  const bitWordIdx = bitLen >> 5;
+  words[bitWordIdx] = (words[bitWordIdx] ?? 0) | (0x80 << (24 - (bitLen % 32)));
+  const totalWords = (((bitLen + 64) >> 9) << 4) + 15;
+  while (words.length <= totalWords) {
+    words.push(0);
+  }
+  words[totalWords] = bitLen;
 
-  for (i = 0; i < words[lengthProperty]; i += 16) {
-    const w = words.slice(i, i + 16);
-    const oldHash = hash.slice(0);
-
-    for (j = 0; j < 64; j += 1) {
-      const w15 = w[j - 15];
-      const w2 = w[j - 2];
-
-      const s0 = j >= 16 ? ((w15 >>> 7) | (w15 << 25)) ^ ((w15 >>> 18) | (w15 << 14)) ^ (w15 >>> 3) : 0;
-      const s1 = j >= 16 ? ((w2 >>> 17) | (w2 << 15)) ^ ((w2 >>> 19) | (w2 << 13)) ^ (w2 >>> 10) : 0;
-      if (j >= 16) {
-        w[j] = (w[j - 16] + s0 + w[j - 7] + s1) | 0;
-      }
-
-      const h0 = hash[0];
-      const h1 = hash[1];
-      const h2 = hash[2];
-      const h4 = hash[4];
-      const s1_maj = ((h4 >>> 6) | (h4 << 26)) ^ ((h4 >>> 11) | (h4 << 21)) ^ ((h4 >>> 25) | (h4 << 7));
-      const ch = (h4 & hash[5]) ^ (~h4 & hash[6]);
-      const temp1 = (hash[7] + s1_maj + ch + k[j] + w[j]) | 0;
-      const s0_maj = ((h0 >>> 2) | (h0 << 30)) ^ ((h0 >>> 13) | (h0 << 19)) ^ ((h0 >>> 22) | (h0 << 10));
-      const maj = (h0 & h1) ^ (h0 & h2) ^ (h1 & h2);
-      const temp2 = (s0_maj + maj) | 0;
-
-      hash = [(temp1 + temp2) | 0, h0, h1, h2, (hash[3] + temp1) | 0, h4, hash[5], hash[6]];
+  const W = new Int32Array(64);
+  for (let i = 0; i < words.length; i += 16) {
+    for (let t = 0; t < 16; t += 1) {
+      W[t] = words[i + t] ?? 0;
+    }
+    for (let t = 16; t < 64; t += 1) {
+      const w15 = W[t - 15] ?? 0;
+      const s0 = ((w15 >>> 7) | (w15 << 25)) ^ ((w15 >>> 18) | (w15 << 14)) ^ (w15 >>> 3);
+      const w2 = W[t - 2] ?? 0;
+      const s1 = ((w2 >>> 17) | (w2 << 15)) ^ ((w2 >>> 19) | (w2 << 13)) ^ (w2 >>> 10);
+      W[t] = ((W[t - 16] ?? 0) + s0 + (W[t - 7] ?? 0) + s1) | 0;
     }
 
-    for (j = 0; j < 8; j += 1) {
-      hash[j] = (hash[j] + oldHash[j]) | 0;
+    let a = H0;
+    let b = H1;
+    let c = H2;
+    let d = H3;
+    let e = H4;
+    let f = H5;
+    let g = H6;
+    let h = H7;
+
+    for (let t = 0; t < 64; t += 1) {
+      const s1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + s1 + ch + (K[t] ?? 0) + (W[t] ?? 0)) | 0;
+      const s0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (s0 + maj) | 0;
+
+      h = g;
+      g = f;
+      f = e;
+      e = (d + temp1) | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (temp1 + temp2) | 0;
     }
+
+    H0 = (H0 + a) | 0;
+    H1 = (H1 + b) | 0;
+    H2 = (H2 + c) | 0;
+    H3 = (H3 + d) | 0;
+    H4 = (H4 + e) | 0;
+    H5 = (H5 + f) | 0;
+    H6 = (H6 + g) | 0;
+    H7 = (H7 + h) | 0;
   }
 
-  for (i = 0; i < 8; i += 1) {
-    for (j = 3; j >= 0; j -= 1) {
-      const b = (hash[i] >> (j * 8)) & 255;
-      result += (b < 16 ? '0' : '') + b.toString(16);
-    }
-  }
-  return result;
+  const hexOf = (num: number) => (num >>> 0).toString(16).padStart(8, '0');
+  return `${hexOf(H0)}${hexOf(H1)}${hexOf(H2)}${hexOf(H3)}${hexOf(H4)}${hexOf(H5)}${hexOf(H6)}${hexOf(H7)}`;
 }

@@ -61,6 +61,10 @@ export class RefundsService {
       throw new ConflictException("An active refund request already exists for this order");
     }
 
+    if (!order.student_id) {
+      throw new BadRequestException("Order has no associated student");
+    }
+
     const refund = await this.prisma.refund.create({
       data: {
         order_id: order.id,

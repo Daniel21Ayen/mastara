@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
   Query,
 } from "@nestjs/common";
 import {
@@ -17,14 +19,63 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { OrdersService, OrderResponse } from "../services/orders.service";
-import { CreateOrderDto, GetOrdersQueryDto } from "../dto";
+import {
+  CreateOrderDto,
+  GetOrdersQueryDto,
+  SubmitOrderWithLocalDto,
+  ClaimOrderDto,
+  PaymentSettingsDto,
+} from "../dto";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
+import { Public } from "../../../../common/decorators/public.decorator";
 
 @ApiTags("Commerce: Orders")
 @ApiBearerAuth()
 @Controller("commerce/orders")
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
+
+  @Public()
+  @Post("unregistered")
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "Submit order and receipt proof for unregistered local student (REG-07..REG-14)",
+  })
+  async submitUnregisteredOrder(
+    @Body() dto: SubmitOrderWithLocalDto,
+    @CurrentUser("id") authenticatedStudentId?: string,
+  ): Promise<OrderResponse> {
+    return this.ordersService.submitOrderWithLocal(dto, authenticatedStudentId);
+  }
+
+  @Public()
+  @Post(":id/claim")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Claim approved order and receive MS number and JWT tokens (REG-10, REG-12)",
+  })
+  async claimOrder(
+    @Param("id", ParseUUIDPipe) orderId: string,
+    @Body() dto: ClaimOrderDto,
+  ): Promise<{ studentId: string; studentCode: string; token: string; refreshToken?: string }> {
+    return this.ordersService.claimOrder(orderId, dto.claimSecret);
+  }
+
+  @Public()
+  @Get("settings/payment")
+  @ApiOperation({ summary: "Get platform payment settings (PUR-08)" })
+  async getPaymentSettings(): Promise<PaymentSettingsDto> {
+    return this.ordersService.getPaymentSettings();
+  }
+
+  @Put("settings/payment")
+  @ApiOperation({ summary: "Update platform payment settings (PUR-08)" })
+  async updatePaymentSettings(
+    @CurrentUser("id") adminId: string,
+    @Body() dto: PaymentSettingsDto,
+  ): Promise<PaymentSettingsDto> {
+    return this.ordersService.updatePaymentSettings(adminId, dto);
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

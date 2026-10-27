@@ -8,14 +8,18 @@ import {
 } from "@nestjs/common";
 import { PrismaService } from "../../../../infrastructure/database/prisma.service";
 import {
+  DeviceBindingStatus,
+  DevicePlatform,
   EntitlementStatus,
   NotificationType,
   OrderStatus,
   PaymentMethod,
   ProofStatus,
   Role,
+  SecurityEventType,
+  StudentStatus,
 } from "@mastara/database";
-import { isValidReference, normalizeReference, MAX_RECEIPT_BYTES } from "@mastara/domain";
+import { isValidReference, normalizeReference, MAX_RECEIPT_BYTES, formatStudentId } from "@mastara/domain";
 import {
   AdminPaymentDto,
   PaymentDecisionDto,
@@ -212,6 +216,91 @@ export class PaymentProofsService {
     const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
     await this.prisma.$transaction(async (tx) => {
+      let studentId = proof.order.student_id;
+
+      // Deferred Server Registration: If this order was submitted by an unregistered local student,
+      // create the student record atomically NOW and assign the gapless MS0001 sequence (REG-07..REG-14).
+      if (!studentId) {
+        // 1. Idempotency: Check if a student was already created for this local ID (REG-10)
+        let student = proof.order.local_account_id
+          ? await tx.student.findUnique({ where: { id: proof.order.local_account_id } })
+          : null;
+
+        // 2. Link check: If phone or email already belongs to an existing student (REG-11)
+        if (!student && (proof.order.pending_phone || proof.order.pending_email)) {
+          student = await tx.student.findFirst({
+            where: {
+              OR: [
+                ...(proof.order.pending_phone ? [{ phone: proof.order.pending_phone }] : []),
+                ...(proof.order.pending_email ? [{ email: proof.order.pending_email }] : []),
+              ],
+            },
+          });
+        }
+
+        // 3. New Student Creation with Atomic PostgreSQL Counter (REG-07, REG-08, REG-09)
+        if (!student) {
+          const counterRow = await tx.$queryRawUnsafe<Array<{ value: number }>>(
+            `INSERT INTO counters (name, value)
+             VALUES ('student_ms_code', (SELECT COALESCE(MAX(student_number), 0) + 1 FROM students))
+             ON CONFLICT (name)
+             DO UPDATE SET value = GREATEST(counters.value, (SELECT COALESCE(MAX(student_number), 0) FROM students)) + 1
+             RETURNING value;`
+          );
+          const studentNumber = Number(counterRow[0]?.value ?? 1);
+          const studentCode = formatStudentId(studentNumber);
+
+          const nameParts = (proof.order.pending_name || "Student").trim().split(/\s+/);
+          const firstName = nameParts[0] || "Student";
+          const lastName = nameParts.slice(1).join(" ") || "User";
+
+          student = await tx.student.create({
+            data: {
+              ...(proof.order.local_account_id ? { id: proof.order.local_account_id } : {}),
+              student_number: studentNumber,
+              student_code: studentCode,
+              first_name: firstName,
+              last_name: lastName,
+              phone: proof.order.pending_phone,
+              email: proof.order.pending_email,
+              password_hash: proof.order.pending_password_hash || "$2b$10$placeholder",
+              role: Role.STUDENT,
+              status: StudentStatus.ACTIVE,
+            },
+          });
+
+          // Device binding starts when the server student record is created (REG-13)
+          await tx.deviceBinding.create({
+            data: {
+              student_id: student.id,
+              platform: DevicePlatform.ANDROID,
+              device_id_hash: `dev-hash-${student.id.slice(0, 8)}`,
+              status: DeviceBindingStatus.ACTIVE,
+            },
+          });
+
+          try {
+            await tx.securityEventLog.create({
+              data: {
+                student_id: student.id,
+                event_type: SecurityEventType.REGISTER,
+                metadata: { studentCode: student.student_code, orderId: proof.order_id },
+              },
+            });
+          } catch (e) {
+            this.logger.warn(`Failed to log register security event: ${e}`);
+          }
+        }
+
+        studentId = student.id;
+
+        // Associate the newly created/linked student with the order
+        await tx.order.update({
+          where: { id: proof.order_id },
+          data: { student_id: studentId },
+        });
+      }
+
       await tx.paymentProof.update({
         where: { id: proofId },
         data: {
@@ -230,7 +319,7 @@ export class PaymentProofsService {
       for (const item of proof.order.items) {
         await tx.entitlement.create({
           data: {
-            student_id: proof.order.student_id,
+            student_id: studentId,
             course_id: item.course_id,
             order_id: proof.order_id,
             starts_at: now,
@@ -242,7 +331,7 @@ export class PaymentProofsService {
         await tx.studentCourse.upsert({
           where: {
             student_id_course_id: {
-              student_id: proof.order.student_id,
+              student_id: studentId,
               course_id: item.course_id,
             },
           },
@@ -251,7 +340,7 @@ export class PaymentProofsService {
             removed_at: null,
           },
           create: {
-            student_id: proof.order.student_id,
+            student_id: studentId,
             course_id: item.course_id,
             is_active: true,
           },
@@ -261,7 +350,7 @@ export class PaymentProofsService {
       // Fire payment approved notification
       await tx.notification.create({
         data: {
-          student_id: proof.order.student_id,
+          student_id: studentId,
           type: NotificationType.PAYMENT_APPROVED,
           title_en: "Payment Approved",
           title_am: "ክፍያ ተቀበለ",
@@ -274,7 +363,7 @@ export class PaymentProofsService {
 
     const studentName = proof.order.student
       ? `${proof.order.student.first_name} ${proof.order.student.last_name}`.trim()
-      : "Student";
+      : (proof.order.pending_name || "Student");
 
     await this.auditService.log({
       actorId: adminId,
@@ -288,16 +377,19 @@ export class PaymentProofsService {
     this.logger.log(`Proof ${proofId} approved by admin ${adminId}`);
 
     // Dispatch instant push notification to student
-    void this.pushService.sendToStudent(proof.order.student_id, {
-      title: "Payment Approved! 🎉",
-      body: `Your payment has been approved and courses are open for ${durationDays} days.`,
-      data: {
-        type: "PAYMENT_APPROVED",
-        orderId: proof.order_id,
-        days: durationDays,
-      },
-      channelId: "payments",
-    });
+    const finalStudentId = proof.order.student_id || proof.order.local_account_id;
+    if (finalStudentId) {
+      void this.pushService.sendToStudent(finalStudentId, {
+        title: "Payment Approved! 🎉",
+        body: `Your payment has been approved and courses are open for ${durationDays} days.`,
+        data: {
+          type: "PAYMENT_APPROVED",
+          orderId: proof.order_id,
+          days: durationDays,
+        },
+        channelId: "payments",
+      });
+    }
   }
 
   /**
@@ -338,23 +430,25 @@ export class PaymentProofsService {
         data: { status: OrderStatus.REJECTED },
       });
 
-      // Fire payment rejected notification
-      await tx.notification.create({
-        data: {
-          student_id: proof.order.student_id,
-          type: NotificationType.PAYMENT_REJECTED,
-          title_en: "Payment Rejected",
-          title_am: "ክፍያ ተቀባይ ተሰርዟል",
-          message_en: `Your payment proof was rejected. Reason: ${rejectReason}. Please resubmit with a valid receipt.`,
-          message_am: `የክፍያ ደረሰኝዎ ተቀባይ ተሰርዟል። ምክንያት: ${rejectReason}። እባክዎ እንደገና ያስገቡ።`,
-          data: { orderId: proof.order_id, reason: rejectReason, rejectReason },
-        },
-      });
+      // Fire payment rejected notification if student already exists on server
+      if (proof.order.student_id) {
+        await tx.notification.create({
+          data: {
+            student_id: proof.order.student_id,
+            type: NotificationType.PAYMENT_REJECTED,
+            title_en: "Payment Rejected",
+            title_am: "ክፍያ ተቀባይ ተሰርዟል",
+            message_en: `Your payment proof was rejected. Reason: ${rejectReason}. Please resubmit with a valid receipt.`,
+            message_am: `የክፍያ ደረሰኝዎ ተቀባይ ተሰርዟል። ምክንያት: ${rejectReason}። እባክዎ እንደገና ያስገቡ።`,
+            data: { orderId: proof.order_id, reason: rejectReason, rejectReason },
+          },
+        });
+      }
     });
 
     const studentName = proof.order.student
       ? `${proof.order.student.first_name} ${proof.order.student.last_name}`.trim()
-      : "Student";
+      : (proof.order.pending_name || "Student");
 
     await this.auditService.log({
       actorId: adminId,
@@ -367,17 +461,19 @@ export class PaymentProofsService {
 
     this.logger.log(`Proof ${proofId} rejected by admin ${adminId}: ${rejectReason}`);
 
-    // Dispatch instant push notification for payment rejection
-    void this.pushService.sendToStudent(proof.order.student_id, {
-      title: "Payment Rejected",
-      body: `Your payment proof was rejected. Reason: ${rejectReason}. Please resubmit with a valid receipt.`,
-      data: {
-        type: "PAYMENT_REJECTED",
-        orderId: proof.order_id,
-        reason: rejectReason,
-      },
-      channelId: "payments",
-    });
+    // Dispatch instant push notification for payment rejection if student exists
+    if (proof.order.student_id) {
+      void this.pushService.sendToStudent(proof.order.student_id, {
+        title: "Payment Rejected",
+        body: `Your payment proof was rejected. Reason: ${rejectReason}. Please resubmit with a valid receipt.`,
+        data: {
+          type: "PAYMENT_REJECTED",
+          orderId: proof.order_id,
+          reason: rejectReason,
+        },
+        channelId: "payments",
+      });
+    }
   }
 
   // --------------------------------------------------------------------------
