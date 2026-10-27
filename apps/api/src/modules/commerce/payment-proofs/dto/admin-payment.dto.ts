@@ -24,6 +24,15 @@ export class AdminPaymentDto {
   @ApiProperty({ example: "Abebe Kebede", description: "Student full name" })
   studentName!: string;
 
+  @ApiPropertyOptional({ example: "+251911223344", nullable: true })
+  studentPhone?: string | null;
+
+  @ApiPropertyOptional({ example: "student@example.com", nullable: true })
+  studentEmail?: string | null;
+
+  @ApiPropertyOptional({ example: "MS0001", nullable: true })
+  studentCode?: string | null;
+
   @ApiProperty({ example: "AAU", description: "University code/short name" })
   universityShortName!: string;
 

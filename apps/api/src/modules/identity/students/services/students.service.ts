@@ -282,6 +282,7 @@ export class StudentsService {
 
     const where: any = {
       role: Role.STUDENT,
+      student_code: { not: null },
     };
 
     if (query.universityId) {

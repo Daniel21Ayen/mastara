@@ -2,6 +2,7 @@
 import type { AuthResult, EditAccountInput, LoginInput, RegisterInput, User } from '@mastara/contracts';
 import { ERROR_CODES } from '@mastara/domain';
 
+import { migrateLocalUserToStudentId } from '@/core/db';
 import { ApiError, httpClient, isApiError } from '@/core/network';
 import { secureStorage, STORAGE_KEYS } from '@/core/storage/secureStorage';
 import {
@@ -157,6 +158,31 @@ export const authApi: AuthApi = {
     try {
       const result = await realAuthApi.login(input);
       await clearLockout(input.identifier);
+
+      // REG-16: If there is an existing local-only account on this device, merge local progress into recovered account
+      const currentSync = await secureStorage.getJson<PendingStudentSync>(STORAGE_KEYS.pendingRemoteSync);
+      if (
+        currentSync &&
+        (currentSync.accountState === 'LOCAL_ONLY' || !currentSync.purchased) &&
+        currentSync.userId &&
+        currentSync.userId !== result.user.id
+      ) {
+        try {
+          await migrateLocalUserToStudentId(currentSync.userId, result.user.id);
+        } catch {
+          // preserve recovery login even if local migration encounters partial tables
+        }
+      }
+
+      await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, {
+        userId: result.user.id,
+        localAccountId: result.user.id,
+        name: result.user.name,
+        identifier: result.user.identifier,
+        accountState: 'REGISTERED_REMOTE',
+        purchased: true,
+      });
+
       return result;
     } catch (err) {
       if (isApiError(err, ERROR_CODES.NETWORK_OFFLINE)) {

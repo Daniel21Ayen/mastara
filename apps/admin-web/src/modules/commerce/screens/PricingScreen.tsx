@@ -373,6 +373,24 @@ export function PricingScreen() {
                 />
               </div>
             </div>
+
+            <div className={styles.formGroup} style={{ marginTop: 12 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={form.allowSingleCourses !== false}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      allowSingleCourses: e.target.checked,
+                    })
+                  }
+                />
+                <span className={styles.fieldLabel} style={{ marginBottom: 0 }}>
+                  Enable single-course purchases
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -523,6 +541,88 @@ export function PricingScreen() {
             />
             <span className={styles.checkboxText}>COC sample set</span>
           </label>
+        </div>
+      </div>
+
+      {/* Payment Deposit Accounts Card (ADM-04) */}
+      <div className={styles.trialCard} style={{ marginTop: 20 }}>
+        <div className={styles.trialTitleRow}>
+          <h2 className={styles.trialTitle}>Payment Accounts & Credentials</h2>
+          <span className={styles.trialBadge}>Payment Gateways</span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginTop: 16 }}>
+          <div className={styles.formGroup}>
+            <label className={styles.fieldLabel} htmlFor="cbeAccount">
+              CBE Bank Account Number
+            </label>
+            <div className={styles.inputWrapper}>
+              <input
+                id="cbeAccount"
+                type="text"
+                className={styles.textInput}
+                value={form.bankAccounts?.cbeAccount || ''}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    bankAccounts: {
+                      ...form.bankAccounts,
+                      cbeAccount: e.target.value,
+                    },
+                  })
+                }
+                placeholder="1000123456789"
+              />
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.fieldLabel} htmlFor="telebirrMerchantId">
+              Telebirr Merchant ID / Number
+            </label>
+            <div className={styles.inputWrapper}>
+              <input
+                id="telebirrMerchantId"
+                type="text"
+                className={styles.textInput}
+                value={form.bankAccounts?.telebirrMerchantId || ''}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    bankAccounts: {
+                      ...form.bankAccounts,
+                      telebirrMerchantId: e.target.value,
+                    },
+                  })
+                }
+                placeholder="TB-123456"
+              />
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.fieldLabel} htmlFor="cbeBirr">
+              CBE Birr Phone / Code
+            </label>
+            <div className={styles.inputWrapper}>
+              <input
+                id="cbeBirr"
+                type="text"
+                className={styles.textInput}
+                value={form.bankAccounts?.cbeBirr || ''}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    bankAccounts: {
+                      ...form.bankAccounts,
+                      cbeBirr: e.target.value,
+                    },
+                  })
+                }
+                placeholder="0911223344"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

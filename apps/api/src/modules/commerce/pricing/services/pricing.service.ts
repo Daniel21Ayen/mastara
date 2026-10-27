@@ -37,6 +37,12 @@ export interface FreeTrialConfig {
   cocSampleSetFree: boolean;
 }
 
+export interface BankAccountsConfig {
+  cbeAccount?: string;
+  cbeBirr?: string;
+  telebirrMerchantId?: string;
+}
+
 export interface PricingSettings {
   bundlePrice: number;
   coursesMin: number;
@@ -49,6 +55,8 @@ export interface PricingSettings {
   fullBothPrice: number;
   fullStreamDurationDays: number;
   freeTrial: FreeTrialConfig;
+  allowSingleCourses?: boolean;
+  bankAccounts?: BankAccountsConfig;
   updatedAt?: string;
 }
 
@@ -168,16 +176,20 @@ export class PricingService {
    * Retrieves designated deposit account numbers for Ethiopian payment options.
    */
   async getAccounts(): Promise<AccountsResponse> {
+    const bankSetting = await this.prisma.systemSetting.findUnique({
+      where: { key: "payment_bank_accounts" },
+    });
+    const custom = (bankSetting?.value as any) ?? {};
     return {
-      CBE_MOBILE: this.configService.get<string>(
+      CBE_MOBILE: custom.cbeAccount || this.configService.get<string>(
         "PAYMENT_ACCOUNT_CBE_MOBILE",
         "1000123456789",
       ),
-      CBE_BIRR: this.configService.get<string>(
+      CBE_BIRR: custom.cbeBirr || this.configService.get<string>(
         "PAYMENT_ACCOUNT_CBE_BIRR",
         "0911223344",
       ),
-      TELEBIRR: this.configService.get<string>(
+      TELEBIRR: custom.telebirrMerchantId || this.configService.get<string>(
         "PAYMENT_ACCOUNT_TELEBIRR",
         "0911223344",
       ),
@@ -375,6 +387,22 @@ export class PricingService {
       cocSampleSetFree: true,
     };
 
+    const singleSetting = await this.prisma.systemSetting.findUnique({
+      where: { key: "allow_single_courses" },
+    });
+    const allowSingleCourses = singleSetting
+      ? Boolean((singleSetting.value as any)?.enabled ?? singleSetting.value)
+      : true;
+
+    const bankSetting = await this.prisma.systemSetting.findUnique({
+      where: { key: "payment_bank_accounts" },
+    });
+    const bankAccounts: BankAccountsConfig = (bankSetting?.value as any) ?? {
+      cbeAccount: this.configService.get<string>("PAYMENT_ACCOUNT_CBE_MOBILE", "1000123456789"),
+      cbeBirr: this.configService.get<string>("PAYMENT_ACCOUNT_CBE_BIRR", "0911223344"),
+      telebirrMerchantId: this.configService.get<string>("PAYMENT_ACCOUNT_TELEBIRR", "0911223344"),
+    };
+
     return {
       bundlePrice: config.bundle.bundlePrice,
       coursesMin: config.bundle.minCourses,
@@ -387,6 +415,8 @@ export class PricingService {
       fullBothPrice: config.fullBothPrice,
       fullStreamDurationDays: config.durationDays.FULL_STREAM,
       freeTrial,
+      allowSingleCourses,
+      bankAccounts,
       updatedAt: new Date().toISOString(),
     };
   }
@@ -491,6 +521,40 @@ export class PricingService {
           key: "free_trial_config",
           value: patch.freeTrial as any,
           description: "Global free trial configuration for modules, quizzes and COC sample sets",
+          updated_by: adminId,
+        },
+      });
+    }
+
+    // 7. Single course purchase toggle in systemSetting (ADM-04)
+    if (patch.allowSingleCourses !== undefined) {
+      await this.prisma.systemSetting.upsert({
+        where: { key: "allow_single_courses" },
+        update: {
+          value: { enabled: patch.allowSingleCourses },
+          updated_by: adminId,
+        },
+        create: {
+          key: "allow_single_courses",
+          value: { enabled: patch.allowSingleCourses },
+          description: "System-wide toggle to enable or disable single course purchases",
+          updated_by: adminId,
+        },
+      });
+    }
+
+    // 8. Bank deposit account numbers in systemSetting (ADM-04)
+    if (patch.bankAccounts) {
+      await this.prisma.systemSetting.upsert({
+        where: { key: "payment_bank_accounts" },
+        update: {
+          value: patch.bankAccounts as any,
+          updated_by: adminId,
+        },
+        create: {
+          key: "payment_bank_accounts",
+          value: patch.bankAccounts as any,
+          description: "Payment deposit accounts: CBE and Telebirr",
           updated_by: adminId,
         },
       });

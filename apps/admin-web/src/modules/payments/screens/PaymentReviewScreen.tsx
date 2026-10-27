@@ -80,6 +80,9 @@ export function PaymentReviewScreen({ id }: { id: string }) {
 
   const rows = [
     { label: adminText('admin.payments.review.student'), value: current.studentName },
+    ...(current.studentCode ? [{ label: 'Student ID', value: current.studentCode }] : []),
+    ...(current.studentPhone ? [{ label: 'Phone', value: current.studentPhone }] : []),
+    ...(current.studentEmail ? [{ label: 'Email', value: current.studentEmail }] : []),
     { label: adminText('admin.payments.review.university'), value: current.universityShortName },
     { label: adminText('admin.payments.review.product'), value: productText(current) },
     {

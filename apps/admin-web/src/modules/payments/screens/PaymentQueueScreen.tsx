@@ -46,7 +46,8 @@ export function PaymentQueueScreen() {
     {
       key: 'student',
       header: adminText('admin.payments.col.student'),
-      render: (row) => row.studentName,
+      render: (row) =>
+        row.studentPhone ? `${row.studentName} (${row.studentPhone})` : row.studentName,
     },
     {
       key: 'product',

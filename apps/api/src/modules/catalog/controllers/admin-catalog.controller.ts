@@ -214,6 +214,20 @@ export class AdminCatalogController {
     return this.catalogService.updateAdminCourse(adminUser?.id || adminUser, id, dto);
   }
 
+  @Post("courses/:id/bump-version")
+  @RequirePermission("course.edit", "catalog.write")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Increment course content version to trigger student update badges (ADM-03, DWN-06)" })
+  @ApiParam({ name: "id", description: "Course UUID" })
+  @ApiResponse({ status: HttpStatus.OK, type: AdminCourseDto })
+  async bumpCourseVersion(
+    @CurrentUser() adminUser: any,
+    @Param("id") id: string,
+  ): Promise<AdminCourseDto> {
+    await this.scopeService.assertCourseInScope(adminUser, id);
+    return this.catalogService.bumpCourseContentVersion(adminUser?.id || adminUser, id);
+  }
+
   @Delete("courses/:id")
   @RequirePermission("catalog.write")
   @ApiOperation({ summary: "Delete an unused course (Super Admin only)" })

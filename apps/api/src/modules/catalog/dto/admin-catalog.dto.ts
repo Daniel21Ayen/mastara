@@ -126,6 +126,9 @@ export class AdminCourseDto {
 
   @ApiProperty({ enum: ["DRAFT", "PUBLISHED"], example: "PUBLISHED" })
   status!: "DRAFT" | "PUBLISHED";
+
+  @ApiPropertyOptional({ example: 1, description: "Content version number (DWN-06, ADM-03)" })
+  contentVersion?: number;
 }
 
 import { PaginationQueryDto, PaginatedResult } from "../../../common/pagination";

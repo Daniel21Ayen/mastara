@@ -9,6 +9,12 @@ export interface FreeTrialConfig {
   cocSampleSetFree: boolean;
 }
 
+export interface BankAccountsConfig {
+  cbeAccount?: string;
+  cbeBirr?: string;
+  telebirrMerchantId?: string;
+}
+
 export interface PricingSettings {
   bundlePrice: number;
   coursesMin: number;
@@ -21,6 +27,8 @@ export interface PricingSettings {
   fullBothPrice: number;
   fullStreamDurationDays: number;
   freeTrial: FreeTrialConfig;
+  allowSingleCourses?: boolean;
+  bankAccounts?: BankAccountsConfig;
   updatedAt?: string;
 }
 

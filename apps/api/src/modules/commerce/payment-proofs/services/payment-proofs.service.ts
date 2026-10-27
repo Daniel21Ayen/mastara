@@ -858,7 +858,11 @@ export class PaymentProofsService {
 
     const studentName = student
       ? `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim() || "Student"
-      : "Unknown Student";
+      : (order?.pending_name || "Student");
+
+    const studentPhone = student?.phone ?? order?.pending_phone ?? null;
+    const studentEmail = student?.email ?? order?.pending_email ?? null;
+    const studentCode = student?.student_code ?? null;
 
     const universityShortName = student?.university?.code ?? "AAU";
 
@@ -897,6 +901,9 @@ export class PaymentProofsService {
       id: proof.id,
       studentId: student?.id ?? order?.student_id ?? "",
       studentName,
+      studentPhone,
+      studentEmail,
+      studentCode,
       universityShortName,
       type,
       stream,

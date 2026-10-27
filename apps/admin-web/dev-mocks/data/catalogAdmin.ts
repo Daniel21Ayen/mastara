@@ -115,6 +115,7 @@ function toCourse(id: string): AdminCourse {
       promotional: sharedMeta.freeTrialItems > 0,
       freeTrialItems: sharedMeta.freeTrialItems,
       status: sharedMeta.status,
+      contentVersion: 1,
     };
   }
   const course = courseById(id);
@@ -142,6 +143,7 @@ function toCourse(id: string): AdminCourse {
     promotional: meta.freeTrialItems > 0,
     freeTrialItems: meta.freeTrialItems,
     status: meta.status,
+    contentVersion: 1,
   };
 }
 

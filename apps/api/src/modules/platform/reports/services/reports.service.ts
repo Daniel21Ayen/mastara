@@ -54,9 +54,9 @@ export class ReportsService {
       courses,
       attempts,
     ] = await Promise.all([
-      this.prisma.student.count(),
-      this.prisma.student.count({ where: { status: StudentStatus.ACTIVE } }),
-      this.prisma.student.count({ where: { status: StudentStatus.SUSPENDED } }),
+      this.prisma.student.count({ where: { student_code: { not: null } } }),
+      this.prisma.student.count({ where: { status: StudentStatus.ACTIVE, student_code: { not: null } } }),
+      this.prisma.student.count({ where: { status: StudentStatus.SUSPENDED, student_code: { not: null } } }),
       this.prisma.order.findMany({
         where: { status: OrderStatus.APPROVED },
         include: { product: true },

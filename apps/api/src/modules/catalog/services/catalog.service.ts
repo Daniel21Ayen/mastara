@@ -1183,6 +1183,40 @@ export class CatalogService {
     return this._mapToAdminCourse(course);
   }
 
+  /**
+   * Bumps the content_version of a course (ADM-03, DWN-06)
+   */
+  async bumpCourseContentVersion(adminId: string, courseId: string): Promise<AdminCourseDto> {
+    const updated = await this.prisma.course.update({
+      where: { id: courseId },
+      data: { content_version: { increment: 1 } },
+      include: {
+        semester: {
+          include: { program: { include: { university: true } } },
+        },
+      },
+    });
+
+    const uniCode = updated.semester.program.university.code;
+    await this.auditService.log({
+      actorId: adminId,
+      actorRole: Role.ADMIN,
+      action: "COURSE_VERSION_BUMPED",
+      targetType: "Course",
+      targetId: courseId,
+      metadata: {
+        target: `${updated.code} · ${uniCode}`,
+        newVersion: updated.content_version,
+      },
+    });
+
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
+    return this._mapToAdminCourse(updated);
+  }
+
   async updateAdminCourse(
     adminId: string,
     id: string,
@@ -1234,6 +1268,7 @@ export class CatalogService {
         ...(input.freeAccess !== undefined ? { free_access: input.freeAccess } : {}),
         is_promotional: input.freeTrialItems > 0,
         trial_expiry_days: input.freeTrialItems,
+        content_version: { increment: 1 },
         status:
           input.status === "DRAFT"
             ? PublicationStatus.DRAFT
@@ -1356,6 +1391,7 @@ export class CatalogService {
       promotional: course.is_promotional,
       freeTrialItems: course.trial_expiry_days ?? 0,
       status: course.status === PublicationStatus.DRAFT ? "DRAFT" : "PUBLISHED",
+      contentVersion: course.content_version ?? 1,
     };
   }
 }

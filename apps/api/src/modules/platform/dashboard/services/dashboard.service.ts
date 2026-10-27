@@ -26,6 +26,7 @@ export class DashboardService {
         where: {
           role: Role.STUDENT,
           status: StudentStatus.ACTIVE,
+          student_code: { not: null },
         },
       }),
       this.prisma.paymentProof.count({
