@@ -1,5 +1,11 @@
-// apps/mobile/src/modules/store/api/store.api.ts
-import type { Course, CreateOrderInput, Order } from '@mastara/contracts';
+import type {
+  ClaimOrderResponse,
+  Course,
+  CreateOrderInput,
+  Order,
+  PaymentSettings,
+  SubmitOrderWithLocalInput,
+} from '@mastara/contracts';
 import { ERROR_CODES, MAX_RECEIPT_BYTES } from '@mastara/domain';
 import type { AccessState, OrderStream, PaymentMethod, PricingConfig, StudentStream } from '@mastara/domain';
 
@@ -25,6 +31,12 @@ export interface StoreApi {
   getFullPackageCourses(programId: string, stream: OrderStream): Promise<Course[]>;
   /** The server recomputes the price; the amount on the returned order is the one charged. */
   createOrder(userId: string, input: CreateOrderInput, receiptBytes: number): Promise<Order>;
+  /** Submits an order and payment proof for an unregistered local student (REG-07..REG-14). */
+  submitOrderWithLocal(input: SubmitOrderWithLocalInput): Promise<Order>;
+  /** Claims an approved order, creating student record and issuing MS code and tokens (REG-10, REG-12). */
+  claimOrder(orderId: string, claimSecret: string): Promise<ClaimOrderResponse>;
+  /** Platform payment settings (PUR-08, ADM-03). */
+  getPaymentSettings(): Promise<PaymentSettings>;
   getOrders(userId: string): Promise<Order[]>;
 }
 
@@ -110,6 +122,20 @@ export const realStoreApi: StoreApi = {
     });
     return mapOrder(res);
   },
+  async submitOrderWithLocal(input) {
+    if (input.imageSizeBytes > MAX_RECEIPT_BYTES) throw new ApiError(ERROR_CODES.RECEIPT_TOO_LARGE);
+    const res = await httpClient.post<any>('/commerce/orders/unregistered', input);
+    return mapOrder(res);
+  },
+  async claimOrder(orderId, claimSecret) {
+    return httpClient.post<ClaimOrderResponse>(`/commerce/orders/${encodeURIComponent(orderId)}/claim`, {
+      orderId,
+      claimSecret,
+    });
+  },
+  async getPaymentSettings() {
+    return httpClient.get<PaymentSettings>('/commerce/orders/settings/payment');
+  },
   async getOrders(_userId) {
     const list = await httpClient.get<any[]>('/commerce/orders');
     return (list ?? []).map(mapOrder);
@@ -122,5 +148,6 @@ export const storeApi = cacheReads('store', realStoreApi, [
   'getAccounts',
   'getBuyableCourses',
   'getFullPackageCourses',
+  'getPaymentSettings',
   'getOrders',
 ]);

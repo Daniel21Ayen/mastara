@@ -12,6 +12,7 @@ import { AppText, ListRow, Screen, SegmentedControl, TopBar } from '@/shared/ui'
 import type { SegmentOption } from '@/shared/ui';
 
 import { ProductCard } from '../components/ProductCard';
+import { usePurchaseEligibility } from '../hooks/usePurchaseEligibility';
 import { usePricing } from '../hooks/useStoreData';
 import { useOrderDraft } from '../state/OrderDraftContext';
 
@@ -23,6 +24,7 @@ export function StoreHomeScreen() {
   const { profile } = useSession();
   const { setDraft } = useOrderDraft();
   const pricing = usePricing();
+  const { hasActiveBundle } = usePurchaseEligibility();
   const [stream, setStream] = useState<OrderStream>(profile?.stream ?? 'NATURAL');
 
   const streams: SegmentOption<OrderStream>[] = [
@@ -74,6 +76,8 @@ export function StoreHomeScreen() {
             subtitle={t('store.product.SINGLE.sub')}
             price={config.singlePrice}
             disabled={both}
+            locked={!hasActiveBundle}
+            lockedMessage={t('store.singleLocked')}
             onPress={() => buy('SINGLE')}
           />
 

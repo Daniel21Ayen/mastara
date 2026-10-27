@@ -13,6 +13,8 @@ export const STORAGE_KEYS = {
   deviceKey: 'mastara.deviceKey',
   entitlementKey: 'mastara.entitlementKey',
   lastSeenServerTime: 'mastara.lastSeenServerTime',
+  pendingClaims: 'mastara.pendingClaims',
+  pendingPassword: 'mastara.pendingPassword',
 } as const;
 
 type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

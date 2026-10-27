@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
 import { useI18n } from '@/core/i18n';
+import { useSession } from '@/core/session';
 import { createStyles, useTheme } from '@/core/theme';
 import { AppButton } from './AppButton';
 import { AppText } from './AppText';
@@ -28,8 +29,10 @@ export function LockedContentSheet({
   const theme = useTheme();
   const styles = useStyles();
   const { language } = useI18n();
+  const { user } = useSession();
 
   const isAmharic = language === 'am';
+  const hasActiveBundle = Boolean(user?.id && user.id.startsWith('MS'));
 
   const title = isAmharic ? 'የተቆለፈ ይዘት' : 'Locked Content';
   const description = isAmharic
@@ -43,7 +46,8 @@ export function LockedContentSheet({
 
   const handlePurchase = () => {
     onClose();
-    if (courseId) {
+    // PAY-02: bundles for a student with no bundle, bundles or single courses for a student with an active bundle
+    if (courseId && hasActiveBundle) {
       router.push({ pathname: '/store', params: { courseId } });
     } else {
       router.push('/store');

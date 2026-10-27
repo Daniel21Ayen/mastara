@@ -1,6 +1,8 @@
 // apps/mobile/src/modules/auth/components/RegisterForm.tsx
 import { registerSchema } from '@mastara/contracts';
 
+import { View } from 'react-native';
+
 import { useI18n } from '@/core/i18n';
 import { useTheme } from '@/core/theme';
 import { FormTextField } from '@/shared/forms';
@@ -22,6 +24,20 @@ export function RegisterForm() {
 
   return (
     <>
+      <View
+        style={{
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.primary,
+          borderWidth: 1,
+          borderRadius: theme.radius.md,
+          padding: theme.spacing.md,
+          marginVertical: theme.spacing.xs,
+        }}
+      >
+        <AppText variant="caption" color={theme.colors.text}>
+          {t('auth.localNotice')}
+        </AppText>
+      </View>
       <FormTextField form={form} name="name" label={t('auth.field.name')} autoCapitalize="words" />
       <FormTextField form={form} name="identifier" label={t('auth.field.identifier')} keyboardType="email-address" />
       <FormTextField form={form} name="password" label={t('auth.field.password')} secureTextEntry />

@@ -12,6 +12,7 @@ import { createStyles, useTheme } from '@/core/theme';
 import { AppButton, AppText, Badge, Screen, SelectableRow, TopBar } from '@/shared/ui';
 
 import { PriceSummary } from '../components/PriceSummary';
+import { usePurchaseEligibility } from '../hooks/usePurchaseEligibility';
 import { useBuyableCourses, usePricing } from '../hooks/useStoreData';
 import { useOrderDraft } from '../state/OrderDraftContext';
 
@@ -24,6 +25,7 @@ export function BuilderScreen() {
   const { profile } = useSession();
   const { draft, setDraft } = useOrderDraft();
   const pricing = usePricing();
+  const { hasActiveBundle, isCourseInBundle } = usePurchaseEligibility();
 
   const stream: StudentStream = draft?.stream === 'SOCIAL' ? 'SOCIAL' : 'NATURAL';
   const isSingle = draft?.type === 'SINGLE';
@@ -47,9 +49,11 @@ export function BuilderScreen() {
     return quoteOrder(config, isSingle ? { type: 'SINGLE' } : { type: 'BUNDLE', courseCount: selected.length });
   }, [config, selected.length, isSingle]);
 
-  const valid = quote?.ok === true && (!isSingle || selected.length === 1);
+  const singleAllowed = !isSingle || hasActiveBundle;
+  const valid = quote?.ok === true && (!isSingle || selected.length === 1) && singleAllowed;
 
   function toggle(courseId: string) {
+    if (isCourseInBundle(courseId)) return;
     setSelected((current) => {
       if (isSingle) return [courseId];
       return current.includes(courseId) ? current.filter((id) => id !== courseId) : [...current, courseId];
@@ -66,6 +70,23 @@ export function BuilderScreen() {
     <Screen scroll>
       <TopBar title={t(isSingle ? 'store.product.SINGLE' : 'store.product.BUNDLE')} onBack={() => router.back()} />
 
+      {isSingle && !hasActiveBundle ? (
+        <View
+          style={{
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.danger,
+            borderWidth: 1,
+            borderRadius: theme.radius.md,
+            padding: theme.spacing.md,
+            marginBottom: theme.spacing.md,
+          }}
+        >
+          <AppText bold color={theme.colors.danger}>
+            {t('store.singleLocked')}
+          </AppText>
+        </View>
+      ) : null}
+
       {bundle ? (
         <AppText muted>
           {isSingle ? t('builder.help.SINGLE') : t('builder.help.BUNDLE', { min: bundle.minCourses, max: bundle.maxCourses })}
@@ -77,20 +98,31 @@ export function BuilderScreen() {
 
       <View style={styles.list}>
         {(courses.data ?? []).map((item) => {
+          const inBundle = isCourseInBundle(item.course.id);
           const owned = item.access === 'PAID' && item.daysLeft !== undefined;
+          const isRowDisabled = inBundle || !item.buyable || (isSingle && !hasActiveBundle);
+
           return (
             <SelectableRow
               key={item.course.id}
               title={item.course.title}
               description={
-                owned
+                inBundle
+                  ? t('store.included')
+                  : owned
                   ? t(item.buyable ? 'builder.renew' : 'builder.owned', { n: item.daysLeft ?? 0 })
                   : item.course.code
               }
               selected={selected.includes(item.course.id)}
-              disabled={!item.buyable}
+              disabled={isRowDisabled}
               onToggle={() => toggle(item.course.id)}
-              trailing={owned ? <Badge label={t('access.paid')} /> : undefined}
+              trailing={
+                inBundle ? (
+                  <Badge label={t('store.included')} />
+                ) : owned ? (
+                  <Badge label={t('access.paid')} />
+                ) : undefined
+              }
             />
           );
         })}

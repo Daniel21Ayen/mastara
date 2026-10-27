@@ -22,6 +22,7 @@ import { pushNotificationService } from '@/modules/notifications/services/pushNo
 import { storeApi } from '../api/store.api';
 import { PaymentNotificationBanner } from '../components/PaymentNotificationBanner';
 import type { PaymentBannerProps } from '../components/PaymentNotificationBanner';
+import { processPendingClaims } from '../services/claimService';
 
 interface PaymentApprovalContextValue {
   isPolling: boolean;
@@ -40,7 +41,7 @@ export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { t } = useI18n();
   const online = useOnline();
-  const { user, profile, saveProfile } = useSession();
+  const { user, profile, saveProfile, updateUser } = useSession();
 
   const [isPolling, setIsPolling] = useState(false);
   const [lastApprovedOrder, setLastApprovedOrder] = useState<Order | null>(null);
@@ -132,8 +133,43 @@ export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
 
     try {
       setIsPolling(true);
-      const orders = await storeApi.getOrders(user.id);
-      let hasPending = false;
+
+      // Check and claim any pending offline-order approvals (REG-10, REG-12, REG-14)
+      const { claimed, pendingCount } = await processPendingClaims((result) => {
+        updateUser({ ...user, id: result.studentCode });
+      });
+
+      if (claimed.length > 0) {
+        await invalidateCache('my-courses');
+        await invalidateCache('store');
+        await invalidateCache('notifications');
+
+        for (const claimItem of claimed) {
+          const dummyOrder: Order = {
+            id: claimItem.orderId,
+            type: 'BUNDLE',
+            stream: 'NATURAL',
+            courseIds: profile?.courseIds || [],
+            method: 'CBE_MOBILE',
+            reference: '',
+            amount: 0,
+            status: 'APPROVED',
+            createdAt: new Date().toISOString(),
+            durationDays: 120,
+          };
+          setLastApprovedOrder(dummyOrder);
+          triggerApprovalBanner(dummyOrder);
+          listenersRef.current.forEach((fn) => fn(dummyOrder));
+        }
+      }
+
+      let orders: Order[] = [];
+      try {
+        orders = await storeApi.getOrders(user.id);
+      } catch {
+        orders = [];
+      }
+      let hasPending = pendingCount > 0;
 
       for (const order of orders) {
         const prevStatus = knownStatusesRef.current.get(order.id);
@@ -189,7 +225,7 @@ export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsPolling(false);
     }
-  }, [user, online, profile, saveProfile, triggerApprovalBanner, triggerRejectionBanner]);
+  }, [user, online, profile, saveProfile, updateUser, triggerApprovalBanner, triggerRejectionBanner]);
 
   // Initial check and periodic polling
   useEffect(() => {

@@ -4,4 +4,5 @@ export * from './cache';
 export * from './database';
 export * from './DatabaseProvider';
 export * from './maintenance';
+export * from './userMigration';
 export * from './userScope';

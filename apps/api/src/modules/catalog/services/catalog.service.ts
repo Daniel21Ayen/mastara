@@ -70,6 +70,7 @@ export interface CourseResponse {
   isPromotional: boolean;
   trialExpiryDays: number | null;
   sortOrder: number;
+  contentVersion: number;
 }
 
 @Injectable()
@@ -227,6 +228,7 @@ export class CatalogService {
         is_promotional: true,
         trial_expiry_days: true,
         sort_order: true,
+        content_version: true,
       },
     });
 
@@ -243,6 +245,7 @@ export class CatalogService {
       isPromotional: c.is_promotional,
       trialExpiryDays: c.trial_expiry_days,
       sortOrder: c.sort_order,
+      contentVersion: c.content_version,
     }));
   }
 
@@ -261,6 +264,7 @@ export class CatalogService {
         is_promotional: true,
         trial_expiry_days: true,
         sort_order: true,
+        content_version: true,
       },
     });
 
@@ -281,6 +285,7 @@ export class CatalogService {
       isPromotional: c.is_promotional,
       trialExpiryDays: c.trial_expiry_days,
       sortOrder: c.sort_order,
+      contentVersion: c.content_version,
     };
   }
 

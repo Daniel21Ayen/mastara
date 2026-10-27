@@ -77,6 +77,7 @@ export const adminCourseSchema = z.object({
   /** How many items of this course unpaid students can open. Set when the course is saved. */
   freeTrialItems: z.number().int().min(0),
   status,
+  contentVersion: z.number().int().default(1),
 });
 
 export const courseListQuerySchema = z.object({

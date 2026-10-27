@@ -203,16 +203,20 @@ export const authApi: AuthApi = {
     const localAccountId =
       typeof globalThis.crypto?.randomUUID === 'function'
         ? globalThis.crypto.randomUUID()
-        : `loc-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          });
 
-    const userId = `u-${localAccountId}`;
+    const userId = localAccountId;
     const user: User = {
       id: userId,
       name: input.name.trim(),
       identifier: input.identifier.trim(),
     };
 
-    // Stored with explicit LOCAL_ONLY state. Zero network requests made.
+    // Stored with explicit LOCAL_ONLY state. Zero network requests made (REG-01, REG-02).
     const record: PendingStudentSync = {
       userId,
       localAccountId,
@@ -224,6 +228,7 @@ export const authApi: AuthApi = {
     };
 
     await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, record);
+    await secureStorage.setString(STORAGE_KEYS.pendingPassword, input.password);
 
     const registry =
       (await secureStorage.getJson<Record<string, PendingStudentSync>>(STORAGE_KEYS.offlineUsers)) || {};

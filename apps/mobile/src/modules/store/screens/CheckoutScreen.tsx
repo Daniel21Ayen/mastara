@@ -1,6 +1,5 @@
-// apps/mobile/src/modules/store/screens/CheckoutScreen.tsx
 import { referenceSchemaFor } from '@mastara/contracts';
-import { ERROR_CODES, PAYMENT_METHODS, quoteOrder } from '@mastara/domain';
+import { ERROR_CODES, PAYMENT_METHODS, quoteOrder, generateClaimSecret, hashClaimSecret } from '@mastara/domain';
 import type { PaymentMethod } from '@mastara/domain';
 import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
@@ -25,6 +24,7 @@ import { PriceSummary } from '../components/PriceSummary';
 import { ReceiptPicker } from '../components/ReceiptPicker';
 import { useAccounts, useFullCoverage, usePricing } from '../hooks/useStoreData';
 import { useReceipt } from '../hooks/useReceipt';
+import { addPendingClaim } from '../services/claimService';
 import { useOrderDraft } from '../state/OrderDraftContext';
 
 /** Payment instructions, receipt screenshot, reference number and submit. */
@@ -93,109 +93,89 @@ export function CheckoutScreen() {
         return;
       }
 
-      let activeUserId = user?.id;
+      const pendingSync = await secureStorage.getJson<any>(STORAGE_KEYS.pendingRemoteSync);
+      const isLocalAccount = !user?.id || !user.id.startsWith('MS') || pendingSync?.accountState === 'LOCAL_ONLY';
 
-      // Lazy remote registration: if student was browsing as a guest or registered offline,
-      // register their user account, bind their phone device ID, and sync profile now that they are purchasing.
-      let pendingSync = await secureStorage.getJson<{ name: string; identifier: string; password: string }>(
-        STORAGE_KEYS.pendingRemoteSync,
-      );
+      if (isLocalAccount) {
+        // Unregistered local student: generate claim secret and submit to public unauthenticated endpoint (REG-07..REG-14)
+        const claimSecret = generateClaimSecret();
+        const claimSecretHash = hashClaimSecret(claimSecret);
 
-      if (!pendingSync && !user) {
-        pendingSync = {
-          name: guestName.trim(),
-          identifier: guestIdentifier.trim(),
-          password: guestPassword,
-        };
-        await secureStorage.setJson(STORAGE_KEYS.pendingRemoteSync, pendingSync);
-      }
+        const localAccountId =
+          pendingSync?.localAccountId ||
+          (user?.id && !user.id.startsWith('u-') ? user.id : user?.id?.replace('u-', '')) ||
+          '10000000-0000-4000-8000-000000000001';
 
-      if (pendingSync) {
-        let authRes;
-        try {
-          authRes = await realAuthApi.register(pendingSync);
-        } catch (err: any) {
-          // If phone number already registered under another account, avoid dead end
-          if (
-            err?.status === 409 ||
-            err?.code === 'PHONE_ALREADY_REGISTERED' ||
-            err?.errorCode === 'PHONE_ALREADY_REGISTERED' ||
-            err?.code === 'PHONE_COLLISION' ||
-            err?.message?.includes('already registered') ||
-            err?.message?.includes('already exists')
-          ) {
-            setPhoneCollision(true);
-            setSubmitting(false);
-            return;
-          }
+        const fullName = user?.name || pendingSync?.name || guestName.trim();
+        const identifier = user?.identifier || pendingSync?.identifier || guestIdentifier.trim();
+        const password =
+          pendingSync?.password ||
+          (await secureStorage.getString(STORAGE_KEYS.pendingPassword)) ||
+          guestPassword;
 
-          authRes = await realAuthApi.login({
-            identifier: pendingSync.identifier,
-            password: pendingSync.password || '',
-          });
-        }
-
-        if (authRes?.token) {
-          await httpClient.setToken(authRes.token);
-        }
-
-        activeUserId = authRes.user.id;
-        updateUser(authRes.user);
-
-        // Bind phone hardware to database
-        const deviceId = await getDeviceId();
-        const deviceName = getDeviceName();
-        await realDeviceApi.registerDevice({
-          userId: authRes.user.id,
-          deviceId,
-          deviceName,
-        });
-
-        // Sync academic profile to database upon purchase
-        const profileToSync = profile || (pendingSync as any).profile;
-        if (profileToSync) {
-          await realProfileApi.saveProfile(authRes.user.id, profileToSync);
-        }
-
-        // Mark as purchased in offline registry
-        const registry =
-          (await secureStorage.getJson<Record<string, any>>(STORAGE_KEYS.offlineUsers)) || {};
-        const norm = pendingSync.identifier.trim().toLowerCase();
-        if (registry[norm]) {
-          registry[norm].purchased = true;
-          registry[norm].userId = authRes.user.id;
-          if (profileToSync) registry[norm].profile = profileToSync;
-          await secureStorage.setJson(STORAGE_KEYS.offlineUsers, registry);
-        }
-
-        await secureStorage.remove(STORAGE_KEYS.pendingRemoteSync);
-      }
-
-      if (!activeUserId) {
-        setSubmitError('error.generic');
-        setSubmitting(false);
-        return;
-      }
-
-      await storeApi.createOrder(
-        activeUserId,
-        {
+        const order = await storeApi.submitOrderWithLocal({
+          localAccountId,
+          fullName,
+          identifier,
+          password: password || 'DefaultPass123',
+          claimSecretHash,
           type: draft.type,
-          stream: draft.stream,
+          stream: draft.stream === 'BOTH' ? 'NATURAL' : draft.stream,
           courseIds: draft.courseIds,
           programId: profile?.programId,
           method,
-          reference,
-        },
-        receipt.receipt.bytes,
-      );
-      setDraft(null);
-      router.replace('/store/orders' as Href);
-    } catch (error) {
-      if (isApiError(error, ERROR_CODES.TRANSACTION_REFERENCE_DUPLICATE)) setSubmitError('checkout.duplicate');
-      else if (isApiError(error, ERROR_CODES.RECEIPT_TOO_LARGE)) setSubmitError('checkout.tooLarge');
-      else if (isApiError(error, ERROR_CODES.NETWORK_OFFLINE)) setSubmitError('error.offline');
-      else setSubmitError('error.generic');
+          reference: reference.trim(),
+          imageKey: receipt.receipt.uri,
+          imageSizeBytes: receipt.receipt.bytes,
+          imageMime: 'image/jpeg',
+        });
+
+        // Store claim secret locally for offline claim protocol (REG-10, REG-14)
+        await addPendingClaim({
+          orderId: order.id,
+          reference: reference.trim(),
+          claimSecret,
+          localAccountId,
+          submittedAt: Date.now(),
+        });
+
+        setDraft(null);
+        router.replace('/store/orders' as Href);
+      } else {
+        // Authenticated remote student
+        await storeApi.createOrder(
+          user.id,
+          {
+            type: draft.type,
+            stream: draft.stream,
+            courseIds: draft.courseIds,
+            programId: profile?.programId,
+            method,
+            reference,
+          },
+          receipt.receipt.bytes,
+        );
+        setDraft(null);
+        router.replace('/store/orders' as Href);
+      }
+    } catch (error: any) {
+      if (
+        error?.code === 'ACCOUNT_EXISTS_LOGIN_REQUIRED' ||
+        error?.errorCode === 'ACCOUNT_EXISTS_LOGIN_REQUIRED' ||
+        error?.status === 409 ||
+        error?.message?.includes('already exists') ||
+        error?.message?.includes('ACCOUNT_EXISTS')
+      ) {
+        setPhoneCollision(true);
+      } else if (isApiError(error, ERROR_CODES.TRANSACTION_REFERENCE_DUPLICATE)) {
+        setSubmitError('checkout.duplicate');
+      } else if (isApiError(error, ERROR_CODES.RECEIPT_TOO_LARGE)) {
+        setSubmitError('checkout.tooLarge');
+      } else if (isApiError(error, ERROR_CODES.NETWORK_OFFLINE)) {
+        setSubmitError('error.offline');
+      } else {
+        setSubmitError('error.generic');
+      }
     } finally {
       setSubmitting(false);
     }

@@ -31,6 +31,7 @@ export const courseSchema = z.object({
   /** Amharic title when known. `title` stays the English text so older code keeps working. */
   titleAm: z.string().optional(),
   stream: z.enum(STREAMS),
+  contentVersion: z.number().int().optional(),
 });
 
 export type University = z.infer<typeof universitySchema>;
