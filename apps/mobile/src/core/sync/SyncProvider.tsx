@@ -15,20 +15,18 @@ const isNative =
   (navigator as any).product === 'ReactNative';
 
 let AppState: typeof import('react-native').AppState | null = null;
-let InteractionManager: typeof import('react-native').InteractionManager | null = null;
 if (isNative) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     AppState = require('react-native').AppState;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    InteractionManager = require('react-native').InteractionManager;
   } catch {
     AppState = null;
-    InteractionManager = null;
   }
 }
 
 const DEBOUNCE_MS = 500;
+const STARTUP_SYNC_DELAY_MS = 800;
 const BASE_RETRY_MS = 1000;
 const MAX_BACKOFF_MS = 60_000;
 const FOREGROUND_THROTTLE_MS = 3 * 60_000; // 3 minutes
@@ -188,19 +186,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         })
       : null;
 
-    // Startup optimization: run catalog sync after first screen is drawn, never before it
+    // Startup: let the first screen draw, then sync.
     let startupTimer: ReturnType<typeof setTimeout> | null = null;
-    if (online) {
-      if (InteractionManager?.runAfterInteractions) {
-        InteractionManager.runAfterInteractions(() => {
-          handleTrigger(false);
-        });
-      } else {
-        startupTimer = setTimeout(() => {
-          handleTrigger(false);
-        }, 500);
-      }
-    }
+    if (online) startupTimer = setTimeout(() => handleTrigger(false), STARTUP_SYNC_DELAY_MS);
 
     return () => {
       unsubscribeNet();
@@ -210,16 +198,6 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       if (retryTimer.current) clearTimeout(retryTimer.current);
     };
   }, [user, online, syncNow]);
-
-  // Sync catalog after login or user change, deferred so screen renders first
-  useEffect(() => {
-    if (user && online) {
-      const timer = setTimeout(() => {
-        void syncCatalog(user.id, true).catch(() => undefined);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [user?.id, online]);
 
   const value = useMemo(
     () => ({ online, pending, rejected, syncing, lastSyncAt, syncNow, syncCatalogNow }),

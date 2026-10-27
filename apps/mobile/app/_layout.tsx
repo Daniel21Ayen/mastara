@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreenNative from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { LogBox, View } from 'react-native';
 
 LogBox.ignoreLogs([
@@ -45,14 +45,25 @@ function AppShell() {
   );
 }
 
+/** Fonts are bundled, so loading should take well under a second. After this long the app starts with system fonts. */
+const FONT_TIMEOUT_MS = 3000;
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
+  const [fontTimedOut, setFontTimedOut] = useState(false);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) void SplashScreenNative.hideAsync();
-  }, [fontsLoaded, fontError]);
+    const timer = setTimeout(() => setFontTimedOut(true), FONT_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (!fontsLoaded && !fontError) return null;
+  const fontsSettled = fontsLoaded || Boolean(fontError) || fontTimedOut;
+
+  useEffect(() => {
+    if (fontsSettled) void SplashScreenNative.hideAsync();
+  }, [fontsSettled]);
+
+  if (!fontsSettled) return null;
 
   return (
     <ThemeProvider>

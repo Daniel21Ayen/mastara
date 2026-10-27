@@ -2,68 +2,77 @@
 import type { Course } from '@mastara/contracts';
 import type { StudentStream } from '@mastara/domain';
 
-import { cacheReads } from '@/core/db';
-import { httpClient } from '@/core/network';
-
-import { getLocalCatalogCourses, parseCatalogMeta } from '@/core/sync/catalogSync';
+import { httpClient, isApiBreakerOpen, isOnline } from '@/core/network';
+import { getLocalCatalogCoursesForScope, parseCatalogMeta } from '@/core/sync/catalogSync';
 
 export interface CoursesApi {
   /** Courses of a semester for a stream: that stream's courses plus the COMMON ones. */
   getCourses(semesterId: string, stream: StudentStream): Promise<Course[]>;
 }
 
+type LocalizedTitle = { en?: string; am?: string };
+
+function splitTitle(raw: string): { en: string; am?: string } {
+  if (raw.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw) as LocalizedTitle;
+      return { en: parsed.en || parsed.am || raw, am: parsed.am || undefined };
+    } catch {
+      // not JSON: use the text as it is
+    }
+  }
+  return { en: raw };
+}
+
+/**
+ * Local first. The catalog stored on the phone (bundled seed, then every sync) answers immediately with no loading
+ * state and no network (SRS 5.3). The server is asked only when the phone has nothing for this semester, and only
+ * briefly, so a slow or unreachable server can never hold the course list hostage.
+ */
 export const realCoursesApi: CoursesApi = {
   async getCourses(semesterId, stream) {
-    try {
-      const list = await httpClient.get<Course[]>(
-        `/catalog/courses?semesterId=${encodeURIComponent(semesterId)}&stream=${encodeURIComponent(stream)}`,
-      );
-      return (list ?? []).map((course: any) => ({
-        id: course.id,
-        semesterId: course.semesterId,
-        code: course.code,
-        title: course.title,
-        stream: course.stream,
-        isPromotional: course.isPromotional,
-        freeTrialItems: course.freeTrialItems,
-      }));
-    } catch (err) {
-      // Fall back to local catalog if remote API is down or unreachable
-      const localCourses = await getLocalCatalogCourses();
-      if (localCourses && localCourses.length > 0) {
-        return localCourses.map((c) => {
-          let title = { en: c.title, am: c.title };
-          if (c.title && c.title.startsWith('{')) {
-            try {
-              const parsed = JSON.parse(c.title);
-              title = { en: parsed.en || c.title, am: parsed.am || parsed.en || c.title };
-            } catch {
-              // ignore
-            }
-          }
-          const meta = parseCatalogMeta<{
-            semesterId?: string;
-            code?: string;
-            stream?: StudentStream;
-            isPromotional?: boolean;
-            freeTrialItems?: number;
-          }>(c.meta);
+    const local = await getLocalCatalogCoursesForScope(semesterId, stream);
+    if (local.length > 0) {
+      return local.map((row) => {
+        const title = splitTitle(row.title);
+        const meta = parseCatalogMeta<{ code?: string; stream?: StudentStream | 'COMMON' }>(row.meta);
+        return {
+          id: row.id,
+          semesterId,
+          code: meta?.code ?? '',
+          title: title.en,
+          titleAm: title.am,
+          stream: (meta?.stream ?? stream) as Course['stream'],
+          isPromotional: Boolean(row.is_free),
+        } as Course;
+      });
+    }
 
-          return {
-            id: c.id,
-            semesterId: meta?.semesterId ?? semesterId,
-            code: meta?.code ?? '',
-            title,
-            stream: (meta?.stream ?? stream) as StudentStream,
-            isPromotional: meta?.isPromotional ?? false,
-            freeTrialItems: meta?.freeTrialItems ?? 0,
-          };
-        });
-      }
+    if (!isOnline() || isApiBreakerOpen()) return [];
+
+    try {
+      const list = await httpClient.get<Array<Record<string, any>>>(
+        `/catalog/courses?semesterId=${encodeURIComponent(semesterId)}&stream=${encodeURIComponent(stream)}`,
+        { timeoutMs: 4000, retries: 0 },
+      );
+      return (list ?? []).map(
+        (course) =>
+          ({
+            id: course.id,
+            semesterId: course.semesterId,
+            code: course.code,
+            title: course.titleEn ?? course.title,
+            titleAm: course.titleAm || undefined,
+            stream: course.stream,
+            isPromotional: course.isPromotional,
+            freeTrialItems: course.freeTrialItems,
+          }) as Course,
+      );
+    } catch {
       return [];
     }
   },
 };
 
-/** Reads are saved in SQLite cache and used when the phone is offline. */
-export const coursesApi = cacheReads('courses', realCoursesApi, ['getCourses']);
+/** Local reads are already instant, so they are not copied into a second cache that could go stale. */
+export const coursesApi: CoursesApi = realCoursesApi;

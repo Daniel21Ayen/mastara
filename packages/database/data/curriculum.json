@@ -1,0 +1,289 @@
+{
+  "_comment": "Single source of truth for the academic catalog. Read by packages/database/src/seed-reference.ts (PostgreSQL) and scripts/generate-seed-catalog.mjs (bundled mobile seed). Course codes are Mastara codes. Have an academic admin check titles, semester placement and Amharic wording against each university's current freshman curriculum before launch.",
+  "idNamespace": "6f1d2c3a-5b7e-4a90-8c11-3d9e2f4a7b60",
+  "universities": [
+    {
+      "code": "AAU",
+      "nameEn": "Addis Ababa University",
+      "nameAm": "አዲስ አበባ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "AASTU",
+      "nameEn": "Addis Ababa Science and Technology University",
+      "nameAm": "አዲስ አበባ ሳይንስና ቴክኖሎጂ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "BDU",
+      "nameEn": "Bahir Dar University",
+      "nameAm": "ባሕር ዳር ዩኒቨርሲቲ"
+    },
+    {
+      "code": "JU",
+      "nameEn": "Jimma University",
+      "nameAm": "ጅማ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "MU",
+      "nameEn": "Mekelle University",
+      "nameAm": "መቐለ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "UoG",
+      "nameEn": "University of Gondar",
+      "nameAm": "ጎንደር ዩኒቨርሲቲ"
+    },
+    {
+      "code": "HU",
+      "nameEn": "Hawassa University",
+      "nameAm": "ሀዋሳ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "HRU",
+      "nameEn": "Haramaya University",
+      "nameAm": "ሀረማያ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "AMU",
+      "nameEn": "Arba Minch University",
+      "nameAm": "አርባ ምንጭ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "ASTU",
+      "nameEn": "Adama Science and Technology University",
+      "nameAm": "አዳማ ሳይንስና ቴክኖሎጂ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "DBU",
+      "nameEn": "Debre Berhan University",
+      "nameAm": "ደብረ ብርሃን ዩኒቨርሲቲ"
+    },
+    {
+      "code": "DMU",
+      "nameEn": "Debre Markos University",
+      "nameAm": "ደብረ ማርቆስ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "WKU",
+      "nameEn": "Wolkite University",
+      "nameAm": "ወልቂጤ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "WU",
+      "nameEn": "Wollo University",
+      "nameAm": "ወሎ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "DDU",
+      "nameEn": "Dire Dawa University",
+      "nameAm": "ድሬዳዋ ዩኒቨርሲቲ"
+    },
+    {
+      "code": "INU",
+      "nameEn": "Injibara University",
+      "nameAm": "እንጅባራ ዩኒቨርሲቲ"
+    }
+  ],
+  "programs": [
+    {
+      "code": "FRESH",
+      "nameEn": "Freshman Program",
+      "nameAm": "የመጀመሪያ ዓመት (ፍሬሽማን) ፕሮግራም"
+    }
+  ],
+  "semesters": [
+    {
+      "number": 1,
+      "code": "S1",
+      "nameEn": "Semester 1",
+      "nameAm": "ሴሚስተር 1"
+    },
+    {
+      "number": 2,
+      "code": "S2",
+      "nameEn": "Semester 2",
+      "nameAm": "ሴሚስተር 2"
+    }
+  ],
+  "courses": [
+    {
+      "semester": 1,
+      "stream": "COMMON",
+      "code": "ENG1011",
+      "titleEn": "Communicative English Language Skills I",
+      "titleAm": "የመግባቢያ እንግሊዝኛ ክህሎት I",
+      "accent": "emerald",
+      "icon": "book",
+      "promotional": true
+    },
+    {
+      "semester": 1,
+      "stream": "COMMON",
+      "code": "LOG1011",
+      "titleEn": "Logic and Critical Thinking",
+      "titleAm": "ሎጂክና ሂሳዊ አስተሳሰብ",
+      "accent": "violet",
+      "icon": "brain",
+      "promotional": true
+    },
+    {
+      "semester": 1,
+      "stream": "COMMON",
+      "code": "CIV1011",
+      "titleEn": "Moral and Civic Education",
+      "titleAm": "ሞራልና ሲቪክ ትምህርት",
+      "accent": "orange",
+      "icon": "shield",
+      "promotional": false
+    },
+    {
+      "semester": 1,
+      "stream": "NATURAL",
+      "code": "MAT1011",
+      "titleEn": "Mathematics for Natural Sciences",
+      "titleAm": "የተፈጥሮ ሳይንስ ሂሳብ",
+      "accent": "blue",
+      "icon": "calculate",
+      "promotional": true
+    },
+    {
+      "semester": 1,
+      "stream": "NATURAL",
+      "code": "PHY1011",
+      "titleEn": "General Physics",
+      "titleAm": "አጠቃላይ ፊዚክስ",
+      "accent": "cyan",
+      "icon": "atom",
+      "promotional": false
+    },
+    {
+      "semester": 1,
+      "stream": "NATURAL",
+      "code": "CHE1011",
+      "titleEn": "General Chemistry",
+      "titleAm": "አጠቃላይ ኬሚስትሪ",
+      "accent": "lime",
+      "icon": "flask",
+      "promotional": false
+    },
+    {
+      "semester": 1,
+      "stream": "SOCIAL",
+      "code": "GEO1011",
+      "titleEn": "Geography of Ethiopia and the Horn",
+      "titleAm": "የኢትዮጵያና የቀንድ አፍሪካ ጂኦግራፊ",
+      "accent": "lime",
+      "icon": "globe",
+      "promotional": false
+    },
+    {
+      "semester": 1,
+      "stream": "SOCIAL",
+      "code": "HIS1011",
+      "titleEn": "History of Ethiopia and the Horn",
+      "titleAm": "የኢትዮጵያና የቀንድ አፍሪካ ታሪክ",
+      "accent": "amber",
+      "icon": "landmark",
+      "promotional": false
+    },
+    {
+      "semester": 1,
+      "stream": "SOCIAL",
+      "code": "ECO1011",
+      "titleEn": "Introduction to Economics",
+      "titleAm": "የኢኮኖሚክስ መግቢያ",
+      "accent": "fuchsia",
+      "icon": "chart",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "COMMON",
+      "code": "ENG1012",
+      "titleEn": "Communicative English Language Skills II",
+      "titleAm": "የመግባቢያ እንግሊዝኛ ክህሎት II",
+      "accent": "emerald",
+      "icon": "book",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "COMMON",
+      "code": "ANT1012",
+      "titleEn": "Social Anthropology",
+      "titleAm": "ማህበራዊ አንትሮፖሎጂ",
+      "accent": "amber",
+      "icon": "users",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "COMMON",
+      "code": "FIT1012",
+      "titleEn": "Physical Fitness",
+      "titleAm": "አካላዊ ብቃት",
+      "accent": "orange",
+      "icon": "activity",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "NATURAL",
+      "code": "MAT1012",
+      "titleEn": "Calculus for Natural Sciences",
+      "titleAm": "ካልኩለስ ለተፈጥሮ ሳይንስ",
+      "accent": "blue",
+      "icon": "calculate",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "NATURAL",
+      "code": "BIO1012",
+      "titleEn": "General Biology",
+      "titleAm": "አጠቃላይ ባዮሎጂ",
+      "accent": "lime",
+      "icon": "leaf",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "NATURAL",
+      "code": "PHY1012",
+      "titleEn": "Mechanics and Heat",
+      "titleAm": "ሜካኒክስና ሙቀት",
+      "accent": "cyan",
+      "icon": "atom",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "SOCIAL",
+      "code": "MAT1022",
+      "titleEn": "Mathematics for Social Sciences",
+      "titleAm": "ሂሳብ ለማህበራዊ ሳይንስ",
+      "accent": "blue",
+      "icon": "calculate",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "SOCIAL",
+      "code": "PSY1012",
+      "titleEn": "General Psychology",
+      "titleAm": "አጠቃላይ ሳይኮሎጂ",
+      "accent": "violet",
+      "icon": "brain",
+      "promotional": false
+    },
+    {
+      "semester": 2,
+      "stream": "SOCIAL",
+      "code": "GEO1012",
+      "titleEn": "Introduction to Human Geography",
+      "titleAm": "የሰው ልጅ ጂኦግራፊ መግቢያ",
+      "accent": "lime",
+      "icon": "globe",
+      "promotional": false
+    }
+  ]
+}

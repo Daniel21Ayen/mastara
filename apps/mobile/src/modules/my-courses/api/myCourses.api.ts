@@ -12,7 +12,7 @@ export interface MyCoursesApi {
 
 export const realMyCoursesApi: MyCoursesApi = {
   async getMyCourses(courseIds) {
-    const list = await httpClient.get<MyCourse[]>('/learning/my-courses');
+    const list = await httpClient.get<MyCourse[]>('/learning/my-courses', { timeoutMs: 5000, retries: 0 });
     if (courseIds && courseIds.length > 0) {
       const map = new Map((list ?? []).map((item) => [item.course.id, item]));
       const filtered = courseIds.flatMap((id) => {

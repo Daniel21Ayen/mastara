@@ -23,28 +23,54 @@ const ThemeContext = createContext<ThemeValue | null>(null);
 const isPreference = (value: string | null): value is ThemePreference =>
   value === 'system' || value === 'light' || value === 'dark';
 
+/** First launch: light (the brand look). The student flips the Dark mode switch in Profile; the choice is remembered. */
+const DEFAULT_PREFERENCE: ThemePreference = 'light';
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [preference, setPreferenceState] = useState<ThemePreference>('light');
+  const [preference, setPreferenceState] = useState<ThemePreference>(DEFAULT_PREFERENCE);
+  const [loaded, setLoaded] = useState(false);
+  const systemScheme = useColorScheme();
+
+  // Restore the saved choice once (a few milliseconds from secure storage).
+  useEffect(() => {
+    let cancelled = false;
+    secureStorage
+      .getString(STORAGE_KEYS.theme)
+      .then((saved) => {
+        if (!cancelled && isPreference(saved)) setPreferenceState(saved);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const setPreference = useCallback((next: ThemePreference) => {
     setPreferenceState(next);
+    void secureStorage.setString(STORAGE_KEYS.theme, next).catch(() => undefined);
   }, []);
 
-  // Consistently locked to the unified 4-colour brand palette
-  const scheme: ColorScheme = 'light';
+  const scheme: ColorScheme = preference === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : preference;
 
+  // Keep native pieces (keyboard, alerts, date pickers) in step with the app theme.
   useEffect(() => {
     try {
-      Appearance.setColorScheme('light');
+      Appearance.setColorScheme(preference === 'system' ? 'unspecified' : preference);
     } catch {
-      // Ignored if device ignores manual override
+      // Some devices ignore the manual override; the app theme still switches.
     }
-  }, []);
+  }, [preference]);
 
   const value = useMemo(
     () => ({ theme: themes[scheme], scheme, preference, setPreference }),
     [scheme, preference, setPreference],
   );
+
+  // Hold the first frame until the saved choice is known, so a dark-mode student never sees a white flash.
+  if (!loaded) return null;
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
@@ -60,7 +86,7 @@ export function useTheme(): Theme {
   return useThemeContext().theme;
 }
 
-/** For the light / dark switch: what is chosen, what is showing, and how to change it. */
+/** For the dark-mode switch: what is chosen, what is showing, and how to change it. */
 export function useThemePreference(): Omit<ThemeValue, 'theme'> {
   const { scheme, preference, setPreference } = useThemeContext();
   return { scheme, preference, setPreference };

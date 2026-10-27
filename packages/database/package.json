@@ -14,9 +14,11 @@
     "migrate:dev": "prisma migrate dev --schema=prisma/schema",
     "migrate:deploy": "prisma migrate deploy --schema=prisma/schema",
     "db:push": "prisma db push --schema=prisma/schema",
-    "db:seed": "ts-node src/seed.ts",
+    "db:seed": "ts-node src/seed-reference.ts",
     "build": "tsc -b",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "db:seed:reference": "ts-node src/seed-reference.ts",
+    "db:seed:demo": "ts-node src/seed.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.0",

@@ -122,7 +122,7 @@ export function MyCoursesScreen() {
         renderItem={renderItem}
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
-        ListFooterComponent={footer}
+        ListFooterComponent={courses.total > 0 ? footer : null}
         ItemSeparatorComponent={renderSeparator}
         contentContainerStyle={styles.list}
         keyboardShouldPersistTaps="handled"

@@ -14,9 +14,44 @@ export interface RequestOptions extends Omit<RequestInit, 'body' | 'method'> {
   retryDelayMs?: number;
 }
 
-const DEFAULT_TIMEOUT_MS = 6000;
-const DEFAULT_RETRY_DELAY_MS = 500;
-const MAX_RETRY_BACKOFF_MS = 5000;
+const DEFAULT_TIMEOUT_MS = 8000;
+const DEFAULT_RETRY_DELAY_MS = 400;
+const MAX_RETRY_BACKOFF_MS = 2000;
+/** One quick retry for reads. Longer waits happen in the background sync, never in front of a screen. */
+const DEFAULT_GET_RETRIES = 1;
+
+/**
+ * Circuit breaker. When the server cannot be reached (timeout, refused, DNS), every later request fails at once
+ * for a short time instead of each one waiting out its own timeout. Before this, three screens loading together
+ * against a wrong or unreachable API address meant a minute of spinners.
+ */
+const BREAKER_OPEN_MS = 20_000;
+const BREAKER_THRESHOLD = 2;
+let consecutiveNetworkFailures = 0;
+let breakerOpenUntil = 0;
+
+function recordNetworkFailure(): void {
+  consecutiveNetworkFailures += 1;
+  if (consecutiveNetworkFailures >= BREAKER_THRESHOLD) {
+    breakerOpenUntil = Date.now() + BREAKER_OPEN_MS;
+  }
+}
+
+function recordNetworkSuccess(): void {
+  consecutiveNetworkFailures = 0;
+  breakerOpenUntil = 0;
+}
+
+/** True while requests are being refused locally because the server was just unreachable. */
+export function isApiBreakerOpen(): boolean {
+  return Date.now() < breakerOpenUntil;
+}
+
+/** Lets a pull-to-refresh or a "Try again" button probe the server immediately. */
+export function resetApiBreaker(): void {
+  consecutiveNetworkFailures = 0;
+  breakerOpenUntil = 0;
+}
 
 function isTransientNetworkError(err: unknown, statusCode?: number): boolean {
   if (statusCode && [502, 503, 504].includes(statusCode)) return true;
@@ -25,6 +60,7 @@ function isTransientNetworkError(err: unknown, statusCode?: number): boolean {
     const msg = err.message.toLowerCase();
     return (
       err.name === 'AbortError' ||
+      msg.includes('cancel') ||
       msg.includes('timeout') ||
       msg.includes('network') ||
       msg.includes('connection') ||
@@ -81,8 +117,12 @@ async function request<T>(
     }
   }
 
+  if (isApiBreakerOpen()) {
+    throw new ApiError(ERROR_CODES.NETWORK_OFFLINE, 'Server unreachable (request skipped)');
+  }
+
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const maxRetries = options.retries ?? (method === 'GET' ? 2 : 0);
+  const maxRetries = options.retries ?? (method === 'GET' ? DEFAULT_GET_RETRIES : 0);
   const baseRetryDelay = options.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
 
   let lastError: unknown = null;
@@ -99,6 +139,8 @@ async function request<T>(
         headers,
         body: requestBody,
       });
+
+      recordNetworkSuccess();
 
       if (response.status === 304) {
         return null as unknown as T;
@@ -160,9 +202,10 @@ async function request<T>(
         continue;
       }
 
+      recordNetworkFailure();
       const isTimeout =
         error instanceof Error &&
-        (error.name === 'AbortError' || error.message.includes('abort'));
+        (error.name === 'AbortError' || /abort|cancel/i.test(error.message));
       throw new ApiError(
         ERROR_CODES.NETWORK_OFFLINE,
         isTimeout

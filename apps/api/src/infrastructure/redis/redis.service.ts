@@ -18,9 +18,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    const redisUrl =
-      this.config.get<string>('REDIS_URL') ||
-      'redis://:da2112@127.0.0.1:6380';
+    const redisUrl = this.config.get<string>('REDIS_URL');
+    if (!redisUrl) {
+      this.logger.warn('REDIS_URL is not set. Using the in-memory fallback cache (single instance only).');
+      return;
+    }
 
     try {
       this.client = new Redis(redisUrl, {

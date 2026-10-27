@@ -17,8 +17,12 @@ interface CourseCardProps {
 export const CourseCard = memo(function CourseCard({ item, onPress }: CourseCardProps) {
   const theme = useTheme();
   const styles = useStyles();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const percent = percentOf(item);
+  const rawTitle: unknown = item.course.title;
+  const englishTitle =
+    typeof rawTitle === 'string' ? rawTitle : ((rawTitle as { en?: string; am?: string } | null)?.en ?? '');
+  const title = (language === 'am' && item.course.titleAm) || englishTitle;
 
   const streamLabel =
     item.course.stream === 'COMMON'
@@ -48,9 +52,9 @@ export const CourseCard = memo(function CourseCard({ item, onPress }: CourseCard
       onPress={() => onPress(item.course.id)}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <LetterTile label={item.course.title.charAt(0).toUpperCase()} accent="blue" />
+      <LetterTile label={title.charAt(0).toUpperCase()} accent="blue" />
       <View style={styles.text}>
-        <AppText bold>{item.course.title}</AppText>
+        <AppText bold>{title}</AppText>
         <AppText variant="caption" muted>
           {streamLabel} · {accessLabel}
         </AppText>

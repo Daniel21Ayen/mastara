@@ -14,9 +14,10 @@ declare global {
 }
 
 export function createPrismaClient(): PrismaClient {
-  const connectionString =
-    process.env.DATABASE_URL ||
-    "postgresql://mastara:da2112@127.0.0.1:5433/mastara?schema=public";
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is not set. Copy .env.example to .env and fill it in.");
+  }
 
   const pool = new Pool({
     connectionString,

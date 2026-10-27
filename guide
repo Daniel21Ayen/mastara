@@ -1,139 +1,125 @@
-First, fix your documents
+Summary of Incorporated Refinements
+Phase 0 (Completed & Verified): Fixed the pre-existing assertions in 
 
-Your repo has two different “v3.2” files, and they contradict each other:
+phase7-performance.test.ts
+ and 
 
-docs/srs/SRS-v3.2.md and docs/adr/004-mandatory-downloads-and-content-keys.md say content must be downloaded before it can be opened. That is the old 23 Oct rule.
-The real PDF says online students may open content without downloading (D24), and offline students open only downloaded content.
+SyncProvider.tsx
+. Monorepo test suite runs clean with 0 failures.
+Password & Credentials (REG-16): When submitting a bundle order, the local app transmits the student's password over HTTPS. Upon approval, the server hashes it (bcrypt) and stores it in Student.password_hash so recovery login after reinstall/lost phone works seamlessly.
+Claiming After Manual Approval (REG-14):
+The app generates a 256-bit random claimSecret and sends claimSecretHash = sha256(claimSecret) with the order.
+The server stores claim_secret_hash with the pending order.
+When Operations Admin approves the receipt, the server creates the student record, generates the MS number, and activates the entitlement.
+The app (via polling or push notification) calls POST /orders/:orderId/claim with { claimSecret }.
+The server validates sha256(claimSecret) === order.claim_secret_hash and returns { studentCode: "MS0001", token, refreshToken, entitlement }.
+Takeover Protection on Linking (REG-11): If a submitted phone or email matches an existing paid student in the database, the order requires prior authentication (or OTP verification). Blind unauthenticated linking is rejected with ACCOUNT_EXISTS_LOGIN_REQUIRED.
+Public Order Endpoint Hardening: Added rate limiting, strict receipt image validation (JPEG/PNG/WebP, size $\le$ MAX_RECEIPT_BYTES), and a cap of maximum 2 pending orders per phone number.
+Local Data Migration (REG-12): When the claim endpoint returns the assigned MS number, the mobile app atomically updates local SQLite/SecureStore tables (progress, attempts, downloaded file mapping) from localAccountId to the server's MS0001 ID.
+Gapless MS Counter: Using row-level locking on PostgreSQL (UPDATE counters SET value = value + 1 WHERE name = 'student_ms_code' RETURNING value;) inside the transaction to guarantee no skipped numbers.
+Earlier Tests: Domain tests are written directly in Phase 1; counter, idempotency, and claim security tests in Phase 2.
+Final Phase-by-Phase Roadmap
+mermaid
+graph TD
+    P0[Phase 0: Baseline Stability & Performance Checks ✅] --> P1[Phase 1: Contracts, Domain Rules, Tests & Prisma Schema]
+    P1 --> P2[Phase 2: API Order Hardening, MS Counter, Approval & Claim Flow]
+    P2 --> P3[Phase 3: Mobile Offline Registration, Store Eligibility & Local Migration]
+    P3 --> P4[Phase 4: Content Streaming, Resumable Downloads & Versioning]
+    P2 --> P5[Phase 5: Admin Panel Paid-Only Students & Receipt Approvals]
+    P4 --> P6[Phase 6: End-to-End Hardening & Recovery Verification]
+    P5 --> P6
+Phase 0: Baseline Stability & Performance Checks ✅ (Done)
+Fixed multiline assertion in phase7-performance.test.ts.
+Removed InteractionManager reference in SyncProvider.tsx.
+Full monorepo npm test verified passing with 0 errors.
+Phase 1: Contracts, Domain Rules, Tests & Prisma Schema
+Focus: Define types, pure domain functions, and database schema supporting deferred student creation, claim secret hashing, and purchase eligibility.
 
-The mobile app still carries the old rule, so you need to fix the documents and the code together.
+Domain & Contract Updates (packages/domain, packages/contracts):
+DTOs:
+SubmitOrderWithLocalDto: localAccountId, fullName, phone, email, password, claimSecretHash, productId, receipt.
+ClaimOrderDto: claimSecret.
+ClaimOrderResponseDto: studentCode, token, refreshToken, entitlements.
+PaymentSettingsDto: bundlePrices, singleCoursePrices, singleCoursesEnabled.
+Pure functions in @mastara/domain:
+canPurchaseSingleCourse({ hasActiveBundle, isCourseInBundle, singleCoursesEnabled })
+resolveContentAccess({ isOnline, isFree, hasEntitlement, isDownloaded })
+formatStudentId(counter: number) $\rightarrow$ MS0001 (4-digit zero-padded format).
+hashClaimSecret(secret: string) and verifyClaimSecret(secret: string, hash: string).
+Tests in Phase 1: Comprehensive unit test suite in packages/domain/src/commerce/eligibility.test.ts and packages/domain/src/identity/claimSecret.test.ts.
+Database Schema (packages/database):
+Update Order model in Prisma:
+Make student_id nullable (for pending unregistered orders).
+Add fields: local_account_id, claim_secret_hash, pending_name, pending_phone, pending_email, pending_password_hash.
+Update Course model: Add content_version Int @default(1).
+Add PaymentSettings table (or platform config): single_courses_enabled Boolean, pricing overrides.
+Phase 2: API — Order Protection, Gapless MS Counter, Approval & Claim
+Focus: Implement the backend payment-triggered student creation and secure claim workflow.
 
-Delete or rewrite SRS-v3.2.md. Replace it with the text of the PDF.
-Mark ADR 004 as superseded by D24. The 5-state download machine and the key rules in it are still valid.
-Update docs/ROADMAP.md. It stops at F11g and says the backend hasn’t started.
-What is done well
-Monorepo structure. The apps and shared packages follow the v2 layout.
-packages/ui-tokens. It has the four brand colours, light and dark themes, accents and contrast tests.
-Shared KaTeX renderer. SharedKatexRenderer.tsx meets NFR-18.
-LockedContentSheet.tsx exists in apps/mobile/src/shared/ui.
-Catalog snapshot endpoint and mobile catalog sync.
-Entitlement signing. packages/domain/src/entitlement/signedEntitlement.ts exists.
-CSV import.
-It rejects %PDF and PK by content.
-It neutralises formula cells.
-It supports a dry run.
-Student ID counter. The counters update and the student insert share one transaction.
-Security basics.
-JWT_SECRET must be at least 32 characters.
-CORS uses an allow-list.
-There are CSRF and permission guards.
-There is an AdminScope table.
-Mobile login lockout, offline crypto, and size and secret-scan scripts.
-What differs from SRS v3.2, phase by phase
+API Tasks (apps/api):
+Endpoint Protection & Rate Limiting:
+Rate limit on POST /orders/unregistered.
+Maximum 2 pending orders per phone/email.
+Image MIME and payload size validation (MAX_RECEIPT_BYTES).
+Takeover Prevention (REG-11):
+If phone or email belongs to an existing Student: reject unauthenticated submission with ACCOUNT_EXISTS_LOGIN_REQUIRED.
+Approval Workflow & Gapless MS Counter (REG-07, REG-08, REG-14):
+In payment-proofs.service.ts: On manual receipt approval, run transaction:
+Increment counters table row student_ms_code with UPDATE ... RETURNING value.
+Create Student record (password_hash, MS0001+), create DeviceBinding, mark order APPROVED, create Entitlement.
+Claim Endpoint (REG-10, REG-12):
+POST /orders/:orderId/claim:
+Verify verifyClaimSecret(claimSecret, order.claim_secret_hash).
+Return JWT tokens and assigned studentCode.
+Payment Settings API (PUR-08, ADM-03):
+Endpoints for Super Admin to toggle single courses and set prices.
+Tests in Phase 2: Integration tests for atomic counter gaplessness, idempotency, takeover prevention, and secret verification.
+Phase 3: Mobile — Offline Registration, Store Eligibility & Local Migration
+Focus: Client-side local lifecycle, claim polling, local data migration, and store paywall UI.
 
-The phases follow SRS section 15.
+Mobile Tasks (apps/mobile):
+Auth Module (REG-01..06):
+Registration is local-only with UUID; remove "Browse Free Content" button.
+Add note: "Your account is saved on this phone until you purchase a bundle".
+Reinstall recovery: Unpaid loses account (REG-15); paid logs in with credentials to recover (REG-16).
+Store & Order Submission (PUR-01..07):
+First purchase enforced as bundle.
+Single courses without bundle: Show locked button "Buy a semester or full bundle first to unlock single courses".
+Single course in active bundle: Show "Included" label.
+Order submission generates random 32-byte claimSecret, stores locally, transmits claimSecretHash and password.
+Claiming & Local Data Migration (REG-12):
+On approval, claim account using claimSecret.
+Atomically migrate SQLite rows and SecureStore from localAccountId to MS0001.
+Paywall Flow (PAY-01..03):
+Restricted content displays "Locked Content / You cannot access this content" with Buy button directing to Bundles (or Bundles + Single Courses).
+Phase 4: Content Streaming, Resumable Downloads & Versioning
+Focus: Online streaming without download, offline downloaded access, and content updates.
 
-Phase V: re-verify the old work
-Run the section 13 gates and record any failures. Do this before new work.
-Make sure npm ci, typecheck, lint, test and migrations all pass on a clean clone.
-Remove committed junk from git: .env, apps/mobile/.env.local, .expo/, .turbo/, apps/api/uploads/ and dist/.
-Rotate any secret that was ever committed, and make sure .gitignore covers these paths. The gitleaks job is in .github/workflows/security-scan.yml.
-Phase 1: roles and permissions (FR-G60 to G63)
-Admins are still rows in the students table, with an admin_role column. SRS 10.3 wants a separate admin_user table with email, password_hash, admin_role, totp_secret, is_active and last_login_at.
-Where: add a model in packages/database/prisma/schema/identity.prisma and a new migration that moves the admin rows.
-Also: repoint AdminScope to it, and update apps/api/src/modules/identity/admins/*.
-student_number is a SERIAL on the same table. Admin rows consume student numbers, and a Postgres sequence leaves gaps after a rollback. The MS code itself comes from the counters table.
-Drop the serial and use only counters.
-Where: a new migration.
-auth.service.ts creates the counters table at runtime with CREATE TABLE IF NOT EXISTS inside the transaction. Put the table in a migration and remove that raw SQL.
-TOTP exists as totp.service.ts but is not wired into admin login. Require it for Super Admin and Operations Admin, cap sessions at 12 hours, and add a last-Super-Admin guard.
-Where: identity/auth/controllers and admins.service.ts.
-Maker–checker is missing. Add IN_REVIEW to PublicationStatus and authored_by / reviewed_by columns on content and exam sets. The publish endpoint must reject the author.
-Admin portal gating. Sidebar.tsx references permissions, so check that every menu item and route follows the permission matrix and returns a 403 page.
-Add: an Admins & Roles screen in apps/admin-web/src/modules/ (Super Admin only).
-Add: a test that calls every admin route as each of the three roles.
-Phase 2: catalog on the phone and the access function (FR-C20 to C25)
-The mobile app still enforces download-first.
-DownloadRequiredSheet.tsx says a course must be downloaded before use.
-content.api.ts (line 130) throws CONTENT_NOT_DOWNLOADED.
-Rule D24: online and permitted means open from the server, held in memory only. Offline means open only if downloaded.
-Where: apps/mobile/src/core/downloads/contentGateway.ts already does this for bodies. Remove the course-level gate and DownloadRequiredSheet, and keep the “you’re offline, download this item” message from SRS 6.6.
-There may be two canOpen copies. One is in content.service.ts on the server and the mobile code has its own. Move one function into packages/domain and import it in both places.
-Then: write a unit test for the whole matrix in SRS 5.2 and 5.3.
-There are two paywall components: access/components/LockedSheet.tsx and shared/ui/LockedContentSheet.tsx. Keep one. Check the wording against SRS 6.6 and confirm all four gates use it with courseId preselected.
-Remove “Browse Free Content (No Registration)”. I found no trace of it in the mobile source or the i18n files, so it may already be gone. Check the Login screen anyway.
-Local-only registration, the server route and the seed catalog.
-Server route. The API still has POST /auth/register, which creates a student before purchase. SRS 6.1 says the server must not expose that.
-Replace it with /auth/register-offline, called only at the first purchase, with a re-entered password and localAccountId as the idempotency key.
-Handle 409 PHONE_ALREADY_REGISTERED with the Sign in / Contact Admin screen.
-Seed catalog. Generate a seed catalog of at most about 150 KB compressed at release time and bundle it.
-Spy test. Add a network-spy test showing zero student requests before the first purchase.
-Offline login. Test it in airplane mode.
-Entitlement token. Check that GET /entitlements/token exists and that the app rejects a rolled-back device clock.
-Delete behaviour. Delete must remove the files and the SQLite rows.
-Update available. An update must replace the old copy in one step.
+Tasks (apps/mobile, apps/api):
+Implement 5.1 Access Matrix:
+Paid student online: opens directly from cloud storage without downloading (ACC-04).
+Paid student offline: opens only if downloaded (ACC-05).
+Course item action: Download / Delete toggle. Delete wipes local files/records and resets button (ACC-06, DWN-07).
+Resumable download tracking, progress bar, file size display, mobile data warning (DWN-01, DWN-02).
+Course content versioning: If server content_version > local_version, show "Update available" badge (DWN-06).
+Graceful handling of Expo Go vs. native development build for device hardware encryption.
+Phase 5: Admin Panel — Paid-Only Students & Receipt Approvals
+Focus: Filter unpaid records and streamline manual approvals.
 
-Phase 3: IDs, numbers, import and pagination (FR-G11 to G55)
-Question numbers. display_number is nullable and there is no per-set counter.
-Allocate it from counters in the same transaction.
-Backfill existing rows in creation order, then make the column NOT NULL.
-Add a unique index on set and number.
-Renumber after a delete.
-Add a concurrency test.
-CSV import.
-Check UTF-8 and BOM handling, and the template header check.
-Add an error-report download, row and size limits, and an audit entry.
-Add tests with Amharic text and LaTeX containing commas and quotes.
-Pagination.
-Use one {items, page, pageSize, total, totalPages} shape on every list.
-Add a row-id tiebreaker to sorting. students.service.ts already does this.
-Check this on every other list.
-Where: apps/api/src/common/pagination/.
-Admin table component: it must keep the page in the URL, reset to page 1 on filter change, and step back after a delete empties a page.
-Student ID display. Show the ID first in the admin Students list, with no ID for local-only students.
-implement this quickly and clearly to make as mastara SRS 3.2
+Tasks (apps/admin-web):
+Students Directory (ADM-01, ADM-02):
+Show only students with assigned MS0001+ IDs; exclude unpaid local records completely.
+Payment Queue (ADM-04, REG-14):
+Operations Admin reviews submitted receipts, clicks Approve $\rightarrow$ triggers server student creation, MS assignment, and claim readiness.
+Pricing Settings (ADM-03, PUR-08):
+Form to edit bundle prices, single-course prices, and toggle single-course option on/off.
+Phase 6: Hardening, Conflict Resolution & End-to-End Verification
+Focus: Full cycle verification across all components.
 
-Phase 4: design tokens and admin theme (FR-G65)
-Hardcoded colours in admin. There are 298 hex values in apps/admin-web/src.
-The biggest file is modules/scans/lib/samplePages.ts with 196. That is sample data, so move it out of app code or exclude it.
-Then clean settings/page.tsx, SavedScanPickerModal.tsx, UnifiedAssessmentsHubScreen.tsx and StudentsScreen.tsx.
-Add an ESLint rule and a CI check that fail on hex values outside packages/ui-tokens.
-Mobile. It has only 1 hardcoded hex, which is good. Admin colours are the reference, so make mobile read the same tokens.
-Brand colours. Your four are primary 
-#1a56db, ink 
-#0f172a, white and danger 
-#b91c1c. Everything else is a tint or semantic token.
-Dark theme. I found no dark-theme code in the admin portal. Add the same dark tokens and a toggle in the Admin menu.
-Status tones. Create one shared status-to-tone function, used by admin badges and mobile chips.
-Course accent. Replace Course.color (hex) with accent (one of eight names) and icon. Add free_access to the course.
-Active state. The active content tab and active sidebar child must share one colour token.
-implement this quickly and clearly to make as mastara SRS 3.2
+Tasks:
+Test offline $\rightarrow$ purchase $\rightarrow$ approval $\rightarrow$ claim $\rightarrow$ online streaming $\rightarrow$ offline download cycle.
+Test latest-change-wins for conflict resolution (OFF-05).
+Verify bundle expiration/refund: single courses remain accessible, but new single-course purchases lock (PUR-09).
+Ready to begin Phase 1: Contracts, Domain Rules, Tests & Prisma Schema. Shall we proceed?
 
-
-Phase 5: refunds, review workflow, audit
-Refunds. I found no refund model, only mentions in payment-proofs code. Add a Refund model with states REQUESTED, APPROVED or REJECTED, PAID_OUT and ENTITLEMENT_REVOKED.
-Roles: Operations requests, Super Admin approves, and approval revokes the entitlement.
-Where: a new API module and a Refunds tab under Payments.
-Audit log. Add actor_role and scope, and log denied requests on sensitive routes.
-Missing admin phases. Pricing and audit (F11h) and notifications, tickets and reports (F11i) are not done.
-Student data deletion. Add a 7-day deletion process.
-implement this quickly and clearly to make as mastara SRS 3.2
-
-
-Phase 6: performance and pilot
-Targets:
-APK at most 20 MB. check-app-size.mjs exists. The old docs/APP-SIZE.md says 50 MB, so update it.
-RAM under 120 MB.
-Cold start under 3 s.
-Lists under 300 ms.
-Admin lists under 500 ms p95 at 10,000 rows (k6, tests/load).
-Mocks. Make CI fail if a production bundle contains a mocks path. scripts/ci-check-mocks.mjs exists, and 20 non-test files still mention “mock”, so check each one.
-Seed and test accounts. Remove built-in or default credentials and require seed passwords from configuration in production.
-Pilot. Run it at one university on a real budget Android phone.
-Order I would work ain
-implement this quickly and clearly to make as mastara SRS 3.2
-
-
-Fix the documents (SRS file, ADR 004, ROADMAP) and clean the repo.
-Phase 2, because it changes what students see most.
-Phase 1 (admin table and 2FA), then Phase 3.
-Phases 4, 5 and 6.
+9:56 AM

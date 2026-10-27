@@ -301,6 +301,34 @@ export async function getLocalCatalogCourses(userId?: string): Promise<LocalCata
   }
 }
 
+/**
+ * Courses of one semester for a student's stream: that stream's courses plus the COMMON ones.
+ * Read straight from the phone, so the list draws at once with or without a connection (SRS 5.3, NFR-15).
+ */
+export async function getLocalCatalogCoursesForScope(
+  semesterId: string,
+  stream: 'NATURAL' | 'SOCIAL' | 'COMMON',
+  userId?: string,
+): Promise<LocalCatalogItem[]> {
+  try {
+    const db = await getDb();
+    const uid = userId || dbUser() || 'anonymous';
+    await ensureCatalogSeeded(uid);
+    const rows = await db.getAllAsync<LocalCatalogItem>(
+      `SELECT * FROM catalog_item
+        WHERE user_id = ? AND kind = 'COURSE' AND parent_id = ?
+        ORDER BY position ASC, title ASC`,
+      [uid, semesterId],
+    );
+    return rows.filter((row) => {
+      const courseStream = parseCatalogMeta<{ stream?: string }>(row.meta)?.stream;
+      return !courseStream || courseStream === 'COMMON' || courseStream === stream;
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function getLocalCatalogModules(
   courseId: string,
   userId?: string,

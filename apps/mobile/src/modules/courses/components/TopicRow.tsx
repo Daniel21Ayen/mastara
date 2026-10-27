@@ -25,6 +25,7 @@ export const TopicRow = memo(function TopicRow({ topic, lang, access, onPress }:
   const { t } = useI18n();
   const open = canOpenContent(access, topic.isFree);
   const isModule = topic.kind === 'MODULE';
+  const accent = accentForKey(topic.courseId || topic.id);
 
   // One language per tab. Modules read "Module 1" with the title below; notes read the title with its summary below.
   const title = isModule ? t('topic.module', { n: topic.number }) : topic.title[lang];
@@ -37,7 +38,7 @@ export const TopicRow = memo(function TopicRow({ topic, lang, access, onPress }:
       onPress={() => onPress(topic, open)}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <IconTile icon={isModule ? 'module' : 'note'} accent="blue" solid={false} size={48} />
+      <IconTile icon={isModule ? 'module' : 'note'} accent={accent} solid={false} size={48} />
       <View style={styles.text}>
         <AppText bold lang={lang}>
           {title}

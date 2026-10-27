@@ -31,6 +31,9 @@ interface SessionValue {
 
 const SessionContext = createContext<SessionValue | null>(null);
 
+/** Longest the splash screen waits for the secure store before showing the sign-in screen. */
+const SESSION_RESTORE_TIMEOUT_MS = 4000;
+
 const INITIAL: SessionFacts = { hydrated: false, user: null, device: 'unknown', profile: null, isGuest: false };
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -41,8 +44,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   setDbUser(facts.user?.id ?? null);
 
   // Restore the saved session once at start.
+  // The restore can never leave the app on the splash screen: a failed or slow read counts as "no saved session".
   useEffect(() => {
-    secureStorage.getJson<SessionSnapshot>(STORAGE_KEYS.session).then((snapshot) => {
+    let done = false;
+    const finish = (snapshot: SessionSnapshot | null) => {
+      if (done) return;
+      done = true;
       setFacts({
         hydrated: true,
         user: snapshot?.user ?? null,
@@ -50,7 +57,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         profile: snapshot?.profile ?? null,
         isGuest: false,
       });
-    });
+    };
+    const timer = setTimeout(() => finish(null), SESSION_RESTORE_TIMEOUT_MS);
+    secureStorage
+      .getJson<SessionSnapshot>(STORAGE_KEYS.session)
+      .then(finish)
+      .catch(() => finish(null))
+      .finally(() => clearTimeout(timer));
+    return () => {
+      done = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   // Save every change after the first restore.

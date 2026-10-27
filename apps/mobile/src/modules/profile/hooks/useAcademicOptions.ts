@@ -40,14 +40,17 @@ export function useAcademicOptions(universityId: string, programId: string): Opt
 
   return {
     universities: (universities.data ?? []).map((item) => {
-      const name = resolveText(item.name);
+      const name = language === 'am' && item.nameAm ? item.nameAm : resolveText(item.name);
       const shortName = resolveText(item.shortName);
       return {
         value: item.id,
         label: shortName && shortName !== name ? `${shortName} · ${name}` : name,
       };
     }),
-    programs: (programs.data ?? []).map((item) => ({ value: item.id, label: resolveText(item.name) })),
+    programs: (programs.data ?? []).map((item) => ({
+      value: item.id,
+      label: language === 'am' && item.nameAm ? item.nameAm : resolveText(item.name),
+    })),
     semesters: (semesters.data ?? []).map((item) => ({
       value: item.id,
       label: t(item.number === 1 ? 'profile.semester.1' : 'profile.semester.2'),

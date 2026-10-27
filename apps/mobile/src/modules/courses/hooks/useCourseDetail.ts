@@ -2,6 +2,7 @@
 import type { MyCourse } from '@mastara/contracts';
 import { useCallback, useEffect, useState } from 'react';
 
+import { getLocalCatalogCourses, parseCatalogMeta, parseCatalogTitle } from '@/core/sync/catalogSync';
 import { isOnline } from '@/core/network';
 import { myCoursesApi, realMyCoursesApi } from '@/modules/my-courses/api/myCourses.api';
 
@@ -25,7 +26,31 @@ export function useCourseDetail(courseId: string) {
     try {
       // 1. Read SQLite cache immediately (with offlineAccess verification)
       const cachedList = await myCoursesApi.getMyCourses([courseId]);
-      const cached = cachedList[0] ?? null;
+      let cached = cachedList[0] ?? null;
+      if (!cached) {
+        const localCourses = await getLocalCatalogCourses();
+        const found = localCourses.find((c) => c.id === courseId);
+        if (found) {
+          const meta = parseCatalogMeta<Record<string, any>>(found.meta);
+          const title = parseCatalogTitle(found.title, 'en');
+          cached = {
+            course: {
+              id: found.id,
+              semesterId: meta?.semesterId ?? found.parent_id ?? '',
+              code: meta?.code ?? '',
+              title,
+              stream: (meta?.stream ?? 'COMMON') as any,
+              accent: meta?.accent,
+              icon: meta?.icon,
+              isPromotional: meta?.isPromotional ?? found.is_free === 1,
+              freeTrialItems: meta?.freeTrialItems ?? 0,
+            },
+            access: found.is_free === 1 || meta?.freeAccess ? 'FREE_TRIAL' : 'LOCKED',
+            chaptersDone: 0,
+            chaptersTotal: 0,
+          };
+        }
+      }
       if (cached) {
         setItem(cached);
         setLoading(false);

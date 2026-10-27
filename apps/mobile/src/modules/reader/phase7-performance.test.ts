@@ -308,15 +308,15 @@ describe('Phase 7: Performance Optimizations & Low-End Device Benchmarks', () =>
   // 6. Startup: Sync Deferred After First Paint & Secure Session Only
   // =========================================================================
   describe('6. Startup: run catalog sync after first screen drawn, short splash', () => {
-    it('SyncProvider defers sync using InteractionManager.runAfterInteractions', () => {
+    it('SyncProvider defers the startup sync until after the first screen is drawn', () => {
       const content = readFileSync(resolve(here, '../../core/sync/SyncProvider.tsx'), 'utf8');
-      assert.ok(content.includes('InteractionManager.runAfterInteractions'));
-      assert.ok(content.includes('// Startup optimization: run catalog sync after first screen is drawn, never before it'));
+      assert.ok(content.includes('STARTUP_SYNC_DELAY_MS'));
+      assert.ok(!content.includes('InteractionManager'));
     });
 
     it('SessionProvider restores session from secure storage only, without blocking network calls', () => {
       const content = readFileSync(resolve(here, '../../core/session/SessionProvider.tsx'), 'utf8');
-      assert.ok(content.includes('secureStorage.getJson<SessionSnapshot>(STORAGE_KEYS.session)'));
+      assert.ok(content.includes('STORAGE_KEYS.session') && content.includes('getJson<SessionSnapshot>'));
       // Does not call network API in initial restoration
       assert.ok(!content.includes('apiClient.get') && !content.includes('fetch('));
     });

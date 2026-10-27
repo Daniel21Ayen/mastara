@@ -61,8 +61,9 @@ function resolvePasswordHash(opts: {
 
 async function main() {
   const isProduction = process.env.NODE_ENV === "production";
-  if (isProduction && process.env.ALLOW_PROD_SEED !== "true") {
-    console.error("🛑 FATAL: Database seeding in PRODUCTION requires ALLOW_PROD_SEED=true and environment seed credentials.");
+  if (isProduction) {
+    console.error("🛑 FATAL: seed.ts creates DEMO data (fake students, payments, placeholder questions). Never run it in production.");
+    console.error("Use `npm run db:seed:reference --workspace=@mastara/database` for the real catalog.");
     process.exit(1);
   }
 

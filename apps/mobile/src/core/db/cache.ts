@@ -15,8 +15,12 @@ interface CacheHit<T> {
   clock?: ClockReading;
 }
 
+/** An empty list is almost always "the server had nothing yet", not an answer worth keeping across restarts. */
+const isEmptyList = (value: unknown): boolean => Array.isArray(value) && value.length === 0;
+
 export const cacheStore = {
   async put(key: string, value: unknown): Promise<void> {
+    if (isEmptyList(value)) return;
     try {
       const db = await getDb();
       await db.runAsync(
@@ -91,7 +95,7 @@ export async function readThrough<T>(
 ): Promise<T> {
   // 1. Fast Cache Path: return cached data immediately to prevent loading delays
   const hit = await cacheStore.get<T>(key);
-  if (hit) {
+  if (hit && !isEmptyList(hit.value)) {
     const now: ClockReading = { wallMs: Date.now(), uptimeMs: await getUptimeMs(), bootId: getBootId() };
     const cachedResult = adapt ? adapt(hit.value, hit.cachedAtMs, trustedNowMs(hit.cachedAtMs, hit.clock, now)) : hit.value;
 

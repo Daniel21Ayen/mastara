@@ -5,6 +5,8 @@ import { z } from 'zod';
 export const universitySchema = z.object({
   id: z.string(),
   name: z.string(),
+  /** Amharic name when the server or the bundled catalog has one. `name` stays the English text. */
+  nameAm: z.string().optional(),
   shortName: z.string(),
 });
 
@@ -12,6 +14,7 @@ export const programSchema = z.object({
   id: z.string(),
   universityId: z.string(),
   name: z.string(),
+  nameAm: z.string().optional(),
 });
 
 export const semesterSchema = z.object({
@@ -25,6 +28,8 @@ export const courseSchema = z.object({
   semesterId: z.string(),
   code: z.string(),
   title: z.string(),
+  /** Amharic title when known. `title` stays the English text so older code keeps working. */
+  titleAm: z.string().optional(),
   stream: z.enum(STREAMS),
 });
 
