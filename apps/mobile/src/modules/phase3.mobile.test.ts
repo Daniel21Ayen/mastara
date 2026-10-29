@@ -276,4 +276,63 @@ describe('Phase 3: Mobile Offline Registration, Store Eligibility, Claim & Local
       storeApi.claimOrder = origClaim;
     }
   });
+
+  test('REG-10, REG-14: processPendingClaims handles ORDER_NOT_APPROVED and ORDER_REJECTED gracefully', async () => {
+    const localId = 'd0000000-0000-4000-8000-000000000003';
+    const orderIdPending = 'd0000000-0000-4000-8000-000000000004';
+    const orderIdRejected = 'd0000000-0000-4000-8000-000000000005';
+    const secret1 = generateClaimSecret();
+    const secret2 = generateClaimSecret();
+
+    await secureStorage.setJson(STORAGE_KEYS.pendingClaims, [
+      {
+        orderId: orderIdPending,
+        reference: 'CBE-TX-PENDING',
+        claimSecret: secret1,
+        localAccountId: localId,
+        submittedAt: Date.now(),
+        status: 'PENDING',
+      },
+      {
+        orderId: orderIdRejected,
+        reference: 'CBE-TX-REJECTED',
+        claimSecret: secret2,
+        localAccountId: localId,
+        submittedAt: Date.now(),
+        status: 'PENDING',
+      },
+    ]);
+
+    const origClaim = storeApi.claimOrder;
+    (storeApi as any).claimOrder = async (oId: string) => {
+      if (oId === orderIdPending) {
+        const err: any = new Error('Order not approved yet');
+        err.status = 400;
+        err.code = 'ORDER_NOT_APPROVED';
+        throw err;
+      }
+      if (oId === orderIdRejected) {
+        const err: any = new Error('Order has been rejected');
+        err.status = 400;
+        err.code = 'ORDER_REJECTED';
+        throw err;
+      }
+      throw new Error('Unknown');
+    };
+
+    try {
+      const result = await processPendingClaims();
+      assert.equal(result.claimed.length, 0);
+      assert.equal(result.pendingCount, 1);
+
+      const claims = await getPendingClaims();
+      const pendingClaim = claims.find((c) => c.orderId === orderIdPending);
+      const rejectedClaim = claims.find((c) => c.orderId === orderIdRejected);
+
+      assert.equal(pendingClaim?.status, 'PENDING');
+      assert.equal(rejectedClaim?.status, 'REJECTED');
+    } finally {
+      storeApi.claimOrder = origClaim;
+    }
+  });
 });

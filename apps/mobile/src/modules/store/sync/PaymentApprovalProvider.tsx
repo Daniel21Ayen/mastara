@@ -34,8 +34,11 @@ interface PaymentApprovalContextValue {
 
 const PaymentApprovalContext = createContext<PaymentApprovalContextValue | null>(null);
 
-const POLL_INTERVAL_PENDING = 4000;
-const POLL_INTERVAL_IDLE = 30000;
+// Exponential backoff configuration for pending claim polling (Section 9.2: avoid fixed-interval high-frequency polling)
+const INITIAL_POLL_INTERVAL_PENDING = 5000;
+const MAX_POLL_INTERVAL_PENDING = 60000;
+const POLL_INTERVAL_IDLE = 60000;
+const BACKOFF_MULTIPLIER = 1.5;
 
 export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -52,6 +55,7 @@ export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
   const knownStatusesRef = useRef<Map<string, Order['status']>>(new Map());
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const backoffRef = useRef<number>(INITIAL_POLL_INTERVAL_PENDING);
 
   const subscribeApproval = useCallback((listener: (order: Order) => void) => {
     listenersRef.current.add(listener);
@@ -216,9 +220,20 @@ export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
         knownStatusesRef.current.set(order.id, order.status);
       }
 
-      // Schedule next polling check
+      // Schedule next polling check with exponential backoff (REG-10, Section 9.2)
       if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
-      const interval = hasPending ? POLL_INTERVAL_PENDING : POLL_INTERVAL_IDLE;
+      let interval: number;
+      if (hasPending) {
+        interval = backoffRef.current;
+        // Increase backoff for next round, capped at MAX_POLL_INTERVAL_PENDING
+        backoffRef.current = Math.min(
+          MAX_POLL_INTERVAL_PENDING,
+          Math.round(backoffRef.current * BACKOFF_MULTIPLIER),
+        );
+      } else {
+        backoffRef.current = INITIAL_POLL_INTERVAL_PENDING;
+        interval = POLL_INTERVAL_IDLE;
+      }
       pollTimerRef.current = setTimeout(() => void checkNow(), interval);
     } catch (err) {
       // Gracefully continue on transient network errors
@@ -235,6 +250,7 @@ export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    backoffRef.current = INITIAL_POLL_INTERVAL_PENDING;
     void checkNow();
 
     // Register push notification token with backend
@@ -245,12 +261,14 @@ export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
       (notif) => {
         const data = notif.request?.content?.data as Record<string, unknown> | undefined;
         if (data?.type === 'PAYMENT_APPROVED' || data?.type === 'PAYMENT_REJECTED') {
+          backoffRef.current = INITIAL_POLL_INTERVAL_PENDING;
           void checkNow();
         }
       },
       (res) => {
         const data = res.notification?.request?.content?.data as Record<string, unknown> | undefined;
         if (data?.type === 'PAYMENT_APPROVED') {
+          backoffRef.current = INITIAL_POLL_INTERVAL_PENDING;
           void checkNow();
           router.push('/my-courses' as Href);
         } else if (data?.type === 'PAYMENT_REJECTED') {
@@ -261,9 +279,10 @@ export function PaymentApprovalProvider({ children }: { children: ReactNode }) {
       },
     );
 
-    // Check immediately when app comes into the foreground
+    // Check immediately when app comes into the foreground and reset backoff
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
+        backoffRef.current = INITIAL_POLL_INTERVAL_PENDING;
         void checkNow();
       }
     });

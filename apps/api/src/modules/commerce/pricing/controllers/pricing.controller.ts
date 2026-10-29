@@ -25,6 +25,7 @@ import {
   GetFullPackageQueryDto,
 } from "../dto";
 import { CurrentUser } from "../../../../common/decorators/current-user.decorator";
+import { Public } from "../../../../common/decorators/public.decorator";
 import { PricingConfig } from "@mastara/domain";
 
 @ApiTags("Commerce & Pricing")
@@ -33,6 +34,7 @@ import { PricingConfig } from "@mastara/domain";
 export class PricingController {
   constructor(private readonly pricingService: PricingService) {}
 
+  @Public()
   @Get("pricing")
   @ApiOperation({
     summary: "Get live pricing rules, bundle thresholds, and access durations",
@@ -45,6 +47,7 @@ export class PricingController {
     return this.pricingService.getPricingConfig();
   }
 
+  @Public()
   @Get("accounts")
   @ApiOperation({
     summary: "Get deposit account numbers for supported Ethiopian payment methods",
@@ -57,6 +60,7 @@ export class PricingController {
     return this.pricingService.getAccounts();
   }
 
+  @Public()
   @Post("pricing/quote")
   @ApiOperation({
     summary: "Calculate dynamic server-authoritative price quote for any product/bundle",
@@ -67,7 +71,7 @@ export class PricingController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: "Invalid course count for bundle (requires at least 7 courses)",
+    description: "Invalid course count for bundle (requires between min and max courses)",
   })
   async quote(@Body() dto: QuoteOrderDto): Promise<QuoteOrderResponse> {
     return this.pricingService.quote(dto);

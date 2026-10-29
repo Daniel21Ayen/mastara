@@ -170,11 +170,12 @@ describe("Phase 5: Admin Panel — Paid-Only Students, Receipt Approvals, Versio
       const mockConfig: any = {};
       const mockPush: any = {};
 
-      const service = new PaymentProofsService(mockPrisma, mockAudit, mockConfig, mockPush);
+      const service = new PaymentProofsService(mockPrisma as any, mockAudit, mockPush);
       const result = await service.getAdminPayments({ status: "PENDING" as any });
 
       assert.equal(result.items.length, 1);
       const item = result.items[0];
+      assert.ok(item);
       assert.equal(item.studentName, "Almaz Kebede");
       assert.equal(item.studentPhone, "0912345678");
       assert.equal(item.studentEmail, "almaz@test.com");
@@ -191,7 +192,7 @@ describe("Phase 5: Admin Panel — Paid-Only Students, Receipt Approvals, Versio
           }),
         },
       };
-      const service = new PaymentProofsService(mockPrisma, {} as any, {} as any, {} as any);
+      const service = new PaymentProofsService(mockPrisma as any, {} as any, {} as any);
 
       await assert.rejects(
         () => service.decidePayment(adminId, "proof-102", { action: "REJECT" as any }),

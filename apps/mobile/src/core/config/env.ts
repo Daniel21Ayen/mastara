@@ -37,47 +37,45 @@ function resolveApiUrl(): string {
     const Platform = RN?.Platform;
     const NativeModules = RN?.NativeModules;
 
-    if (!Platform || Platform.OS === 'web') {
+    if (Platform?.OS === 'web') {
+      if (typeof window !== 'undefined' && window.location?.hostname) {
+        const hostname = window.location.hostname;
+        if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+          return rawUrl.replace(/localhost|127\.0\.0\.1/, hostname);
+        }
+      }
       return rawUrl;
     }
 
-    if (rawUrl.includes('localhost') || rawUrl.includes('127.0.0.1')) {
-      if (resolvedHost) {
-        return rawUrl.replace(/localhost|127\.0\.0\.1/, resolvedHost);
-      }
+    // On native in development: find the host where the JavaScript bundle was served from
+    const scriptUrl = NativeModules?.SourceCode?.scriptURL;
+    const scriptHost = getHostFromUri(scriptUrl);
 
-      const scriptUrl = NativeModules?.SourceCode?.scriptURL;
-      const scriptHost = getHostFromUri(scriptUrl);
-      if (scriptHost) {
-        resolvedHost = scriptHost;
-        return rawUrl.replace(/localhost|127\.0\.0\.1/, scriptHost);
-      }
+    let Constants: any = null;
+    try {
+      Constants = typeof require !== 'undefined' ? require('expo-constants')?.default ?? require('expo-constants') : null;
+    } catch {
+      // Fallback if expo-constants is unavailable
+    }
 
-      let Constants: any = null;
-      try {
-        Constants = typeof require !== 'undefined' ? require('expo-constants')?.default ?? require('expo-constants') : null;
-      } catch {
-        // Fallback if expo-constants is unavailable
-      }
+    const expoHost =
+      scriptHost ??
+      getHostFromUri(Constants?.expoConfig?.hostUri) ??
+      getHostFromUri(Constants?.expoGoConfig?.debuggerHost) ??
+      getHostFromUri(Constants?.manifest2?.extra?.expoClient?.hostUri) ??
+      getHostFromUri(Constants?.manifest2?.extra?.expoGo?.debuggerHost) ??
+      getHostFromUri(Constants?.manifest?.debuggerHost) ??
+      getHostFromUri(Constants?.linkingUri) ??
+      getHostFromUri(Constants?.experienceUrl);
 
-      const expoHost =
-        getHostFromUri(Constants?.expoConfig?.hostUri) ??
-        getHostFromUri(Constants?.expoGoConfig?.debuggerHost) ??
-        getHostFromUri(Constants?.manifest2?.extra?.expoClient?.hostUri) ??
-        getHostFromUri(Constants?.manifest2?.extra?.expoGo?.debuggerHost) ??
-        getHostFromUri(Constants?.manifest?.debuggerHost) ??
-        getHostFromUri(Constants?.linkingUri) ??
-        getHostFromUri(Constants?.experienceUrl);
+    if (expoHost) {
+      resolvedHost = expoHost;
+      return rawUrl.replace(/localhost|127\.0\.0\.1/, expoHost);
+    }
 
-      if (expoHost) {
-        resolvedHost = expoHost;
-        return rawUrl.replace(/localhost|127\.0\.0\.1/, expoHost);
-      }
-
-      const isDevice = Constants?.isDevice ?? false;
-      if (Platform.OS === 'android' && !isDevice) {
-        return rawUrl.replace(/localhost|127\.0\.0\.1/, '10.0.2.2');
-      }
+    const isDevice = Constants?.isDevice ?? false;
+    if (Platform?.OS === 'android' && !isDevice) {
+      return rawUrl.replace(/localhost|127\.0\.0\.1/, '10.0.2.2');
     }
   } catch {
     return rawUrl;

@@ -167,7 +167,12 @@ export async function syncCatalog(
             typeof item.title === 'string'
               ? item.title
               : JSON.stringify(item.title);
-          const metaStr = item.meta ? JSON.stringify(item.meta) : null;
+          const mergedMeta = {
+            ...(item.meta || {}),
+            ...(item.type ? { type: item.type } : {}),
+            kind: item.kind,
+          };
+          const metaStr = JSON.stringify(mergedMeta);
           const updatedAtNum =
             typeof item.updatedAt === 'number'
               ? item.updatedAt
@@ -285,6 +290,27 @@ export async function ensureCatalogSeeded(userId?: string): Promise<void> {
   }
 }
 
+export async function getLocalCatalogCourse(
+  courseId: string,
+  userId?: string,
+): Promise<LocalCatalogItem | null> {
+  try {
+    const db = await getDb();
+    const uid = userId || dbUser() || 'anonymous';
+    await ensureCatalogSeeded(uid);
+    const row = await db.getFirstAsync<LocalCatalogItem>(
+      `SELECT * FROM catalog_item
+        WHERE id = ? AND kind = 'COURSE' AND (user_id = ? OR user_id = 'anonymous')
+        ORDER BY CASE WHEN user_id = ? THEN 0 ELSE 1 END
+        LIMIT 1`,
+      [courseId, uid, uid],
+    );
+    return row ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getLocalCatalogCourses(userId?: string): Promise<LocalCatalogItem[]> {
   try {
     const db = await getDb();
@@ -292,7 +318,8 @@ export async function getLocalCatalogCourses(userId?: string): Promise<LocalCata
     await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
-        WHERE user_id = ? AND kind = 'COURSE'
+        WHERE (user_id = ? OR user_id = 'anonymous') AND kind = 'COURSE'
+        GROUP BY id
         ORDER BY position ASC, title ASC`,
       [uid],
     );
@@ -316,7 +343,8 @@ export async function getLocalCatalogCoursesForScope(
     await ensureCatalogSeeded(uid);
     const rows = await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
-        WHERE user_id = ? AND kind = 'COURSE' AND parent_id = ?
+        WHERE (user_id = ? OR user_id = 'anonymous') AND kind = 'COURSE' AND parent_id = ?
+        GROUP BY id
         ORDER BY position ASC, title ASC`,
       [uid, semesterId],
     );
@@ -339,7 +367,8 @@ export async function getLocalCatalogModules(
     await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
-        WHERE user_id = ? AND course_id = ? AND kind = 'MODULE'
+        WHERE (user_id = ? OR user_id = 'anonymous') AND course_id = ? AND kind = 'MODULE'
+        GROUP BY id
         ORDER BY position ASC`,
       [uid, courseId],
     );
@@ -360,14 +389,16 @@ export async function getLocalCatalogTopics(
     if (moduleId) {
       return await db.getAllAsync<LocalCatalogItem>(
         `SELECT * FROM catalog_item
-          WHERE user_id = ? AND course_id = ? AND kind = 'TOPIC' AND parent_id = ?
+          WHERE (user_id = ? OR user_id = 'anonymous') AND course_id = ? AND kind = 'TOPIC' AND parent_id = ?
+          GROUP BY id
           ORDER BY position ASC`,
         [uid, courseId, moduleId],
       );
     }
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
-        WHERE user_id = ? AND course_id = ? AND kind = 'TOPIC'
+        WHERE (user_id = ? OR user_id = 'anonymous') AND course_id = ? AND kind = 'TOPIC'
+        GROUP BY id
         ORDER BY position ASC`,
       [uid, courseId],
     );
@@ -386,7 +417,8 @@ export async function getLocalCatalogQuizChapters(
     await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
-        WHERE user_id = ? AND course_id = ? AND kind = 'QUIZ_CHAPTER'
+        WHERE (user_id = ? OR user_id = 'anonymous') AND course_id = ? AND kind = 'QUIZ_CHAPTER'
+        GROUP BY id
         ORDER BY position ASC`,
       [uid, courseId],
     );
@@ -405,7 +437,8 @@ export async function getLocalCatalogExams(
     await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
-        WHERE user_id = ? AND course_id = ? AND kind = 'EXAM'
+        WHERE (user_id = ? OR user_id = 'anonymous') AND course_id = ? AND kind = 'EXAM'
+        GROUP BY id
         ORDER BY position ASC`,
       [uid, courseId],
     );
@@ -421,7 +454,8 @@ export async function getLocalCatalogCocSets(userId?: string): Promise<LocalCata
     await ensureCatalogSeeded(uid);
     return await db.getAllAsync<LocalCatalogItem>(
       `SELECT * FROM catalog_item
-        WHERE user_id = ? AND kind = 'COC_SET'
+        WHERE (user_id = ? OR user_id = 'anonymous') AND kind = 'COC_SET'
+        GROUP BY id
         ORDER BY position ASC`,
       [uid],
     );

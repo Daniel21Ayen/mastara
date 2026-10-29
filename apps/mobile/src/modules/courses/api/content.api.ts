@@ -4,7 +4,7 @@ import { ERROR_CODES, type ContentKind } from '@mastara/domain';
 
 import { contentKey, downloadStore, gatewayReads } from '@/core/downloads';
 import { ApiError, httpClient, isApiError, isOnline } from '@/core/network';
-import { getLocalCatalogTopics, parseCatalogMeta } from '@/core/sync/catalogSync';
+import { getLocalCatalogModules, getLocalCatalogTopics, parseCatalogMeta } from '@/core/sync/catalogSync';
 import { myCoursesApi } from '@/modules/my-courses/api/myCourses.api';
 import { readerMemoryCache } from '@/modules/reader/store/readerMemoryCache';
 
@@ -44,8 +44,17 @@ const baseCatalogGateway = gatewayReads('content', contentRemote, {
   details: [],
   lists: {
     getTopics: async (courseId: string, kind: ContentKind) => {
+      const fetchLocal = async () => {
+        if (kind === 'MODULE') {
+          const mods = await getLocalCatalogModules(courseId);
+          if (mods.length > 0) return mods;
+          return getLocalCatalogTopics(courseId);
+        }
+        return getLocalCatalogTopics(courseId);
+      };
+
       const [localRows, saved] = await Promise.all([
-        getLocalCatalogTopics(courseId),
+        fetchLocal(),
         downloadStore.listByKind<Topic>('TOPIC', courseId).catch(() => []),
       ]);
 
@@ -63,11 +72,13 @@ const baseCatalogGateway = gatewayReads('content', contentRemote, {
                 title = { en: parsed.en || r.title, am: parsed.am || parsed.en || r.title };
               } catch {}
             }
-            const meta = parseCatalogMeta<{ kind?: string; summary?: { en: string; am: string }; body?: { en: string; am: string } }>(r.meta);
+            const meta = parseCatalogMeta<{ kind?: string; type?: string; summary?: { en: string; am: string }; body?: { en: string; am: string } }>(r.meta);
+            const rawKind = meta?.kind || r.kind;
+            const itemKind = (rawKind === 'MODULE' || meta?.type === 'MODULE') ? 'MODULE' : (rawKind || kind);
             return {
               id: r.id,
               courseId: r.course_id,
-              kind: (meta?.kind || kind) as ContentKind,
+              kind: itemKind as ContentKind,
               number: r.position,
               title,
               summary: meta?.summary ?? { en: '', am: '' },
@@ -75,7 +86,7 @@ const baseCatalogGateway = gatewayReads('content', contentRemote, {
               isFree: Boolean(r.is_free),
             };
           })
-          .filter((t) => t.kind === kind)
+          .filter((t) => t.kind === kind || (kind === 'MODULE' && (t.kind === 'MODULE' || !t.kind)))
           .sort((a, b) => a.number - b.number);
       }
 

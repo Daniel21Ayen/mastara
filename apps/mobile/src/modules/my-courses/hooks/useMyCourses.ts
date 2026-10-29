@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { httpClient } from '@/core/network';
 import { useSession } from '@/core/session';
+import { getLocalCatalogCourses, parseCatalogMeta, parseCatalogTitle } from '@/core/sync/catalogSync';
 import { coursesApi } from '@/modules/course-list';
 import { useAsync } from '@/shared/hooks';
 import type { MyCourse } from '@mastara/contracts';
@@ -14,11 +15,33 @@ import type { CourseFilters } from '../lib/filterCourses';
 
 /** Loads the student's courses and applies search, tab and filters. */
 export function useMyCourses() {
-  const { profile } = useSession();
+  const { profile, isGuest } = useSession();
   const courseIds = profile?.courseIds ?? [];
   const [filters, setFilters] = useState<CourseFilters>(EMPTY_FILTERS);
 
   const courses = useAsync(async (): Promise<MyCourse[]> => {
+    // Guest users: show entire local catalog with FREE_TRIAL for free courses, LOCKED for paid
+    if (isGuest || !profile) {
+      const localCourses = await getLocalCatalogCourses();
+      return localCourses.map((row) => {
+        const meta = parseCatalogMeta<Record<string, any>>(row.meta);
+        const title = parseCatalogTitle(row.title, 'en');
+        return {
+          course: {
+            id: row.id,
+            semesterId: meta?.semesterId ?? row.parent_id ?? '',
+            code: meta?.code ?? '',
+            title,
+            stream: (meta?.stream ?? 'COMMON') as any,
+            contentVersion: meta?.contentVersion ?? 1,
+          },
+          access: row.is_free === 1 || meta?.freeAccess ? 'FREE_TRIAL' : 'LOCKED',
+          chaptersDone: 0,
+          chaptersTotal: 0,
+        };
+      });
+    }
+
     // 1. Instant and offline-safe: the courses of the student's semester and stream from the catalog on the phone.
     let local: MyCourse[] = [];
     if (profile?.semesterId) {
@@ -41,6 +64,27 @@ export function useMyCourses() {
         }));
     }
 
+    if (local.length === 0) {
+      const allLocal = await getLocalCatalogCourses();
+      local = allLocal.map((row) => {
+        const meta = parseCatalogMeta<Record<string, any>>(row.meta);
+        const title = parseCatalogTitle(row.title, 'en');
+        return {
+          course: {
+            id: row.id,
+            semesterId: meta?.semesterId ?? row.parent_id ?? '',
+            code: meta?.code ?? '',
+            title,
+            stream: (meta?.stream ?? 'COMMON') as any,
+            contentVersion: meta?.contentVersion ?? 1,
+          },
+          access: row.is_free === 1 || meta?.freeAccess ? 'FREE_TRIAL' : 'LOCKED',
+          chaptersDone: 0,
+          chaptersTotal: 0,
+        };
+      });
+    }
+
     // 2. Students who have not made their first purchase have no server account and no token (SRS 6.1):
     // there is nothing to ask the server, so do not wait on it.
     if (!(await httpClient.getToken())) return local;
@@ -55,13 +99,14 @@ export function useMyCourses() {
     } catch {
       return local;
     }
-  }, [courseIds.join(','), profile?.semesterId, profile?.stream]);
+  }, [courseIds.join(','), profile?.semesterId, profile?.stream, isGuest]);
 
   const { reload } = courses;
   useFocusEffect(useCallback(() => reload(), [reload]));
   const visible = useMemo(() => filterCourses(courses.data ?? [], filters), [courses.data, filters]);
 
   return {
+    isGuest: isGuest || !profile,
     filters,
     setFilters,
     visible,

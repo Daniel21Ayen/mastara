@@ -91,8 +91,11 @@ export const realCatalogApi: CatalogApi = {
   },
 
   async listUniversities() {
-    const result = await httpClient.get<AdminUniversity[]>('/catalog/admin/universities');
-    return result.map((u) => adminUniversitySchema.parse(u));
+    const result = await httpClient.get<AdminUniversity[] | { items: AdminUniversity[] }>(
+      '/catalog/admin/universities',
+    );
+    const items = Array.isArray(result) ? result : (result?.items ?? []);
+    return items.map((u) => adminUniversitySchema.parse(u));
   },
 
   async createUniversity(input) {
@@ -118,8 +121,11 @@ export const realCatalogApi: CatalogApi = {
   },
 
   async listPrograms() {
-    const result = await httpClient.get<AdminProgram[]>('/catalog/admin/programs');
-    return result.map((p) => adminProgramSchema.parse(p));
+    const result = await httpClient.get<AdminProgram[] | { items: AdminProgram[] }>(
+      '/catalog/admin/programs',
+    );
+    const items = Array.isArray(result) ? result : (result?.items ?? []);
+    return items.map((p) => adminProgramSchema.parse(p));
   },
 
   async createProgram(input) {
@@ -145,8 +151,11 @@ export const realCatalogApi: CatalogApi = {
   },
 
   async listSemesters() {
-    const result = await httpClient.get<AdminSemester[]>('/catalog/admin/semesters');
-    return result.map((s) => adminSemesterSchema.parse(s));
+    const result = await httpClient.get<AdminSemester[] | { items: AdminSemester[] }>(
+      '/catalog/admin/semesters',
+    );
+    const items = Array.isArray(result) ? result : (result?.items ?? []);
+    return items.map((s) => adminSemesterSchema.parse(s));
   },
 
   async updateSemester(id, input) {

@@ -391,6 +391,10 @@ export class CatalogService {
       metadata: { target: `University ${university.code}`, name: university.name_en },
     });
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     return {
       id: university.id,
       name: university.name_en,
@@ -466,6 +470,10 @@ export class CatalogService {
       metadata: { target: `University ${updated.code}`, reason: input.reason },
     });
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     return {
       id: updated.id,
       name: updated.name_en,
@@ -503,6 +511,10 @@ export class CatalogService {
       targetId: id,
       metadata: { target: `University ${university.code}` },
     });
+
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
 
     return {
       id: university.id,
@@ -653,6 +665,10 @@ export class CatalogService {
       metadata: { target: `Program ${program.name_en} · ${university.code}` },
     });
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     return {
       id: program.id,
       universityId: program.university_id,
@@ -730,6 +746,10 @@ export class CatalogService {
       },
     });
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     const courseCount = program.semesters.reduce((acc, s) => acc + s._count.courses, 0);
     return {
       id: updated.id,
@@ -773,6 +793,10 @@ export class CatalogService {
       targetId: id,
       metadata: { target: `Program ${program.name_en} · ${program.university.code}` },
     });
+
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
 
     return {
       id: program.id,
@@ -922,6 +946,10 @@ export class CatalogService {
       (c) => c.status === PublicationStatus.PUBLISHED,
     ).length;
 
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
+
     return {
       id: updated.id,
       programId: semester.program_id,
@@ -970,6 +998,10 @@ export class CatalogService {
         target: `Semester ${semesterNumber} · ${semester.program.name_en} · ${semester.program.university.code}`,
       },
     });
+
+    if (this.redisService) {
+      await this.redisService.invalidateCatalogCache();
+    }
 
     return {
       id: semester.id,

@@ -134,8 +134,8 @@ export class OrdersService {
     const quoteResult = quoteOrder(config, quoteInput);
     if (!quoteResult.ok) {
       throw new BadRequestException({
-        errorCode: "BUNDLE_COUNT_INVALID",
-        message: `Bundle requires between ${config.bundle.minCourses} and ${config.bundle.maxCourses} or more courses`,
+        errorCode: "BUNDLE_SIZE_INVALID",
+        message: `Bundle requires between ${config.bundle.minCourses} and ${config.bundle.maxCourses} courses`,
       });
     }
 

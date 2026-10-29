@@ -22,10 +22,11 @@ import { useMyCourses } from '../hooks/useMyCourses';
 export function MyCoursesScreen() {
   const theme = useTheme();
   const styles = useStyles();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { profile } = useSession();
   const router = useRouter();
   const courses = useMyCourses();
+  const isGuest = courses.isGuest;
   const [filterOpen, setFilterOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -41,7 +42,29 @@ export function MyCoursesScreen() {
   const header = useMemo(
     () => (
       <View style={styles.header}>
-        <ScreenHeader title={t('mycourses.title')} />
+        <ScreenHeader title={isGuest
+          ? (language === 'am' ? 'ሁሉም ኮርሶች' : 'Course Catalog')
+          : t('mycourses.title')} />
+
+        {/* Guest promotional banner */}
+        {isGuest ? (
+          <View style={styles.guestBanner}>
+            <AppText bold>
+              {language === 'am' ? '🔒 ሙሉ ዝግጅት ይፈልጋሉ?' : '🔒 Want full access?'}
+            </AppText>
+            <AppText variant="caption" muted>
+              {language === 'am'
+                ? 'ነጻ ኮርሶችን ያንብቡ። ሁሉንም ይዘቶች ለማነብ ቦርሳ ይግዙ።'
+                : 'Free courses are open. Purchase a bundle to unlock all paid content.'}
+            </AppText>
+            <AppButton
+              label={language === 'am' ? 'ኮርስ ቦርሳ ይግዙ' : 'Buy a Course Bundle'}
+              variant="primary"
+              onPress={() => router.push('/store')}
+            />
+          </View>
+        ) : null}
+
         <CourseSearchBar
           value={courses.filters.query}
           onChangeText={(query) => courses.setFilters((prev) => ({ ...prev, query }))}
@@ -55,7 +78,7 @@ export function MyCoursesScreen() {
         />
       </View>
     ),
-    [courses.activeFilters, courses.filters.query, courses.filters.tab, courses.setFilters, styles.header, t, tabs],
+    [courses.activeFilters, courses.filters.query, courses.filters.tab, courses.setFilters, isGuest, language, router, styles.guestBanner, styles.header, t, tabs],
   );
 
   const empty = useMemo(() => {
@@ -70,12 +93,21 @@ export function MyCoursesScreen() {
         </View>
       );
     }
-    if (courses.total === 0) {
+    if (courses.total === 0 && !isGuest) {
       return (
         <Card>
           <AppText bold>{t('mycourses.empty.none')}</AppText>
           <AppText muted>{t('home.empty')}</AppText>
           <AppButton label={t('mycourses.add')} onPress={() => setAddOpen(true)} />
+        </Card>
+      );
+    }
+    if (courses.total === 0 && isGuest) {
+      return (
+        <Card>
+          <AppText bold>{language === 'am' ? 'ምንም ኮርስ አልተገኘም' : 'No courses found'}</AppText>
+          <AppText muted>{language === 'am' ? 'ለሁሉም ኮርሶች ቦርሳ ይግዙ' : 'Purchase a bundle to unlock all courses'}</AppText>
+          <AppButton label={language === 'am' ? 'ኮርስ ይግዙ' : 'Buy a Course Bundle'} onPress={() => router.push('/store')} />
         </Card>
       );
     }
@@ -85,7 +117,7 @@ export function MyCoursesScreen() {
         <AppButton label={t('mycourses.clear')} variant="outline" onPress={courses.clearFilters} />
       </View>
     );
-  }, [courses.error, courses.loading, courses.total, courses.clearFilters, courses.reload, styles.gap, t, theme.colors.primary]);
+  }, [courses.error, courses.loading, courses.total, courses.clearFilters, courses.reload, isGuest, language, styles.gap, t, theme.colors.primary]);
 
   const handlePressCourse = useCallback(
     (id: string) => {
@@ -146,4 +178,13 @@ const useStyles = createStyles((theme) => ({
   separator: { height: theme.spacing.sm },
   gap: { gap: theme.spacing.sm },
   emptyCard: { gap: theme.spacing.sm, padding: theme.spacing.lg, marginTop: theme.spacing.md },
+  guestBanner: {
+    gap: theme.spacing.sm,
+    backgroundColor: theme.colors.primarySoft,
+    borderColor: theme.colors.primary,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: theme.spacing.md,
+  },
 }));
+

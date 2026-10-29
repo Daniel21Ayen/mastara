@@ -18,8 +18,8 @@ import { useHomeData } from '../hooks/useHomeData';
 export function HomeScreen() {
   const theme = useTheme();
   const styles = useStyles();
-  const { t } = useI18n();
-  const { user, profile } = useSession();
+  const { t, language } = useI18n();
+  const { user, profile, isGuest } = useSession();
   const router = useRouter();
   const comingSoon = useComingSoon();
   const unread = useUnreadCount();
@@ -30,11 +30,35 @@ export function HomeScreen() {
   return (
     <Screen scroll inTabs>
       <HomeHeader
-        name={user?.name ?? ''}
+        name={user?.name ?? (isGuest ? (language === 'am' ? 'እንኳን ደህና መጡ!' : 'Welcome!') : '')}
         hasUnread={unread > 0}
         onBellPress={() => router.push('/notifications' as Href)}
-        onAvatarPress={() => router.push('/profile' as Href)}
+        onAvatarPress={() => isGuest ? router.push('/login' as Href) : router.push('/profile' as Href)}
       />
+
+      {/* Guest: prominent CTA to buy or sign in */}
+      {isGuest ? (
+        <View style={styles.guestWelcome}>
+          <AppText bold>
+            {language === 'am' ? '🎓 ማስታራ' : '🎓 Welcome to Mastara'}
+          </AppText>
+          <AppText variant="caption" muted>
+            {language === 'am'
+              ? 'ነጻ ኮርሶችን ያንብቡ ወይም ሙሉ ዝግጅት ለማግኘት ቡንዴ ይግዙ።'
+              : 'Browse free courses now. Purchase a bundle for full access to all content.'}
+          </AppText>
+          <AppButton
+            label={language === 'am' ? 'ኮርስ ቡንዴ ይግዙ' : 'Buy a Course Bundle'}
+            variant="primary"
+            onPress={() => router.push('/store' as Href)}
+          />
+          <AppButton
+            label={language === 'am' ? 'አካውንት አለዎት? ይግቡ' : 'Already have an account? Sign In'}
+            variant="outline"
+            onPress={() => router.push('/login' as Href)}
+          />
+        </View>
+      ) : null}
 
       {loading && !data ? <ActivityIndicator color={theme.colors.primary} /> : null}
       {error ? <AppButton label={t('common.retry')} variant="outline" onPress={reload} /> : null}
@@ -102,4 +126,12 @@ const useStyles = createStyles((theme) => ({
   // Four cards of the same size: two rows of two.
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
   emptyCard: { gap: theme.spacing.sm, marginTop: theme.spacing.md, padding: theme.spacing.md },
+  guestWelcome: {
+    gap: theme.spacing.sm,
+    backgroundColor: theme.colors.primarySoft,
+    borderColor: theme.colors.primary,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: theme.spacing.md,
+  },
 }));

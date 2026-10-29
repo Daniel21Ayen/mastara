@@ -46,13 +46,17 @@ export function ContentManagementScreen({
   // Lists Data State
   const [testSets, setTestSets] = useState<TestSetItem[]>(INITIAL_TEST_SETS);
   const [materials, setMaterials] = useState<MaterialItem[]>(INITIAL_MATERIALS);
+  const [availableCourses, setAvailableCourses] = useState<string[]>([]);
 
   useEffect(() => {
     let isCancelled = false;
     async function loadLiveMaterials() {
       try {
         const courses = await contentApi.listCourses();
-        if (isCancelled || courses.length === 0) return;
+        if (isCancelled) return;
+        if (courses.length > 0) {
+          setAvailableCourses(courses.map((c) => c.title));
+        }
 
         const liveItems: MaterialItem[] = [];
 
@@ -122,11 +126,40 @@ export function ContentManagementScreen({
         }
 
         if (!isCancelled && liveItems.length > 0) {
-          setMaterials((prev) => {
-            const liveIds = new Set(liveItems.map((item) => item.id));
-            const remaining = prev.filter((item) => !liveIds.has(item.id));
-            return [...liveItems, ...remaining];
-          });
+          setMaterials(liveItems);
+        }
+
+        try {
+          const qRes = await testsApi.listQuestions({ page: 1 });
+          if (!isCancelled && qRes.items && qRes.items.length > 0) {
+            const liveQuestions: TestSetItem[] = qRes.items.map((q) => ({
+              id: q.id,
+              questionId: q.id.slice(0, 8),
+              question: q.prompt || q.title,
+              questionType:
+                q.form === 'MULTIPLE_CHOICE'
+                  ? 'Multiple Choice'
+                  : q.form === 'TRUE_FALSE'
+                  ? 'True/False'
+                  : 'Short Answer',
+              quizNo: (q.quizNo ?? 1) as 1 | 2 | 3,
+              chapterNumber: 1,
+              chapterTitle: q.topicLabel || 'Chapter 1',
+              chapterSubtitle: q.title,
+              courseTitle: q.courseTitle || 'Course',
+              courseCode: '',
+              semester: 'Semester 1',
+              stream: 'Common',
+              program: 'All programs',
+              status: q.status === 'PUBLISHED' ? 'Active' : 'Inactive',
+              verified: q.status === 'PUBLISHED',
+              options: q.options,
+              explanation: q.explanation,
+            }));
+            setTestSets(liveQuestions);
+          }
+        } catch {
+          // Keep existing testSets on offline
         }
       } catch (err) {
         console.error('Failed to fetch live materials for content management:', err);
@@ -319,12 +352,12 @@ export function ContentManagementScreen({
 
   // Unique options for filters
   const testChapters = ['All chapters', ...Array.from(new Set(testSets.map((t) => t.chapterTitle)))];
-  const testCourses = ['All courses', ...Array.from(new Set(testSets.map((t) => t.courseTitle)))];
+  const testCourses = ['All courses', ...Array.from(new Set([...testSets.map((t) => t.courseTitle), ...availableCourses]))];
   const testStreams = ['All streams', ...Array.from(new Set(testSets.map((t) => t.stream)))];
   const testPrograms = ['All programs', ...Array.from(new Set(testSets.map((t) => t.program)))];
 
   const matChapters = ['All chapters', ...Array.from(new Set(materials.map((m) => m.chapterTitle)))];
-  const matCourses = ['All courses', ...Array.from(new Set(materials.map((m) => m.courseTitle)))];
+  const matCourses = ['All courses', ...Array.from(new Set([...materials.map((m) => m.courseTitle), ...availableCourses]))];
   const matSemesters = ['All semesters', ...Array.from(new Set(materials.map((m) => m.semester)))];
   const matPrograms = ['All programs', ...Array.from(new Set(materials.map((m) => m.program)))];
 

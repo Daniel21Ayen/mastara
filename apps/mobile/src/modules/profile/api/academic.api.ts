@@ -81,4 +81,4 @@ export const realAcademicApi: AcademicApi = {
  * Reads are saved in SQLite api_cache and used when offline; writes always need the server.
  * The "v2" prefix retires answers saved by earlier builds, which could contain the old placeholder ids.
  */
-export const academicApi = cacheReads('academic.v2', realAcademicApi, ['getUniversities', 'getPrograms', 'getSemesters']);
+export const academicApi = cacheReads('academic.v3', realAcademicApi, ['getUniversities', 'getPrograms', 'getSemesters']);
