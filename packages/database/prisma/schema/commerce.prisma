@@ -52,21 +52,29 @@ enum RefundStatus {
   ENTITLEMENT_REVOKED
 }
 
+enum PricingMode {
+  CALCULATED
+  FIXED
+}
+
 model Product {
-  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type           ProductType
-  stream_scope   StreamScope @default(ANY)
-  name_en        String
-  name_am        String
-  description_en String?     @db.Text
-  description_am String?     @db.Text
-  price_etb      Decimal     @db.Decimal(10, 2)
-  duration_days  Int
-  min_courses    Int?
-  max_courses    Int?
-  is_active      Boolean     @default(true)
-  created_at     DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime    @updatedAt @db.Timestamptz(6)
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type             ProductType
+  pricing_mode     PricingMode @default(FIXED)
+  stream_scope     StreamScope @default(ANY)
+  name_en          String
+  name_am          String
+  description_en   String?     @db.Text
+  description_am   String?     @db.Text
+  price_etb        Decimal     @db.Decimal(10, 2)
+  discount_percent Decimal?    @db.Decimal(5, 2)
+  fixed_price_etb  Decimal?    @db.Decimal(10, 2)
+  duration_days    Int
+  min_courses      Int?
+  max_courses      Int?
+  is_active        Boolean     @default(true)
+  created_at       DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime    @updatedAt @db.Timestamptz(6)
 
   price_rules PriceRule[]
   orders      Order[]
@@ -76,12 +84,14 @@ model Product {
 }
 
 model PriceRule {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  product_id String   @db.Uuid
-  tier_no    Int
-  price_etb  Decimal  @db.Decimal(10, 2)
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id  String   @db.Uuid
+  tier_no     Int
+  range_start Int?
+  range_end   Int?
+  price_etb   Decimal  @db.Decimal(10, 2)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @updatedAt @db.Timestamptz(6)
 
   product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
 

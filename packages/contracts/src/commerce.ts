@@ -107,10 +107,48 @@ export const claimOrderResponseSchema = z.object({
   entitlementToken: z.string().optional(),
 });
 
+export const extraCourseTierSchema = z.object({
+  fromOrdinal: z.number().int().positive(),
+  toOrdinal: z.number().int().positive().optional(),
+  priceETB: z.number().nonnegative(),
+});
+
+export const bundleConfigSchema = z.object({
+  minCourses: z.number().int().positive(),
+  maxCourses: z.number().int().positive(),
+  pricingMode: z.enum(['CALCULATED', 'FIXED']),
+  discountPercent: z.number().min(0).max(100).optional(),
+  fixedPriceETB: z.number().nonnegative().optional(),
+  allowedSemesterId: z.string().uuid().optional(),
+  allowedStream: z.enum(['NATURAL', 'SOCIAL', 'BOTH', 'ANY']).optional(),
+});
+
+export const priceQuoteSchema = z.object({
+  quoteId: z.string().uuid(),
+  productType: z.enum(PRODUCT_TYPES),
+  courseCount: z.number().int().nonnegative(),
+  perCourseBreakdown: z
+    .array(
+      z.object({
+        courseId: z.string(),
+        priceETB: z.number(),
+      }),
+    )
+    .optional(),
+  baseAmount: z.number().nonnegative(),
+  discountAmount: z.number().nonnegative(),
+  totalETB: z.number().nonnegative(),
+  expiresAt: z.string(),
+});
+
 export const paymentSettingsSchema = z.object({
   singleCoursesEnabled: z.boolean(),
   bundlePrices: z.record(z.string(), z.number()).optional(),
   singleCoursePrices: z.record(z.string(), z.number()).optional(),
+  pricingMode: z.enum(['CALCULATED', 'FIXED']).optional(),
+  discountPercent: z.number().min(0).max(100).optional(),
+  fixedPriceETB: z.number().nonnegative().optional(),
+  extraCourseTiers: z.array(extraCourseTierSchema).optional(),
 });
 
 export type Order = z.infer<typeof orderSchema>;
@@ -118,6 +156,9 @@ export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type SubmitOrderWithLocalInput = z.infer<typeof submitOrderWithLocalSchema>;
 export type ClaimOrderInput = z.infer<typeof claimOrderSchema>;
 export type ClaimOrderResponse = z.infer<typeof claimOrderResponseSchema>;
+export type ExtraCourseTierDto = z.infer<typeof extraCourseTierSchema>;
+export type BundleConfigDto = z.infer<typeof bundleConfigSchema>;
+export type PriceQuoteDto = z.infer<typeof priceQuoteSchema>;
 export type PaymentSettings = z.infer<typeof paymentSettingsSchema>;
 export type RefundStatus = z.infer<typeof refundStatusSchema>;
 export type AdminRefund = z.infer<typeof adminRefundSchema>;

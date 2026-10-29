@@ -51,6 +51,7 @@ model Student {
   id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   student_number     Int               @unique @default(autoincrement())
   student_code       String?           @unique
+  local_account_id   String?           @unique
   phone              String?           @unique
   email              String?           @unique
   password_hash      String

@@ -14,3 +14,5 @@ apps/mobile/src/core/math/katexAssets.generated.ts
 infra/backups/
 *.dump
 *.dump.sha256
+
+

@@ -2,7 +2,7 @@
 import type { ProductType } from '../constants/commerce';
 
 import type { BundleRules } from './bundle';
-import { DEFAULT_BUNDLE_RULES } from './bundle';
+import { DEFAULT_BUNDLE_RULES, roundCurrency } from './bundle';
 
 /** Everything the Admin can change about prices. The server sends the live values. */
 export interface PricingConfig {
@@ -70,7 +70,73 @@ export function quoteOrder(config: PricingConfig, input: OrderInput): QuoteResul
       for (let i = 0; i < input.courseCount - maxCourses; i += 1) {
         lines.push({ kind: 'EXTRA', count: 1, amount: extraCoursePrices[i] ?? lastTier });
       }
-      return { ok: true, quote: { lines, total: lines.reduce((sum, line) => sum + line.amount, 0) } };
+      return { ok: true, quote: { lines, total: roundCurrency(lines.reduce((sum, line) => sum + line.amount, 0)) } };
     }
   }
 }
+
+// ============================================================================
+// Consolidated Requirements (v1.0): Extra Course Count-Based Tier Pricing
+// ============================================================================
+
+export interface ExtraCourseTier {
+  fromOrdinal: number; // 1-indexed, e.g. 1, 2, 6
+  toOrdinal?: number; // e.g. 1, 5, or undefined for open-ended tier
+  priceETB: number; // admin-defined unit price for this band
+}
+
+export interface ExtraCoursePriceResult {
+  total: number;
+  lines: Array<{
+    ordinal: number;
+    priceETB: number;
+    tierFrom: number;
+    tierTo?: number;
+  }>;
+}
+
+/**
+ * Calculates extra single-course pricing based on ordinal position in the order.
+ * Requirements: Section 4.4 & Section 11 (calculateExtraCoursePrice).
+ * Example: 7 extra courses under [1-1: 100, 2-5: 50, 6+: 40]
+ *   Total = 1x100 + 4x50 + 2x40 = 380 ETB
+ */
+export function calculateExtraCoursePrice(
+  extraCourseCount: number,
+  tiers: readonly ExtraCourseTier[],
+): ExtraCoursePriceResult {
+  if (extraCourseCount <= 0) {
+    return { total: 0, lines: [] };
+  }
+  if (!tiers || tiers.length === 0) {
+    throw new Error('At least one extra course tier must be configured by admin');
+  }
+
+  const sorted = [...tiers].sort((a, b) => a.fromOrdinal - b.fromOrdinal);
+
+  const lines: ExtraCoursePriceResult['lines'] = [];
+  let total = 0;
+
+  for (let ordinal = 1; ordinal <= extraCourseCount; ordinal += 1) {
+    const tier = sorted.find((t) => {
+      if (ordinal < t.fromOrdinal) return false;
+      if (t.toOrdinal != null && ordinal > t.toOrdinal) return false;
+      return true;
+    });
+
+    if (!tier) {
+      throw new Error(`No pricing tier found covering extra course ordinal #${ordinal}`);
+    }
+
+    total = roundCurrency(total + tier.priceETB);
+    lines.push({
+      ordinal,
+      priceETB: tier.priceETB,
+      tierFrom: tier.fromOrdinal,
+      tierTo: tier.toOrdinal,
+    });
+  }
+
+  return { total, lines };
+}
+
